@@ -57,7 +57,7 @@ export default function Home() {
         whileHover={{ scale: 1.02 }}
       >
         <motion.img
-          src="/portfolio/images/36e6c82d-6066-407a-a923-b0a3541abcae.jpg"
+          src="/portfolio/images/def.jpg"
           alt="Sayantan"
           className="w-[420px] h-[420px] object-cover rounded-xl shadow-xl animate-float"
         />
