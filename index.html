@@ -1,33 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/portfolio/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SayantanXBTC</title>
 
-    <!-- 🟦 IMPORTANT: Apply saved theme BEFORE React loads -->
-    <script>
-      const savedTheme = localStorage.getItem("theme") || "dark";
-      if (savedTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    </script>
+    <title>SayantanXBTC | Portfolio</title>
 
-    <!-- Prevent flash -->
+    <!-- Smooth background transition -->
     <style>
       html {
+        background-color: black;
+        color: white;
         transition: background-color 0.25s ease, color 0.25s ease;
       }
     </style>
-    <script type="module" crossorigin src="/portfolio/assets/index-DhgXxNuK.js"></script>
-    <link rel="stylesheet" crossorigin href="/portfolio/assets/index-CmxBl99X.css">
+    <script type="module" crossorigin src="/portfolio/assets/index-BfdCujVc.js"></script>
+    <link rel="stylesheet" crossorigin href="/portfolio/assets/index-tTJR8mSM.css">
   </head>
 
-  <body class="bg-white dark:bg-black text-black dark:text-white">
+  <body class="bg-black text-white">
     <div id="root"></div>
 
+    <!-- IMPORTANT: For VITE BUILD, use ONLY raw path -->
   </body>
 </html>
