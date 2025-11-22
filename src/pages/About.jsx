@@ -1,27 +1,82 @@
 import React from "react"
 import { motion } from "framer-motion"
-import heroImage from "../assets/images/def.jpg" // optional usage in about
 
 export default function About() {
   return (
-    <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen flex flex-col items-center pt-28 px-6">
-      <h1 className="text-4xl text-sky-400 font-bold mb-10" data-aos="fade-up">About Me</h1>
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen flex flex-col items-center pt-28 px-6 pb-12"
+    >
+      <h1 className="text-4xl md:text-5xl text-sky-400 font-bold mb-8 text-center">
+        About Me
+      </h1>
 
-      <div className="max-w-3xl glass p-8 rounded-2xl shadow-xl text-left leading-8 text-lg text-slate-300 backdrop-blur-xl border border-slate-700/50" data-aos="fade-up">
-        <p className="mb-6" data-aos="fade-right" data-aos-delay="30">
-          Hey! I’m a B.Tech CSE student at LPU, currently figuring out how to break software professionally (aka <span className="text-sky-300 font-semibold">Software Testing</span>). I grew up in Agartala in a family of teachers — so curiosity wasn’t optional; it was basically a rule.
-        </p>
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* LONG BIO */}
+        <div className="glass p-8 rounded-2xl shadow-xl border border-slate-700/40">
+          <h2 className="text-2xl font-semibold text-sky-300 mb-4">Who I am</h2>
+          <p className="text-slate-300 leading-8 mb-4">
+            I’m a B.Tech Computer Science student at Lovely Professional University with
+            a deep appetite for building dependable software. I began coding to solve
+            small automation problems and soon found joy in designing systems that make
+            developers’ lives easier and testing more reliable.
+          </p>
 
-        <p className="mb-6" data-aos="fade-left" data-aos-delay="80">
-          That curiosity pushed me deep into <span className="text-sky-300 font-semibold">Particle Physics</span>. While debugging code, my brain is usually running collider experiments in the background. Physics is my first love and the reason I question everything.
-        </p>
+          <p className="text-slate-300 leading-8 mb-4">
+            My curiosity pushed me toward particle physics — the discipline that taught
+            me to model complex systems, think probabilistically, and build experiments
+            that reveal unexpected results. I apply the same experimental rigor to
+            software: design, observe, measure, iterate.
+          </p>
 
-        <p className="mb-6" data-aos="fade-up" data-aos-delay="120">
-          On the tech side, I work on automation testing, full-stack bits, and web design. I also pick up quizzing trophies like side quests — and had the honor of representing Tripura at the <span className="text-sky-300 font-semibold">National Youth Festival 2025</span>.
-        </p>
+          <p className="text-slate-300 leading-8">
+            Outside code, I quiz, read research papers, and tinker with low-latency
+            automation pipelines. I enjoy translating complex workflows into simple,
+            testable units.
+          </p>
+        </div>
 
-        <p className="font-semibold text-sky-300" data-aos="zoom-in" data-aos-delay="160">
-          My life motto: Keep the code clean, the hair unpredictable, and the volume maxed out.
+        {/* TECH PROFILE */}
+        <div className="glass p-8 rounded-2xl shadow-xl border border-slate-700/40">
+          <h2 className="text-2xl font-semibold text-sky-300 mb-4">Technical Snapshot</h2>
+
+          <ul className="grid grid-cols-1 gap-3">
+            <li className="p-3 rounded-lg bg-slate-900/40 border border-slate-700/30">
+              <strong>Primary:</strong> Java, Selenium, TestNG, REST API testing
+            </li>
+            <li className="p-3 rounded-lg bg-slate-900/40 border border-slate-700/30">
+              <strong>Frontend:</strong> React, TailwindCSS, Vite, Framer Motion
+            </li>
+            <li className="p-3 rounded-lg bg-slate-900/40 border border-slate-700/30">
+              <strong>Data & DevOps:</strong> Docker, Git, GitHub Actions
+            </li>
+            <li className="p-3 rounded-lg bg-slate-900/40 border border-slate-700/30">
+              <strong>Tools:</strong> Postman, Maven, Jenkins, Allure Reporting
+            </li>
+          </ul>
+
+          <h3 className="mt-6 text-lg font-semibold text-sky-300">What I care about</h3>
+          <p className="text-slate-300 leading-7 mt-2">
+            Maintainability, reproducible tests, clear metrics, and fast feedback loops.
+            I love turning flaky manual processes into stable repeatable pipelines.
+          </p>
+
+          <h3 className="mt-6 text-lg font-semibold text-sky-300">Fun facts</h3>
+          <ul className="list-disc list-inside text-slate-300 mt-2">
+            <li>Started competitive quizzing at age 12 — still addicted to trivia.</li>
+            <li>Designed a small automation framework that reduced test runtime by 40%.</li>
+            <li>Can argue for hours about which physics thought experiment is cooler LMAO.</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* CTA / Values */}
+      <div className="max-w-3xl mt-10 text-center">
+        <p className="text-slate-300">
+          I’m always open to new problems — whether it’s building a rock-solid
+          test harness, automating a tedious workflow, or collaborating on research.
+          If that sounds like you, let’s talk.
         </p>
       </div>
     </motion.section>

@@ -8,6 +8,7 @@ import Home from "./pages/Home"
 import About from "./pages/About"
 import Skills from "./pages/Skills"
 import Projects from "./pages/Projects"
+import Research from "./pages/Research"
 import Internships from "./pages/Internships"
 import Certificates from "./pages/Certificates"
 import Achievements from "./pages/Achievements"
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/skills" element={<Skills />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/research" element={<Research />} />
           <Route path="/internships" element={<Internships />} />
           <Route path="/certificates" element={<Certificates />} />
           <Route path="/achievements" element={<Achievements />} />

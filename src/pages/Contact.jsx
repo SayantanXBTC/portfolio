@@ -36,7 +36,10 @@ export default function Contact(){
 
   return (
     <section className="min-h-screen pt-28 px-6">
-      <h1 className="text-4xl text-sky-300 font-bold mb-6" data-aos="fade-up">Contact</h1>
+      <h1 className="text-4xl text-sky-300 font-bold mb-8 text-center">
+  Contact
+</h1>
+
 
       <div className="max-w-3xl mx-auto glass p-6 rounded-2xl" data-aos="fade-up">
         <form onSubmit={handleSubmit} className="grid gap-4">

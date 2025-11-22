@@ -6,11 +6,16 @@ export default function Navbar() {
   const [theme, setTheme] = useState("dark")
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // Load theme on start
+  // Load saved theme
   useEffect(() => {
     const saved = localStorage.getItem("theme") || "dark"
     setTheme(saved)
-    document.documentElement.classList.toggle("dark", saved === "dark")
+
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
   }, [])
 
   // Toggle theme
@@ -18,7 +23,12 @@ export default function Navbar() {
     const newTheme = theme === "dark" ? "light" : "dark"
     setTheme(newTheme)
     localStorage.setItem("theme", newTheme)
-    document.documentElement.classList.toggle("dark", newTheme === "dark")
+
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
   }
 
   const links = [
@@ -26,6 +36,7 @@ export default function Navbar() {
     { name: "About", path: "/about" },
     { name: "Skills", path: "/skills" },
     { name: "Projects", path: "/projects" },
+    { name: "Research", path: "/research" },
     { name: "Internships", path: "/internships" },
     { name: "Certificates", path: "/certificates" },
     { name: "Achievements", path: "/achievements" },
@@ -39,7 +50,7 @@ export default function Navbar() {
 
         {/* LOGO */}
         <Link className="text-sky-400 text-2xl font-bold tracking-wide" to="/">
-          Sayantan
+          SayantanXBTC
         </Link>
 
         {/* DESKTOP NAV */}
@@ -57,7 +68,7 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-          {/* THEME BUTTON */}
+          {/* THEME TOGGLE */}
           <button
             onClick={toggleTheme}
             className="ml-4 p-2 rounded-full bg-slate-700/40 hover:bg-slate-600 transition shadow"
@@ -79,7 +90,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* MOBILE OVERLAY MENU */}
+      {/* MOBILE MENU */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm md:hidden z-50"
@@ -89,7 +100,6 @@ export default function Navbar() {
             className="absolute right-0 top-0 h-full w-64 bg-slate-900 shadow-xl p-6 flex flex-col gap-6"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
             <button
               className="ml-auto text-sky-300 mb-4"
               onClick={() => setMenuOpen(false)}
@@ -97,7 +107,6 @@ export default function Navbar() {
               <FiX size={28} />
             </button>
 
-            {/* Mobile Links */}
             {links.map((link) => (
               <NavLink
                 key={link.name}
@@ -115,7 +124,7 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            {/* Theme Toggle - Mobile */}
+            {/* MOBILE THEME BUTTON */}
             <button
               onClick={toggleTheme}
               className="mt-6 p-2 rounded-full bg-slate-700/40 hover:bg-slate-600 transition shadow self-start"
