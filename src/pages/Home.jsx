@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import Typed from "typed.js"
-import Starfield from "../components/starfield"
+import Starfield from "../components/Starfield"
 import heroImage from "../assets/images/def.jpg" // confirm file exists
 
 const CV = "/portfolio/docs/Sayantan-Bhattacharjee-CV.pdf" // final public path
