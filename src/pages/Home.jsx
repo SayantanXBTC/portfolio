@@ -1,103 +1,72 @@
-import React, { useEffect, useRef } from 'react'
-import Particles from 'react-tsparticles'
-import { loadFull } from 'tsparticles'
-import Typed from 'typed.js'
-import { motion } from 'framer-motion'
-
-// ⭐ Your correctly imported image (GitHub Pages SAFE)
-import heroImage from '../assets/images/def.jpg'
-
-// CV stays in public/docs/
-const CV = "/portfolio/docs/Sayantan-Bhattacharjee-CV.pdf"
+import React, { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
+import Typed from "typed.js"
+import Starfield from "../components/starfield" // NEW
+import "../styles/hero.css" // optional custom effects
 
 export default function Home() {
   const typedRef = useRef(null)
 
   useEffect(() => {
     const t = new Typed(typedRef.current, {
-      strings: ["Automation Engineer", "Particle Physics Researcher"],
-      typeSpeed: 80,
+      strings: ["Automation Engineer", "Particle Physics Researcher", "Software Tester"],
+      typeSpeed: 70,
       backSpeed: 40,
       loop: true,
     })
-
     return () => t.destroy()
   }, [])
-
-  const particlesInit = async (main) => {
-    await loadFull(main)
-  }
 
   return (
     <motion.section
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen flex flex-col items-center justify-center relative bg-hero-gradient text-white"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pb-20"
     >
-      <Particles
-        init={particlesInit}
-        className="absolute inset-0 -z-10"
-        options={{
-          background: { color: "#071021" },
-          particles: {
-            color: { value: "#0ea5e9" },
-            links: { enable: true, color: "#0ea5e9" },
-            move: { enable: true },
-          },
-        }}
-      />
+      {/* ⭐ STARFIELD BACKGROUND */}
+      <Starfield />
 
       <motion.h1
-        className="clamp-hero font-extrabold text-center mb-6"
+        className="text-4xl md:text-5xl font-extrabold text-sky-300 drop-shadow-lg"
         data-aos="fade-down"
       >
         Hi! I’m Sayantan Bhattacharjee
       </motion.h1>
 
+      {/* IMAGE CARD */}
       <motion.div
+        className="mt-10 p-3 rounded-2xl glass border border-slate-700/40 shadow-xl"
         data-aos="zoom-in"
-        className="glass neon p-3 rounded-xl border border-slate-800 shadow-xl"
-        whileHover={{ scale: 1.02 }}
       >
-        <motion.img
-          src={heroImage}  // ⭐ FIXED — Now GitHub Pages will load it
+        <img
+          src="/portfolio/src/assets/def.jpg"
           alt="Sayantan"
-          className="w-[420px] h-[420px] object-cover rounded-xl shadow-xl animate-float"
+          className="w-[400px] h-[400px] object-cover rounded-2xl shadow-xl"
         />
       </motion.div>
 
-      <p
-        className="mt-6 text-sky-300 italic lead max-w-2xl text-center"
-        data-aos="fade-up"
-      >
+      <p className="mt-4 text-sky-300 italic" data-aos="fade-up">
         At the great Plenary Hall at Bharat Mandapam, New Delhi, India
       </p>
 
       <h2
-        className="mt-6 text-xl md:text-2xl text-gray-200"
+        className="mt-6 text-xl md:text-2xl text-gray-300"
         data-aos="fade-up"
       >
-        I am a{" "}
-        <span ref={typedRef} className="text-brand-500 font-semibold"></span>
+        I am a <span ref={typedRef} className="text-sky-400"></span>
       </h2>
 
-      <div className="mt-8 flex gap-4" data-aos="fade-up">
-        <a
-          href={CV}
-          download
-          className="px-6 py-3 bg-gradient-to-br from-brand-500 to-brand-300 text-black rounded-xl shadow-lg hover:-translate-y-1 transition"
-        >
-          Download CV
-        </a>
+     <div className="mt-8 flex gap-4" data-aos="fade-up">
+  <a
+    href="/portfolio/docs/Sayantan-Bhattacharjee-CV.pdf"
+    download
+    className="px-6 py-3 bg-sky-600 text-black rounded-xl shadow-lg 
+      hover:bg-sky-500 transition font-semibold"
+  >
+    Download CV
+  </a>
+</div>
 
-        <a
-          href="/portfolio/projects"
-          className="px-6 py-3 border border-slate-700 rounded-xl text-slate-200 hover:text-brand-300 transition"
-        >
-          View Projects
-        </a>
-      </div>
     </motion.section>
   )
 }

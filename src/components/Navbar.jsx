@@ -1,86 +1,75 @@
-import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect } from "react"
+import { Link, NavLink } from "react-router-dom"
+import { FiSun, FiMoon } from "react-icons/fi"
 
 export default function Navbar() {
-  const loc = useLocation()
+  const [theme, setTheme] = useState("dark")
 
-  const items = [
-    ['Home', '/'],
-    ['About', '/about'],
-    ['Skills', '/skills'],
-    ['Projects', '/projects'],
-    ['Internships', '/internships'],
-    ['Certificates', '/certificates'],
-    ['Achievements', '/achievements'],
-    ['Education', '/education'],
-    ['Contact', '/contact']
+  // Load saved theme
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") || "dark"
+    setTheme(saved)
+    document.documentElement.classList.toggle("dark", saved === "dark")
+  }, [])
+
+  // Toggle theme
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark"
+    setTheme(newTheme)
+    localStorage.setItem("theme", newTheme)
+    document.documentElement.classList.toggle("dark", newTheme === "dark")
+  }
+
+  const links = [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Skills", path: "/skills" },
+    { name: "Projects", path: "/projects" },
+    { name: "Internships", path: "/internships" },
+    { name: "Certificates", path: "/certificates" },
+    { name: "Achievements", path: "/achievements" },
+    { name: "Education", path: "/education" },
+    { name: "Contact", path: "/contact" },
   ]
 
   return (
-    <header className="fixed w-full z-50 glass">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-xl font-bold text-brand-300">
-          SayantanXBTC
+    <nav className="fixed top-0 left-0 w-full z-40 backdrop-blur-xl bg-black/30 dark:bg-black/40 border-b border-slate-700/30">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+        {/* LOGO */}
+        <Link className="text-sky-400 text-2xl font-bold tracking-wide" to="/">
+          Sayantan
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex gap-3 items-center">
-          {items.map(([label, path]) => (
-            <Link
-              key={path}
-              to={path}
-              className={`relative px-3 py-2 rounded-lg transition 
-                ${
-                  loc.pathname === path
-                    ? 'bg-slate-800 text-brand-300'
-                    : 'text-slate-300 hover:text-brand-300'
-                }`}
+        {/* NAV LINKS */}
+        <div className="hidden md:flex gap-6 text-gray-300">
+          {links.map(link => (
+            <NavLink
+              key={link.name}
+              to={link.path}
+              className={({ isActive }) =>
+                `hover:text-sky-400 transition ${
+                  isActive ? "text-sky-400 font-semibold" : ""
+                }`
+              }
             >
-              <motion.span whileHover={{ scale: 1.03 }} className="inline-block">
-                {label}
-              </motion.span>
-            </Link>
+              {link.name}
+            </NavLink>
           ))}
-        </nav>
-
-        {/* Mobile Menu */}
-        <div className="md:hidden">
-          <MobileMenu items={items} current={loc.pathname} />
         </div>
+
+        {/* THEME TOGGLE */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-full bg-slate-700/40 hover:bg-slate-600 transition shadow"
+        >
+          {theme === "dark" ? (
+            <FiSun className="text-yellow-300 text-xl" />
+          ) : (
+            <FiMoon className="text-slate-900 text-xl" />
+          )}
+        </button>
       </div>
-    </header>
-  )
-}
-
-function MobileMenu({ items, current }) {
-  const [open, setOpen] = React.useState(false)
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="p-2 bg-slate-800 rounded"
-      >
-        ☰
-      </button>
-
-      {open && (
-        <div className="absolute right-0 mt-2 bg-slate-900 p-2 rounded shadow-lg w-48">
-          {items.map(([label, path]) => (
-            <Link
-              key={path}
-              to={path}
-              onClick={() => setOpen(false)}
-              className={`block px-3 py-2 
-                ${current === path ? 'text-sky-300' : 'text-slate-300'}
-              `}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
+    </nav>
   )
 }

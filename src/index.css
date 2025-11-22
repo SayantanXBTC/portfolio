@@ -111,3 +111,59 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #2c3a55;
 }
+
+/* ------------------ Theme variables ------------------ */
+:root {
+  --bg-900: #02040a;
+  --bg-800: #071022;
+  --panel: rgba(8, 13, 23, 0.6);
+  --glass: rgba(255,255,255,0.04);
+  --brand: #2dd0ff;
+  --accent: #7cf0ff;
+  --muted: #98a2b3;
+  --card-shadow: 0 8px 30px rgba(2,6,23,0.6);
+}
+
+/* Light theme override */
+.light {
+  --bg-900: #f8fafc;
+  --bg-800: #eef2f7;
+  --panel: rgba(255,255,255,0.85);
+  --glass: rgba(255,255,255,0.7);
+  --brand: #0ea5e9;
+  --muted: #475569;
+}
+
+/* apply background variables */
+body.dark, :root.dark {
+  background: linear-gradient(180deg, var(--bg-900), #000);
+  color: #e6eef6;
+}
+body.light, :root.light {
+  background: linear-gradient(180deg, var(--bg-800), #f1f5f9);
+  color: #0b1220;
+}
+
+/* glass + neon */
+.glass {
+  background: var(--glass);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.text-brand {
+  color: var(--brand);
+}
+
+/* starfield canvas sits behind particles - ensure non interactive */
+canvas.pointer-events-none { pointer-events: none; }
+
+/* tilt card tweak */
+.react-parallax-tilt {
+  transform-style: preserve-3d;
+}
+
+/* subtle heading glow */
+h1, h2, h3 {
+  text-shadow: 0 6px 22px rgba(2,10,24,0.5);
+}
