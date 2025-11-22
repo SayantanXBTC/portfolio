@@ -1,33 +1,37 @@
-/* -------------------------------------- */
-/* Tailwind Directives (Required)         */
-/* -------------------------------------- */
-
+/* ------------------------------- */
+/* Tailwind Base                  */
+/* ------------------------------- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* -------------------------------------- */
-/* Global Styles                           */
-/* -------------------------------------- */
+/* ------------------------------- */
+/* Global Styles                  */
+/* ------------------------------- */
 
 html, body {
   margin: 0;
   padding: 0;
-  background: #000;
   scroll-behavior: smooth;
+  background: #020617; /* dark cosmic */
   font-family: 'Inter', sans-serif;
 }
 
-/* Prevent weird scroll gap above Navbar */
-body {
-  padding-top: 0 !important;
+/* For dark mode */
+html.dark {
+  background: #000;
 }
 
-/* -------------------------------------- */
-/* Custom Utility Classes                  */
-/* -------------------------------------- */
+/* Smooth transitions for theme */
+* {
+  transition: background-color .25s ease, color .25s ease;
+}
 
-/* Glassmorphism Box */
+/* ------------------------------- */
+/* Utility + Custom Classes       */
+/* ------------------------------- */
+
+/* Glass morphism */
 .glass {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(14px);
@@ -35,135 +39,38 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Neon Border */
-.neon {
-  box-shadow: 0 0 18px rgba(14, 165, 233, 0.4);
-  border: 1px solid rgba(14, 165, 233, 0.55);
+/* Floating animation (used for hero image) */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
-/* Hero Gradient Background */
-.bg-hero-gradient {
-  background: linear-gradient(to bottom, #000000, #0a1224, #000000);
-}
-
-/* Clamp utilities used for hero heading */
-.clamp-hero {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-}
-
-/* -------------------------------------- */
-/* Animations                              */
-/* -------------------------------------- */
-
-/* Floating Image Animation */
 @keyframes float {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-14px); }
+  50% { transform: translateY(-12px); }
   100% { transform: translateY(0px); }
 }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+/* Fade-up animation for reveals */
+.fade-up {
+  animation: fadeUp 0.6s ease-out both;
 }
 
-/* Fade-in with slight upward motion */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0px); }
 }
 
-.fade-up {
-  animation: fadeUp 0.9s ease forwards;
-}
-
-/* Soft Glow Animation */
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 8px rgba(14,165,233,0.4); }
-  50% { box-shadow: 0 0 14px rgba(14,165,233,0.8); }
-}
-
-.glow {
-  animation: glow 3s ease-in-out infinite;
-}
-
-/* Smooth page transitions used by framer-motion fallback */
-.page-transition {
-  animation: fadeUp 0.75s ease;
-}
-
-/* -------------------------------------- */
-/* Scrollbar Styling                       */
-/* -------------------------------------- */
-
+/* Scrollbar styling (sleek dark) */
 ::-webkit-scrollbar {
   width: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #09101d;
+  background: #0a0f1d;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #1e2b40;
+  background: #1e293b;
   border-radius: 6px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #2c3a55;
-}
-
-/* ------------------ Theme variables ------------------ */
-:root {
-  --bg-900: #02040a;
-  --bg-800: #071022;
-  --panel: rgba(8, 13, 23, 0.6);
-  --glass: rgba(255,255,255,0.04);
-  --brand: #2dd0ff;
-  --accent: #7cf0ff;
-  --muted: #98a2b3;
-  --card-shadow: 0 8px 30px rgba(2,6,23,0.6);
-}
-
-/* Light theme override */
-.light {
-  --bg-900: #f8fafc;
-  --bg-800: #eef2f7;
-  --panel: rgba(255,255,255,0.85);
-  --glass: rgba(255,255,255,0.7);
-  --brand: #0ea5e9;
-  --muted: #475569;
-}
-
-/* apply background variables */
-body.dark, :root.dark {
-  background: linear-gradient(180deg, var(--bg-900), #000);
-  color: #e6eef6;
-}
-body.light, :root.light {
-  background: linear-gradient(180deg, var(--bg-800), #f1f5f9);
-  color: #0b1220;
-}
-
-/* glass + neon */
-.glass {
-  background: var(--glass);
-  box-shadow: var(--card-shadow);
-  border: 1px solid rgba(255,255,255,0.04);
-}
-
-.text-brand {
-  color: var(--brand);
-}
-
-/* starfield canvas sits behind particles - ensure non interactive */
-canvas.pointer-events-none { pointer-events: none; }
-
-/* tilt card tweak */
-.react-parallax-tilt {
-  transform-style: preserve-3d;
-}
-
-/* subtle heading glow */
-h1, h2, h3 {
-  text-shadow: 0 6px 22px rgba(2,10,24,0.5);
+  background: #334155;
 }

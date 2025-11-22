@@ -1,33 +1,26 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react"
+import { FaCertificate } from "react-icons/fa"
 
-export default function Skills() {
-  const badges = [
-    'C++','JavaScript','Java','Python','React','NodeJS',
-    'Selenium','MySQL','MongoDB','Jenkins','Docker','Rest Assured'
-  ]
+const certificates = [
+  { title: "Foundations Of Virtual Reality - IIT Madras (NPTEL)", date: "Nov 2025", id: "NPTEL-VR" },
+  { title: "Master Generative AI and Tools - Udemy", date: "Aug 2025", id: "UD-GAI" },
+  { title: "Build Generative AI Apps (No-Code) - Udemy", date: "Aug 2025", id: "UD-NO-CODE" }
+]
 
+export default function Certificates() {
   return (
-    <section className="min-h-screen flex flex-col items-center pt-28 px-6 text-center">
-      <h1 className="text-4xl text-sky-400 font-bold mb-8" data-aos="fade-up">
-        Skills
-      </h1>
+    <section className="min-h-screen pt-28 px-6">
+      <h1 className="text-4xl text-sky-300 font-bold mb-8" data-aos="fade-up">Certificates</h1>
 
-      <div
-        className="max-w-5xl w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"
-        data-aos="fade-up"
-      >
-        {badges.map((b, i) => (
-          <motion.div
-            key={b}
-            whileHover={{ scale: 1.06 }}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            className="glass p-4 rounded-xl text-center shadow-sm"
-          >
-            <div className="font-semibold text-sky-300">{b}</div>
-          </motion.div>
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        {certificates.map((c,i)=>(
+          <article key={c.id} className="glass p-6 rounded-2xl" data-aos="zoom-in" data-aos-delay={i*80}>
+            <div className="flex items-center gap-3">
+              <FaCertificate className="text-brand-400 text-2xl" />
+              <h3 className="text-lg font-semibold text-sky-200">{c.title}</h3>
+            </div>
+            <p className="mt-3 text-slate-300">{c.date}</p>
+          </article>
         ))}
       </div>
     </section>

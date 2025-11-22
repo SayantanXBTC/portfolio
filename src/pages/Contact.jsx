@@ -1,86 +1,62 @@
 import React, { useState } from "react"
 import emailjs from "emailjs-com"
-import { motion } from "framer-motion"
 
-export default function Contact() {
-  const [status, setStatus] = useState("")
+export default function Contact(){
+  const [form, setForm] = useState({ name: "", email: "", message: ""})
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(null)
 
-  const sendMessage = e => {
+  const serviceID = "YOUR_EMAILJS_SERVICE_ID"
+  const templateID = "YOUR_EMAILJS_TEMPLATE_ID"
+  const userID = "YOUR_EMAILJS_USER_ID" // public key
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setStatus("Sending...")
-
-    emailjs
-      .sendForm(
-        "SERVICE_ID",      // ← replace with EmailJS service ID
-        "TEMPLATE_ID",     // ← replace with EmailJS template ID
-        e.target,
-        "USER_ID"          // ← replace with EmailJS public key
-      )
-      .then(() => {
-        setStatus("Message sent!")
-        e.target.reset()
-      })
-      .catch(() => setStatus("Failed to send."))
+    if (!form.name || !form.email || !form.message) {
+      setSuccess({ ok: false, msg: "Please fill all fields." })
+      return
+    }
+    setLoading(true)
+    emailjs.send(serviceID, templateID, {
+      from_name: form.name,
+      from_email: form.email,
+      message: form.message
+    }, userID).then(() => {
+      setLoading(false)
+      setSuccess({ ok: true, msg: "Message sent — thank you!" })
+      setForm({ name: "", email: "", message: "" })
+    }).catch(err => {
+      setLoading(false)
+      setSuccess({ ok: false, msg: "Failed to send — try again later." })
+      console.error(err)
+    })
   }
 
   return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen flex flex-col items-center pt-28 px-6 text-center"
-    >
-      <h1 className="text-4xl text-sky-400 font-bold mb-8" data-aos="fade-up">
-        Contact
-      </h1>
+    <section className="min-h-screen pt-28 px-6">
+      <h1 className="text-4xl text-sky-300 font-bold mb-6" data-aos="fade-up">Contact</h1>
 
-      <motion.form
-        onSubmit={sendMessage}
-        data-aos="fade-up"
-        className="max-w-xl w-full glass p-8 rounded-2xl shadow-lg text-left"
-      >
-        <label className="text-slate-300">Name</label>
-        <input
-          name="from_name"
-          required
-          className="w-full p-3 bg-transparent border border-slate-700 rounded mb-4"
-        />
+      <div className="max-w-3xl mx-auto glass p-6 rounded-2xl" data-aos="fade-up">
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <input name="name" value={form.name} onChange={handleChange} placeholder="Your name" className="p-3 rounded-md bg-slate-900/50 border border-slate-700 text-slate-200" />
+          <input name="email" value={form.email} onChange={handleChange} placeholder="Your email" className="p-3 rounded-md bg-slate-900/50 border border-slate-700 text-slate-200" />
+          <textarea name="message" value={form.message} onChange={handleChange} rows="6" placeholder="Message" className="p-3 rounded-md bg-slate-900/50 border border-slate-700 text-slate-200"></textarea>
 
-        <label className="text-slate-300">Email</label>
-        <input
-          name="from_email"
-          type="email"
-          required
-          className="w-full p-3 bg-transparent border border-slate-700 rounded mb-4"
-        />
+          <div className="flex items-center gap-4">
+            <button type="submit" className="px-6 py-3 bg-sky-600 rounded-xl text-black font-semibold" disabled={loading}>
+              {loading ? "Sending..." : "Send Message"}
+            </button>
 
-        <label className="text-slate-300">Subject</label>
-        <input
-          name="subject"
-          className="w-full p-3 bg-transparent border border-slate-700 rounded mb-4"
-        />
-
-        <label className="text-slate-300">Message</label>
-        <textarea
-          name="message"
-          rows="5"
-          required
-          className="w-full p-3 bg-transparent border border-slate-700 rounded mb-4"
-        ></textarea>
-
-        <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            className="px-6 py-2 bg-brand-500 text-black rounded-lg hover:-translate-y-1 transition"
-          >
-            Send Message
-          </button>
-          <span className="text-slate-400">{status}</span>
-        </div>
-
-        <p className="mt-4 text-slate-500 text-sm">
-          Replace SERVICE_ID, TEMPLATE_ID, USER_ID with EmailJS credentials.
-        </p>
-      </motion.form>
-    </motion.section>
+            {success && (
+              <div className={`p-2 rounded-md ${success.ok ? 'bg-green-700 text-white' : 'bg-red-700 text-white'}`}>
+                {success.msg}
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
+    </section>
   )
 }
