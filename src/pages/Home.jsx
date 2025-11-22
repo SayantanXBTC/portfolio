@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     const t = new Typed(typedRef.current, {
-      strings: ["Automation Engineer", "Particle Physics Researcher", "Researcher"],
+      strings: ["Upcoming Automation Engineer", "Applied Particle Physics Researcher", "Researcher"],
       typeSpeed: 70,
       backSpeed: 40,
       loop: true
@@ -45,7 +45,7 @@ export default function Home() {
       </p>
 
       <h2 className="mt-6 text-xl md:text-2xl text-gray-300" data-aos="fade-up">
-        I am a <span ref={typedRef} className="text-sky-400 font-semibold"></span>
+        I am an <span ref={typedRef} className="text-sky-400 font-semibold"></span>
       </h2>
 
       <div className="mt-8 flex gap-4" data-aos="fade-up">
