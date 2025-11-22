@@ -22,6 +22,7 @@
     "typed.js": "^2.1.0"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.20",
     "gh-pages": "^6.3.0",
