@@ -57,7 +57,7 @@ export default function Home() {
         whileHover={{ scale: 1.02 }}
       >
         <motion.img
-          src="/images/def.jpg"
+          src="/portfolio/images/36e6c82d-6066-407a-a923-b0a3541abcae.jpg"
           alt="Sayantan"
           className="w-[420px] h-[420px] object-cover rounded-xl shadow-xl animate-float"
         />
@@ -67,7 +67,7 @@ export default function Home() {
         className="mt-6 text-sky-300 italic lead max-w-2xl text-center"
         data-aos="fade-up"
       >
-        At the great Plenary Hall at Bharat Mandapam,New Delhi,India
+        At the great Plenary Hall at Bharat Mandapam, New Delhi, India
       </p>
 
       <h2 data-aos="fade-up" className="mt-6 text-xl md:text-2xl text-gray-200">
