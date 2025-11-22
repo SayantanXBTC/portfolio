@@ -55,7 +55,7 @@ export default function Home() {
           GitHub
         </a>
         <a
-          href="https://www.linkedin.com/in/sayantanxbtc"
+          href="https://www.linkedin.com/in/sayantan-bhattacharje/"
           target="_blank"
           rel="noreferrer"
           className="hover:text-sky-300 transition"
@@ -83,7 +83,6 @@ export default function Home() {
         />
       </motion.div>
 
-      {/* CAPTION */}
       <p className="mt-6 text-sky-300 italic max-w-2xl" data-aos="fade-up">
         At the great Plenary Hall at Bharat Mandapam, New Delhi, India
       </p>

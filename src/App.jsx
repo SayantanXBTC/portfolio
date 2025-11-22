@@ -1,11 +1,7 @@
 import React from "react"
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
+
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 
@@ -43,8 +39,6 @@ function AnimatedRoutes() {
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/education" element={<Education />} />
         <Route path="/contact" element={<Contact />} />
-
-        {/* FALLBACK: If any invalid path → redirect to Home */}
         <Route path="*" element={<Home />} />
       </Routes>
     </motion.main>
@@ -53,12 +47,10 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <Router basename="/portfolio">
-      <div className="min-h-screen bg-hero-gradient text-gray-100">
-        <Navbar />
-        <AnimatedRoutes />
-        <Footer />
-      </div>
-    </Router>
+    <div className="min-h-screen bg-hero-gradient text-gray-100">
+      <Navbar />
+      <AnimatedRoutes />
+      <Footer />
+    </div>
   )
 }
