@@ -7,8 +7,9 @@ export default defineConfig({
   // Required for GitHub Pages
   base: "/portfolio/",
 
-  // Cache-busting + predictable hashing
+  // GitHub Pages + Vite cache stability
   build: {
+    sourcemap: true,
     assetsDir: "assets",
     rollupOptions: {
       output: {
