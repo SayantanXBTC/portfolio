@@ -18,7 +18,10 @@ export default function App() {
       <Navbar />
       <main className="pt-20">
         <Routes>
+          {/* Primary Home Route */}
           <Route path="/" element={<Home />} />
+
+          {/* Other routes */}
           <Route path="/about" element={<About />} />
           <Route path="/skills" element={<Skills />} />
           <Route path="/projects" element={<Projects />} />
@@ -27,6 +30,9 @@ export default function App() {
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/education" element={<Education />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* 👇 Fallback route to fix blank first load */}
+          <Route path="*" element={<Home />} />
         </Routes>
       </main>
       <Footer />
