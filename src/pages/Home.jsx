@@ -89,7 +89,7 @@ export default function Home() {
       {/* CV BUTTONS */}
       <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up">
         <a
-          href="/portfolio/public/docs/sayantan-cv.pdf"
+          href="/portfolio/docs/sayantan-cv.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="px-6 py-3 bg-sky-400 text-black rounded-xl shadow-lg hover:-translate-y-1 transition font-semibold"

@@ -30,7 +30,7 @@ export default function Certificates() {
             </ul>
 
             <a
-              href="/portfolio/public/docs/foundation-sb.pdf"
+              href="/portfolio/docs/foundation-sb.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-4 px-5 py-2 bg-sky-400 text-black font-semibold rounded-xl shadow-md hover:opacity-90 transition"
@@ -62,7 +62,7 @@ export default function Certificates() {
             </ul>
 
             <a
-              href="/portfolio/public/docs/master-sayantan.pdf"
+              href="/portfolio/docs/master-sayantan.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-4 px-5 py-2 bg-sky-400 text-black font-semibold rounded-xl shadow-md hover:opacity-90 transition"
@@ -94,7 +94,7 @@ export default function Certificates() {
             </ul>
 
             <a
-              href="/portfolio/public/docs/build-ai.pdf"
+              href="/portfolio/docs/build-ai.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-4 px-5 py-2 bg-sky-400 text-black font-semibold rounded-xl shadow-md hover:opacity-90 transition"

@@ -16,7 +16,8 @@ const internships = [
       "Reduced average request processing time by ~25% and improved test coverage to 88%",
 
     // NEW — certificate file path
-    certificate: "/portfolio/public/docs/Sayantan Bhattacharjee-Certificate _page-0001.jpg"
+    certificate: "/portfolio/docs/sayantan-intern.jpg"
+
   },
 ]
 
@@ -58,7 +59,7 @@ export default function Internships() {
 
             {/* ⭐ View Certificate Button */}
             <a
-              href="/portfolio/public/docs/sayantan-intern.jpg"
+              href={it.certificate}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-5 px-5 py-2 bg-sky-400 text-black font-semibold rounded-xl shadow-md hover:opacity-90 transition"
