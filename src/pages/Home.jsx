@@ -11,8 +11,7 @@ export default function Home() {
     const t = new Typed(typedRef.current, {
       strings: [
         "Upcoming Automation Engineer",
-        "Applied Particle Physics Researcher",
-        "Full-Stack Automation Enthusiast",
+        "Applied Particle Physics Researcher"
       ],
       typeSpeed: 60,
       backSpeed: 35,
@@ -35,7 +34,7 @@ export default function Home() {
         className="text-4xl md:text-5xl font-extrabold text-sky-300 drop-shadow-lg"
         data-aos="fade-down"
       >
-        Hi! I’m <span className="text-sky-400">SayantanXBTC</span>
+        Hi! I’m <span className="text-sky-400">Sayantan Bhattacharjee</span>
       </motion.h1>
 
       {/* TYPED TEXT */}
