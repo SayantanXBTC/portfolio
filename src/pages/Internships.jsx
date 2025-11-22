@@ -58,7 +58,7 @@ export default function Internships() {
 
             {/* ⭐ View Certificate Button */}
             <a
-              href={it.certificate}
+              href="/portfolio/public/docs/sayantan-intern.jpg"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-5 px-5 py-2 bg-sky-400 text-black font-semibold rounded-xl shadow-md hover:opacity-90 transition"
