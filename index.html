@@ -1,5 +1,33 @@
-<!doctype html>
-<html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width, initial-scale=1' /><title>Sayantan Portfolio</title>  <script type="module" crossorigin src="/portfolio/assets/index-DbaMQYjO.js"></script>
-  <link rel="stylesheet" crossorigin href="/portfolio/assets/index-ClZgyiPz.css">
-</head>
-<body class='bg-black text-gray-200'><div id='root'></div></body></html>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/portfolio/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SayantanXBTC</title>
+
+    <!-- 🟦 IMPORTANT: Apply saved theme BEFORE React loads -->
+    <script>
+      const savedTheme = localStorage.getItem("theme") || "dark";
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+
+    <!-- Prevent flash -->
+    <style>
+      html {
+        transition: background-color 0.25s ease, color 0.25s ease;
+      }
+    </style>
+    <script type="module" crossorigin src="/portfolio/assets/index-DhgXxNuK.js"></script>
+    <link rel="stylesheet" crossorigin href="/portfolio/assets/index-CmxBl99X.css">
+  </head>
+
+  <body class="bg-white dark:bg-black text-black dark:text-white">
+    <div id="root"></div>
+
+  </body>
+</html>
