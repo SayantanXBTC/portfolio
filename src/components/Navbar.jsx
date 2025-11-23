@@ -1,55 +1,36 @@
 import React, { useState, useEffect } from "react"
-import { Link, NavLink } from "react-router-dom"
-import { FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi"
+import { Link, NavLink, useLocation } from "react-router-dom"
+import { FiMenu, FiX } from "react-icons/fi"
 
 export default function Navbar() {
-  const [theme, setTheme] = useState("dark")
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // Load saved theme
+  const location = useLocation()
+
+  // Auto-close mobile menu when route changes
   useEffect(() => {
-    const saved = localStorage.getItem("theme") || "dark"
-    setTheme(saved)
-
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [])
-
-  // Toggle theme
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark"
-    setTheme(newTheme)
-    localStorage.setItem("theme", newTheme)
-
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }
+    setMenuOpen(false)
+  }, [location.pathname])
 
   const links = [
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
     { name: "Skills", path: "/skills" },
     { name: "Projects", path: "/projects" },
-    { name: "Research", path: "/research" },
     { name: "Internships", path: "/internships" },
     { name: "Certificates", path: "/certificates" },
     { name: "Achievements", path: "/achievements" },
+    { name: "Research", path: "/research" },
     { name: "Education", path: "/education" },
     { name: "Contact", path: "/contact" },
   ]
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/30 dark:bg-black/40 border-b border-slate-700/30">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-slate-700/20">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
         {/* LOGO */}
-        <Link className="text-sky-400 text-2xl font-bold tracking-wide" to="/">
+        <Link className="text-sky-400 text-2xl font-bold" to="/">
           SayantanXBTC
         </Link>
 
@@ -60,81 +41,58 @@ export default function Navbar() {
               key={link.name}
               to={link.path}
               className={({ isActive }) =>
-                `hover:text-sky-400 transition relative pb-1 
-                ${isActive ? "text-sky-400 font-semibold" : ""}`
+                `hover:text-sky-400 transition ${
+                  isActive ? "text-sky-400 font-semibold" : ""
+                }`
               }
             >
               {link.name}
             </NavLink>
           ))}
-
-          {/* THEME TOGGLE */}
-          <button
-            onClick={toggleTheme}
-            className="ml-4 p-2 rounded-full bg-slate-700/40 hover:bg-slate-600 transition shadow"
-          >
-            {theme === "dark" ? (
-              <FiSun className="text-yellow-300 text-xl" />
-            ) : (
-              <FiMoon className="text-gray-900 text-xl" />
-            )}
-          </button>
         </div>
 
         {/* MOBILE MENU BUTTON */}
         <button
           onClick={() => setMenuOpen(true)}
-          className="md:hidden p-2 text-sky-300"
+          className="md:hidden text-sky-300 p-2"
         >
-          <FiMenu size={26} />
+          <FiMenu size={28} />
         </button>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE OVERLAY MENU */}
       {menuOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm md:hidden z-50"
-          onClick={() => setMenuOpen(false)}
-        >
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm md:hidden z-50">
           <div
-            className="absolute right-0 top-0 h-full w-64 bg-slate-900 shadow-xl p-6 flex flex-col gap-6"
+            className="absolute right-0 top-0 h-full w-72 bg-slate-900 p-6 flex flex-col gap-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* CLOSE BUTTON */}
             <button
-              className="ml-auto text-sky-300 mb-4"
               onClick={() => setMenuOpen(false)}
+              className="text-sky-300 self-end"
             >
               <FiX size={28} />
             </button>
 
-            {links.map((link) => (
-              <NavLink
-                key={link.name}
-                to={link.path}
-                onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  `text-lg ${
-                    isActive
-                      ? "text-sky-400 font-semibold"
-                      : "text-gray-200 hover:text-sky-300"
-                  }`
-                }
-              >
-                {link.name}
-              </NavLink>
-            ))}
-
-            {/* MOBILE THEME BUTTON */}
-            <button
-              onClick={toggleTheme}
-              className="mt-6 p-2 rounded-full bg-slate-700/40 hover:bg-slate-600 transition shadow self-start"
-            >
-              {theme === "dark" ? (
-                <FiSun className="text-yellow-300 text-xl" />
-              ) : (
-                <FiMoon className="text-gray-900 text-xl" />
-              )}
-            </button>
+            {/* MOBILE NAV LINKS */}
+            <div className="flex flex-col gap-4 text-lg">
+              {links.map((link) => (
+                <NavLink
+                  key={link.name}
+                  to={link.path}
+                  className={({ isActive }) =>
+                    `py-1 ${
+                      isActive
+                        ? "text-sky-400 font-semibold"
+                        : "text-gray-200 hover:text-sky-300"
+                    }`
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              ))}
+            </div>
           </div>
         </div>
       )}

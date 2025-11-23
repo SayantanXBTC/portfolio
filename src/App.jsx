@@ -1,6 +1,11 @@
 import React from "react"
-import { Routes, Route, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom"
+import { AnimatePresence, motion } from "framer-motion"
 
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
@@ -20,37 +25,43 @@ function AnimatedRoutes() {
   const location = useLocation()
 
   return (
-    <motion.main
-      key={location.pathname}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
-      className="pt-20"
-    >
-      <Routes location={location}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/skills" element={<Skills />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/research" element={<Research />} />
-        <Route path="/internships" element={<Internships />} />
-        <Route path="/certificates" element={<Certificates />} />
-        <Route path="/achievements" element={<Achievements />} />
-        <Route path="/education" element={<Education />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="*" element={<Home />} />
-      </Routes>
-    </motion.main>
+    <AnimatePresence mode="wait">
+      <motion.main
+        key={location.pathname}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -15 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+        className="pt-20"
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/skills" element={<Skills />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/research" element={<Research />} />
+          <Route path="/internships" element={<Internships />} />
+          <Route path="/certificates" element={<Certificates />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/education" element={<Education />} />
+          <Route path="/contact" element={<Contact />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </motion.main>
+    </AnimatePresence>
   )
 }
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-hero-gradient text-gray-100">
-      <Navbar />
-      <AnimatedRoutes />
-      <Footer />
-    </div>
+    <Router basename="/portfolio">
+      <div className="min-h-screen bg-hero-gradient text-gray-100">
+        <Navbar />
+        <AnimatedRoutes />
+        <Footer />
+      </div>
+    </Router>
   )
 }
