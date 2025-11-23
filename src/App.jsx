@@ -46,7 +46,6 @@ function AnimatedRoutes() {
           <Route path="/education" element={<Education />} />
           <Route path="/contact" element={<Contact />} />
 
-          {/* Fallback */}
           <Route path="*" element={<Home />} />
         </Routes>
       </motion.main>
