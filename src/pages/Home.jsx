@@ -1,67 +1,102 @@
-import React from "react"
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom"
-import { AnimatePresence, motion } from "framer-motion"
+import React, { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
+import Typed from "typed.js"
+import Starfield from "../components/Starfield"
+import heroImage from "../assets/images/def.jpg"
 
-import Navbar from "./components/Navbar"
-import Footer from "./components/Footer"
+export default function Home() {
+  const typedRef = useRef(null)
 
-import Home from "./pages/Home"
-import About from "./pages/About"
-import Skills from "./pages/Skills"
-import Projects from "./pages/Projects"
-import Research from "./pages/Research"
-import Internships from "./pages/Internships"
-import Certificates from "./pages/Certificates"
-import Achievements from "./pages/Achievements"
-import Education from "./pages/Education"
-import Contact from "./pages/Contact"
-
-function AnimatedRoutes() {
-  const location = useLocation()
+  useEffect(() => {
+    const t = new Typed(typedRef.current, {
+      strings: [
+        "Upcoming Automation Engineer",
+        "Applied Particle Physics Researcher"
+      ],
+      typeSpeed: 60,
+      backSpeed: 35,
+      backDelay: 1500,
+      loop: true,
+    })
+    return () => t.destroy()
+  }, [])
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.main
-        key={location.pathname}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -15 }}
-        transition={{ duration: 0.25, ease: "easeInOut" }}
-        className="pt-20"
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative min-h-screen flex flex-col items-center justify-start text-center px-6 pt-32 pb-20"
+    >
+      <Starfield />
+
+      {/* TITLE */}
+      <motion.h1
+        className="text-4xl md:text-5xl font-extrabold text-sky-300 drop-shadow-lg"
+        data-aos="fade-down"
       >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/skills" element={<Skills />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/research" element={<Research />} />
-          <Route path="/internships" element={<Internships />} />
-          <Route path="/certificates" element={<Certificates />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="/contact" element={<Contact />} />
+        Hi! I’m <span className="text-sky-400">Sayantan Bhattacharjee</span>
+      </motion.h1>
 
-          {/* Fallback */}
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </motion.main>
-    </AnimatePresence>
-  )
-}
+      {/* TYPED TEXT */}
+      <h2 className="mt-4 text-xl md:text-2xl text-gray-300" data-aos="fade-up">
+        I am an{" "}
+        <span ref={typedRef} className="text-sky-400 font-semibold"></span>
+      </h2>
 
-export default function App() {
-  return (
-    <Router basename="/portfolio">
-      <div className="min-h-screen bg-hero-gradient text-gray-100">
-        <Navbar />
-        <AnimatedRoutes />
-        <Footer />
+      {/* SOCIAL LINKS */}
+      <div className="mt-6 flex gap-6 text-slate-300 text-lg">
+        <a
+          href="https://github.com/SayantanXBTC"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-sky-300 transition"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://www.linkedin.com/in/sayantan-bhattacharje/"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-sky-300 transition"
+        >
+          LinkedIn
+        </a>
+        <a
+          href="mailto:bhattacharjeesayantan86@gmail.com"
+          className="hover:text-sky-300 transition"
+        >
+          Email
+        </a>
       </div>
-    </Router>
+
+      {/* HERO IMAGE */}
+      <motion.div
+        className="mt-12 p-3 rounded-3xl glass border border-slate-700/40 shadow-2xl"
+        data-aos="zoom-in"
+      >
+        <img
+          src={heroImage}
+          alt="Sayantan"
+          className="w-[330px] h-[330px] md:w-[420px] md:h-[420px] object-cover rounded-2xl shadow-xl animate-float"
+          loading="lazy"
+        />
+      </motion.div>
+
+      <p className="mt-6 text-sky-300 italic max-w-2xl" data-aos="fade-up">
+        At the great Plenary Hall at Bharat Mandapam, New Delhi, India
+      </p>
+
+      {/* CV BUTTONS */}
+      <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up">
+        <a
+          href="/portfolio/docs/sayantan-cv.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-3 bg-sky-400 text-black rounded-xl shadow-lg hover:-translate-y-1 transition font-semibold"
+        >
+          View CV
+        </a>
+      </div>
+    </motion.section>
   )
 }
