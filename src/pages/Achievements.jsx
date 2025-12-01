@@ -23,7 +23,7 @@ const achievements = [
     title: "CPE Multi-Event Winner",
     detail:
       "Won multiple events across debates, quizzes, vocabulary & aptitude at the college level. Regular member of quiz teams and debate squads.",
-    impact: "Overall holistic develpment",
+    impact: "Overall holistic development.",
   },
 ]
 

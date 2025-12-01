@@ -5,10 +5,11 @@ import { motion } from "framer-motion"
 export default function Projects() {
   const projects = [
     {
-      title: "Distributed Microservices Automation Framework",
-      tech: "Selenium • Rest Assured • Docker • Jenkins",
-      desc: "Built a multilayer automation system validating cross-service workflows. Achieved 95% automation coverage.",
-      github: "https://github.com/SayantanXBTC/project-microservices"
+      title: "Humanity OS – Real-Time Carbon & Mood Tracker",
+      tech: "Vite • React • Local ML • LocalForage • REST APIs • Gemini AI",
+      desc: "Built a real-time wellbeing platform combining on-device emotion analysis, carbon tracking, and an AI therapist. Features include advanced mood detection, animated dashboard visualizations, offline-first storage using LocalForage, user authentication, avatar management, and a privacy-first global wellbeing index.",
+      github: "https://github.com/SayantanXBTC/Humanity-OS"
+
     },
     {
       title: "Automated Medical Diagnostic Workflow",
@@ -20,7 +21,7 @@ export default function Projects() {
       title: "Automated Bank Management System",
       tech: "Java Swing • JDBC • MySQL",
       desc: "End-to-end bank GUI with secure DB operations and automated test flows.",
-      github: "https://github.com/SayantanXBTC/project-bank"
+      github: "https://github.com/SayantanXBTC/Bank-Management-System-"
     }
   ]
 

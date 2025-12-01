@@ -94,7 +94,7 @@ export default function Home() {
           rel="noopener noreferrer"
           className="px-6 py-3 bg-sky-400 text-black rounded-xl shadow-lg hover:-translate-y-1 transition font-semibold"
         >
-          View CV
+          View Resume
         </a>
       </div>
     </motion.section>
