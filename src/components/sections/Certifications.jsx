@@ -4,7 +4,6 @@ import {
   motion,
   useAnimationControls,
   useInView,
-  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -21,9 +20,6 @@ import { useLightbox } from "../kit/Lightbox";
 
 const pad = (n) => String(n).padStart(2, "0");
 const N = certificates.length;
-// each sheet lies at its own slight angle, like real paper dropped on a pile
-const TILT = [-2.6, 1.9, -1.3, 2.4, -2, 1.2];
-const SPRING = { type: "spring", stiffness: 200, damping: 26, mass: 0.9 };
 
 const slides = certificates.map((c) => ({
   src: c.image,
@@ -34,29 +30,28 @@ const slides = certificates.map((c) => ({
 const years = certificates.map((c) => Number(c.date.slice(-4)));
 const span = `${Math.min(...years)} — ${Math.max(...years)}`;
 
-/** Where a sheet rests in the pile: depth 0 is on top; lower sheets sit further back in space. */
-function pose(depth, i, peeked = false, reduce = false) {
-  if (depth === 0) return { x: 0, y: 0, z: 0, rotate: 0, rotateX: 0, rotateY: 0, opacity: 1 };
+/**
+ * Where a card rests in the stack. Everything lives in one plane and is layered
+ * by z-index (no depth in space), so cards can never cut through each other;
+ * the cards behind peek out above the one on top, each a little smaller and darker.
+ */
+function pose(depth, peeked = false) {
   return {
-    x: depth * 12 + (peeked ? 70 : 0),
-    y: -depth * 12 - (peeked ? 18 : 0),
-    z: -depth * 42 + (peeked ? 36 : 0),
-    rotate: reduce ? 0 : TILT[i % TILT.length] * (peeked ? 1.7 : 1),
-    rotateX: 0,
-    rotateY: peeked ? -8 : 0,
-    opacity: depth <= 4 || peeked ? 1 : 0,
+    x: peeked ? 56 : 0,
+    y: depth * -24 - (peeked ? 10 : 0),
+    scale: 1 - depth * 0.055,
+    rotate: peeked ? 2.5 : 0,
+    opacity: depth <= 3 || peeked ? 1 : 0,
+    zIndex: N - depth,
   };
 }
 
-// before the pile is seen, every sheet hangs above it, ready to drop
-const DROP = { x: 0, y: -260, z: 320, rotate: 0, rotateX: -55, rotateY: 0, opacity: 0 };
-
 /**
- * One certificate. It drops onto the pile when the pile first comes into view;
- * when it is sent to the bottom (or pulled back to the top) it swings out to the
- * side and comes round, instead of just changing places.
+ * One certificate card. It rises into place when the stack is first seen.
+ * When it leaves the top it slides down and fades, then settles in at the back;
+ * when it comes back to the top it does the reverse.
  */
-function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling }) {
+function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) {
   const reduce = useReducedMotion();
   const controls = useAnimationControls();
   const prev = useRef(depth);
@@ -72,24 +67,24 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
     });
   };
 
-  // drop in, bottom sheet first
+  // rise in, back card first
   useEffect(() => {
     if (!entered || landed.current) return;
     landed.current = true;
     prev.current = depth;
-    const t = pose(depth, i, false, reduce);
+    const t = pose(depth);
     if (reduce) controls.set(t);
-    else run({ ...t, transition: { type: "spring", stiffness: 120, damping: 17, mass: 1.1, delay: 0.2 + (N - 1 - depth) * 0.13 } });
+    else run({ ...t, transition: { duration: 1.1, ease: EASE, delay: 0.15 + (N - 1 - depth) * 0.09 } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entered]);
 
-  // the pile moved
+  // the stack moved
   useEffect(() => {
     if (!landed.current) return;
     const from = prev.current;
     prev.current = depth;
     if (from === depth) return;
-    const t = pose(depth, i, false, reduce);
+    const t = pose(depth);
     if (reduce) {
       controls.set(t);
       return;
@@ -97,46 +92,61 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
     const { k, forward, dir } = move;
     const wrapped = forward ? from < k : from >= k;
     if (!wrapped) {
-      run({ ...t, transition: { ...SPRING, delay: 0.12 } });
+      run({ ...t, transition: { duration: 0.8, ease: EASE, delay: 0.1 } });
       return;
     }
     const order = forward ? from : N - 1 - from;
-    run({
-      x: [null, dir * 360, t.x],
-      y: [null, -46, t.y],
-      z: [null, 140, t.z],
-      rotate: [null, dir * 12, t.rotate],
-      rotateY: [null, dir * 32, 0],
-      rotateX: [null, -10, 0],
-      opacity: [null, 1, t.opacity],
-      transition: { duration: 1.05, times: [0, 0.45, 1], ease: [0.42, 0, 0.18, 1], delay: order * 0.08 },
-    });
+    const timing = { duration: 0.9, times: [0, 0.4, 1], ease: EASE, delay: order * 0.07 };
+    if (forward) {
+      // leaves the top: drops away in front, then reappears at the back
+      run({
+        x: [null, dir * 40, t.x],
+        y: [null, 120, t.y],
+        scale: [null, 0.96, t.scale],
+        rotate: [null, dir * 3, 0],
+        opacity: [null, 0, t.opacity],
+        zIndex: [N + 1, N + 1, t.zIndex],
+        transition: timing,
+      });
+    } else {
+      // comes back to the top: fades from the back, rises in front
+      run({
+        x: [null, 0, t.x],
+        y: [null, 120, t.y],
+        scale: [null, 0.96, t.scale],
+        rotate: [null, 0, 0],
+        opacity: [null, 0, 1],
+        zIndex: [t.zIndex, N + 1, N + 1],
+        transition: timing,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depth]);
 
-  // a line in the index is pointing at this sheet
+  // a line in the index is pointing at this card
   useEffect(() => {
     if (!landed.current || busy.current) return;
-    controls.start({ ...pose(depth, i, peeked, reduce), transition: SPRING });
+    controls.start({ ...pose(depth, peeked), transition: { duration: 0.6, ease: EASE } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [peeked]);
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center"
-      style={{ transformOrigin: "50% 60%" }}
-      initial={reduce ? pose(depth, i, false, true) : DROP}
+      className="absolute inset-x-0 bottom-0"
+      style={{ transformOrigin: "50% 0%" }}
+      initial={reduce ? pose(depth) : { ...pose(depth), y: 80, opacity: 0 }}
       animate={controls}
       drag={top ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.9}
+      dragElastic={0.6}
       onDragStart={() => {
         dragged.current = true;
       }}
       onDragEnd={(_, info) => {
-        if (Math.abs(info.offset.x) > 100 || Math.abs(info.velocity.x) > 550) onFling(info.offset.x < 0 ? 1 : -1);
+        if (Math.abs(info.offset.x) > 90 || Math.abs(info.velocity.x) > 500) onFling(info.offset.x < 0 ? 1 : -1);
       }}
     >
+      {/* the hit area stays still; only the card inside lifts on hover, so it never jitters */}
       <button
         type="button"
         tabIndex={-1}
@@ -146,38 +156,44 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
             dragged.current = false;
             return;
           }
-          if (top) onOpen(i);
-          else onPick(i);
+          if (top) onOpen(certificates.indexOf(cert));
+          else onPick(certificates.indexOf(cert));
         }}
-        className={`relative block w-full overflow-hidden rounded-[3px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.25)] transition-[transform,box-shadow] duration-500 ease-cine ${
-          top
-            ? "cursor-grab hover:-translate-y-2 hover:shadow-[0_50px_80px_-30px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,0,0,0.25)] active:cursor-grabbing motion-reduce:hover:translate-y-0"
-            : "cursor-pointer"
-        }`}
+        className={`group block w-full ${top ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
       >
-        <img src={cert.preview} alt="" draggable={false} loading="lazy" decoding="async" className="pointer-events-none block h-auto w-full" />
-        {/* light falls on the top sheet; the ones beneath sit in its shadow */}
-        <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-black"
-          initial={false}
-          animate={{ opacity: top ? 0 : peeked ? 0.12 : 0.3 + depth * 0.1 }}
-          transition={{ duration: 0.6, ease: EASE }}
-        />
-        {top && (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/10 mix-blend-soft-light"
+        <span
+          className={`relative block overflow-hidden rounded-xl bg-white ring-1 ring-black/10 transition-[transform,box-shadow] duration-500 ease-cine ${
+            top
+              ? "shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.06)] group-hover:-translate-y-1.5 group-hover:shadow-[0_45px_80px_-25px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.1)] motion-reduce:group-hover:translate-y-0"
+              : "shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)]"
+          }`}
+        >
+          <img
+            src={cert.image}
+            alt=""
+            width={2000}
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="pointer-events-none block aspect-[1.36] h-auto w-full object-cover"
           />
-        )}
+          {/* cards further back sit in shadow */}
+          <motion.span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-ink"
+            initial={false}
+            animate={{ opacity: top ? 0 : peeked ? 0.15 : 0.35 + depth * 0.12 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          />
+        </span>
       </button>
     </motion.div>
   );
 }
 
 /**
- * The pile, lying on a desk seen at an angle. It breathes slowly, leans toward
- * the pointer, and the top sheet can be thrown aside or clicked to read.
+ * The stack, seen at a slight angle and leaning gently toward the pointer.
+ * The top card can be thrown aside or clicked to read.
  */
 function Pile({ active, step, goTo, peek, onOpen }) {
   const reduce = useReducedMotion();
@@ -185,8 +201,7 @@ function Pile({ active, step, goTo, peek, onOpen }) {
   const ref = useRef(null);
   const entered = useInView(ref, { once: true, amount: 0.35 });
 
-  // which way the pile last moved, so sheets know which side to swing out on
-  // (away from the index on the left, unless the sheet was thrown by hand)
+  // which way the stack last moved, and whether a card was thrown by hand
   const last = useRef(active);
   const thrown = useRef(null);
   const move = useRef({ k: 1, forward: true, dir: 1 });
@@ -201,24 +216,24 @@ function Pile({ active, step, goTo, peek, onOpen }) {
     step(d);
   };
 
-  const lean = reduce ? 0 : 1;
-  const tx = useSpring(useMotionValue(14 * lean), { stiffness: 80, damping: 18 });
-  const ty = useSpring(useMotionValue(-12 * lean), { stiffness: 80, damping: 18 });
+  const base = reduce ? { x: 0, y: 0 } : { x: 6, y: -7 };
+  const tx = useSpring(base.x, { stiffness: 60, damping: 20 });
+  const ty = useSpring(base.y, { stiffness: 60, damping: 20 });
   const onMove = (e) => {
     if (!fine || reduce) return;
     const r = e.currentTarget.getBoundingClientRect();
-    ty.set(-12 + ((e.clientX - r.left) / r.width - 0.5) * 14);
-    tx.set(14 - ((e.clientY - r.top) / r.height - 0.5) * 10);
+    ty.set(base.y + ((e.clientX - r.left) / r.width - 0.5) * 6);
+    tx.set(base.x - ((e.clientY - r.top) / r.height - 0.5) * 5);
   };
   const onLeave = () => {
-    tx.set(14 * lean);
-    ty.set(-12 * lean);
+    tx.set(base.x);
+    ty.set(base.y);
   };
 
   return (
     <div
       ref={ref}
-      className="relative mx-auto w-full max-w-[40rem] select-none pb-6 pr-10 pt-12 md:pr-16 md:pt-16"
+      className="relative mx-auto w-full max-w-[40rem] select-none px-2 pb-4 pt-6"
       tabIndex={0}
       role="group"
       aria-roledescription="certificate pile"
@@ -231,41 +246,35 @@ function Pile({ active, step, goTo, peek, onOpen }) {
       onPointerMove={onMove}
       onPointerLeave={onLeave}
     >
-      {/* registration marks: the pile sits on a printer's proof */}
-      <span aria-hidden="true" className="pointer-events-none absolute -inset-3 md:-inset-5">
-        {["left-0 top-0 border-l border-t", "right-0 top-0 border-r border-t", "bottom-0 left-0 border-b border-l", "bottom-0 right-0 border-b border-r"].map((c) => (
-          <span key={c} className={`absolute h-4 w-4 border-white/25 ${c}`} />
-        ))}
-      </span>
-
-      <div className="relative aspect-[1.36]" style={{ perspective: 1500 }}>
-        <div className={`absolute inset-0 [transform-style:preserve-3d] ${reduce ? "" : "pile-sway"}`}>
-          <motion.div className="absolute inset-0" style={{ rotateX: tx, rotateY: ty, transformStyle: "preserve-3d" }}>
-            {/* the pile's shadow on the desk */}
-            <motion.span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[6%] bottom-[-4%] top-[18%] rounded-[50%] bg-black blur-2xl"
-              style={{ z: -N * 42 - 30 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: entered ? 0.8 : 0 }}
-              transition={{ duration: 1.6, delay: 0.4 }}
-            />
-            {certificates.map((c, i) => (
-              <Sheet
-                key={c.title}
-                cert={c}
-                i={i}
-                depth={(i - active + N) % N}
-                move={move.current}
-                entered={entered || reduce}
-                peeked={peek === i && i !== active}
-                onPick={goTo}
-                onOpen={onOpen}
-                onFling={fling}
+      <div style={{ perspective: 1800 }}>
+        {/* the cards are flat inside this plane; only the plane itself is tilted */}
+        <motion.div className="relative" style={{ rotateX: tx, rotateY: ty }}>
+          {/* room above for the cards peeking out behind */}
+          <div className="relative pt-[4.5rem]">
+            <div className="relative aspect-[1.36]">
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-[8%] -bottom-8 h-16 rounded-[50%] bg-black blur-2xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: entered ? 0.9 : 0 }}
+                transition={{ duration: 1.4, delay: 0.3 }}
               />
-            ))}
-          </motion.div>
-        </div>
+              {certificates.map((c, i) => (
+                <Sheet
+                  key={c.title}
+                  cert={c}
+                  depth={(i - active + N) % N}
+                  move={move.current}
+                  entered={entered || reduce}
+                  peeked={peek === i && i !== active}
+                  onPick={goTo}
+                  onOpen={onOpen}
+                  onFling={fling}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -355,7 +364,7 @@ function Desk({ active, step, goTo, onOpen, compact, pinned }) {
     <div className="grid w-full items-center gap-14 lg:grid-cols-12 lg:gap-16">
       <Reveal from="up" distance={0.5} className="lg:order-2 lg:col-span-7">
         <Pile active={active} step={step} goTo={goTo} peek={fine ? peek : null} onOpen={onOpen} />
-        <div className="mx-auto mt-6 flex max-w-[40rem] items-center gap-4 pr-10 md:pr-16">
+        <div className="mx-auto mt-8 flex max-w-[40rem] items-center gap-4 px-2">
           <button type="button" onClick={() => step(-1)} disabled={pinned && active === 0} aria-label="Previous certificate" className={nav}>
             <Arrow dir="left" />
           </button>
