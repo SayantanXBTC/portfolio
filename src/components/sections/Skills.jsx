@@ -45,11 +45,17 @@ const BRAND = {
 const DRAWN = { Atom, BrainCircuit, Coffee, Glasses, ListChecks, Network, ScrollText, ShieldCheck, Trophy, Workflow };
 
 // Near-black brand colours would vanish on the page; fall back to paper.
-const tintFor = (item) => {
-  const hex = item.tint ?? (BRAND[item.icon] ? `#${BRAND[item.icon].hex}` : "#efede9");
+const lum = (hex) => {
   const v = parseInt(hex.slice(1), 16);
-  const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-  return lum < 60 ? "#efede9" : hex;
+  return 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
+};
+const plateFor = (item) => {
+  const hex = item.tint ?? (BRAND[item.icon] ? `#${BRAND[item.icon].hex}` : "#2a2a2a");
+  return lum(hex) < 40 ? "#262626" : hex;
+};
+const tintFor = (item) => {
+  const hex = plateFor(item);
+  return lum(hex) < 60 ? "#efede9" : hex;
 };
 
 function Glyph({ item, className }) {
@@ -61,7 +67,67 @@ function Glyph({ item, className }) {
       </svg>
     );
   const Drawn = DRAWN[item.icon];
-  return Drawn ? <Drawn className={className} strokeWidth={1.5} aria-hidden="true" /> : null;
+  return Drawn ? <Drawn className={className} strokeWidth={2.2} aria-hidden="true" /> : null;
+}
+
+// a stable pseudo-random number per skill, so every icon moves on its own rhythm
+const seed = (str) => {
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) % 9973;
+  return h / 9973;
+};
+
+/**
+ * A logo as a solid object: a glossy, rounded plate with real thickness (stacked
+ * slabs), the logo raised off its face (stacked glyph layers), a light sweep and
+ * a soft shadow. It floats and turns on its own, so its depth is always visible.
+ */
+function Icon3D({ item }) {
+  const plate = plateFor(item);
+  const glyph = lum(plate) > 175 ? "#161616" : "#ffffff";
+  const r = seed(item.name);
+  const style = {
+    "--c": plate,
+    "--dur": `${5 + r * 3}s`,
+    "--delay": `${-r * 8}s`,
+  };
+  return (
+    <span className="icon3d block" style={style} aria-hidden="true">
+      <span className="icon3d-shadow" />
+      <span className="icon3d-bob">
+        {/* thickness of the plate */}
+        {[7, 6, 5, 4, 3, 2, 1].map((d) => (
+          <span
+            key={d}
+            className="icon3d-slab"
+            style={{
+              transform: `translateZ(${-d * 1.6}px)`,
+              background: `color-mix(in srgb, var(--c) ${62 - d * 4}%, black)`,
+            }}
+          />
+        ))}
+        <span className="icon3d-face">
+          <span className="icon3d-gloss" />
+        </span>
+        {/* the logo, embossed: darker layers underneath, bright layer on top */}
+        {[1, 2, 3].map((d) => (
+          <span
+            key={d}
+            className="icon3d-glyph"
+            style={{ transform: `translateZ(${d * 1.6}px)`, color: `color-mix(in srgb, ${glyph} 45%, black)` }}
+          >
+            <Glyph item={item} />
+          </span>
+        ))}
+        <span
+          className="icon3d-glyph"
+          style={{ transform: "translateZ(6.4px)", color: glyph, filter: "drop-shadow(0 1px 0 rgba(255,255,255,0.35))" }}
+        >
+          <Glyph item={item} />
+        </span>
+      </span>
+    </span>
+  );
 }
 
 class SceneBoundary extends Component {
@@ -75,9 +141,9 @@ class SceneBoundary extends Component {
 }
 
 /**
- * One skill as a small physical object: it flips up into place, tilts toward the
- * pointer, the logo floats above the face, a sheen follows the cursor and the
- * logo takes its own colour while you look at it.
+ * One skill as a small stage: the tile flips up into place, tilts toward the
+ * pointer and catches a sheen; the 3D icon on it floats on its own rhythm and
+ * lifts and turns once when you look at it.
  */
 function Tile({ item }) {
   const ref = useRef(null);
@@ -109,8 +175,8 @@ function Tile({ item }) {
     <motion.li
       className="[perspective:700px]"
       variants={{
-        hidden: { opacity: 0, rotateX: -75, y: 30 },
-        show: { opacity: 1, rotateX: 0, y: 0, transition: { duration: 1, ease: EASE } },
+        hidden: { opacity: 0, rotateX: -80, rotateY: -40, y: 50, scale: 0.6 },
+        show: { opacity: 1, rotateX: 0, rotateY: 0, y: 0, scale: 1, transition: { duration: 1.3, ease: [0.34, 1.3, 0.64, 1] } },
       }}
     >
       <motion.div
@@ -123,10 +189,11 @@ function Tile({ item }) {
           rotateX: rx,
           rotateY: ry,
           transformStyle: "preserve-3d",
+          transformPerspective: 600,
           borderColor: hot ? `${tint}66` : undefined,
           boxShadow: hot ? `0 30px 60px -30px ${tint}` : undefined,
         }}
-        className="group relative flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500"
+        className="group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500"
       >
         {/* sheen that follows the pointer */}
         <span
@@ -134,17 +201,18 @@ function Tile({ item }) {
           className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           style={{ background: "radial-gradient(120px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.12), transparent 70%)" }}
         />
-        {/* coloured glow under the logo */}
+        {/* coloured glow under the object */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[40%] h-12 w-12 rounded-full blur-2xl transition-opacity duration-500"
-          style={{ background: tint, opacity: hot ? 0.55 : 0, transform: "translate(-50%,-50%) translateZ(10px)" }}
+          className="pointer-events-none absolute left-1/2 top-[40%] h-14 w-14 rounded-full blur-2xl transition-opacity duration-500"
+          style={{ background: tint, opacity: hot ? 0.5 : 0.12, transform: "translate(-50%,-50%) translateZ(4px)" }}
         />
+        {/* the icon: lifts toward you and does one full turn on hover */}
         <span
-          style={{ transform: "translateZ(38px)", color: hot ? tint : "rgba(239,237,233,0.82)" }}
-          className="relative transition-colors duration-500"
+          className="relative block transition-transform duration-[1300ms] ease-cine"
+          style={{ transform: hot ? "translateZ(60px) rotateY(360deg) scale(1.08)" : "translateZ(36px)" }}
         >
-          <Glyph item={item} className="h-8 w-8 transition-transform duration-500 ease-cine group-hover:scale-110 md:h-9 md:w-9" />
+          <Icon3D item={item} />
         </span>
         <span
           style={{ transform: "translateZ(22px)" }}

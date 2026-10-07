@@ -23,10 +23,10 @@ export function SectionHeader({ id, label, note, children }) {
         <p className="label flex shrink-0 items-center gap-3">
           <span className="text-paper">{chapterIndex(id)}</span>
           {note && (
-            <>
+            <span className="hidden items-center gap-3 sm:flex">
               <span className="text-dim">—</span>
               <span>{note}</span>
-            </>
+            </span>
           )}
         </p>
         <motion.span
