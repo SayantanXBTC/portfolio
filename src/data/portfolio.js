@@ -408,6 +408,7 @@ export const foundations = [
 export const certificates = [
   {
     title: "Foundations of Virtual Reality",
+    topic: "Virtual reality",
     org: "IIT Madras (NPTEL)",
     date: "November 2025",
     points: [
@@ -421,12 +422,12 @@ export const certificates = [
   },
   {
     title: "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM",
+    topic: "Generative AI",
     org: "Infosys Springboard",
     date: "August 2025",
     points: [
-      "Finite automata, regular expressions, and context-free grammars",
-      "Turing machines and computational complexity",
-      "Formal language theory and compiler design principles",
+      "Prompt engineering for ChatGPT-4",
+      "Generative AI and large language model (LLM) fundamentals",
     ],
     link: asset("docs/chatgpt.pdf"),
     image: asset("images/certs/chatgpt.webp"),
@@ -434,6 +435,7 @@ export const certificates = [
   },
   {
     title: "Master Generative AI & Tools",
+    topic: "Generative AI",
     org: "Udemy",
     date: "August 2025",
     points: [
@@ -447,6 +449,7 @@ export const certificates = [
   },
   {
     title: "Build Generative AI Apps with No-Code",
+    topic: "Generative AI",
     org: "Infosys Springboard",
     date: "August 2025",
     points: [
@@ -460,6 +463,7 @@ export const certificates = [
   },
   {
     title: "Test Tribe REST Assured Course",
+    topic: "API testing",
     org: "Test Tribe",
     date: "January 2026",
     points: [
@@ -473,6 +477,7 @@ export const certificates = [
   },
   {
     title: "Test Automation using SOAP UI",
+    topic: "API testing",
     org: "LinkedIn Learning",
     date: "January 2026",
     points: [
