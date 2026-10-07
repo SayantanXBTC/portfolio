@@ -279,27 +279,54 @@ export const education = {
 
 // What I know -> what I build with -> what I keep exploring.
 // Every item maps back to the existing skills, projects, certificates or About copy.
+// `icon` is either a brand logo (si*) or a drawn concept icon (lucide), see Skills.jsx.
 export const foundations = [
   {
     key: "engineering",
     title: "Engineering",
     line: "What I work in every day",
-    items: ["Java", "JavaScript", "Python", "React", "Node.js", "Selenium", "TestNG", "JUnit", "REST Assured", "Postman"],
+    items: [
+      { name: "Java", icon: "Coffee", tint: "#E76F00" },
+      { name: "JavaScript", icon: "siJavascript" },
+      { name: "Python", icon: "siPython" },
+      { name: "React", icon: "siReact" },
+      { name: "Node.js", icon: "siNodedotjs" },
+      { name: "Selenium", icon: "siSelenium" },
+      { name: "TestNG", icon: "ListChecks", tint: "#E0533D" },
+      { name: "JUnit", icon: "siJunit5" },
+      { name: "REST Assured", icon: "ShieldCheck", tint: "#5BB974" },
+      { name: "Postman", icon: "siPostman" },
+    ],
   },
   {
     key: "systems",
     title: "Systems",
     line: "How the pieces hold together",
-    items: ["REST APIs", "MongoDB", "MySQL", "JDBC & concurrency", "Docker", "Jenkins", "Maven", "GitHub Actions"],
+    items: [
+      { name: "REST APIs", icon: "Network", tint: "#7FA7FF" },
+      { name: "MongoDB", icon: "siMongodb" },
+      { name: "MySQL", icon: "siMysql" },
+      { name: "JDBC & concurrency", icon: "Workflow", tint: "#E9A23B" },
+      { name: "Docker", icon: "siDocker" },
+      { name: "Jenkins", icon: "siJenkins" },
+      { name: "Maven", icon: "siApachemaven" },
+      { name: "GitHub Actions", icon: "siGithubactions" },
+    ],
   },
   {
     key: "exploration",
     title: "Exploration",
     line: "What I keep coming back to",
-    items: ["Applied particle physics", "History", "Generative AI", "Virtual reality", "WebGL & 3D simulation", "Competitive quizzing"],
+    items: [
+      { name: "Particle physics", icon: "Atom", tint: "#8FD3FF" },
+      { name: "History", icon: "ScrollText", tint: "#D9B77E" },
+      { name: "Generative AI", icon: "BrainCircuit", tint: "#B794F6" },
+      { name: "Virtual reality", icon: "Glasses", tint: "#6EE7B7" },
+      { name: "WebGL & 3D", icon: "siThreedotjs" },
+      { name: "Quizzing", icon: "Trophy", tint: "#F5C451" },
+    ],
   },
 ];
-export const workingStyle = ["Problem Solving", "Team Collaboration", "Communication", "Time Management", "Leadership", "Adaptability"];
 
 export const certificates = [
   {

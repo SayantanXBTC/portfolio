@@ -215,6 +215,35 @@ html {
   }
 }
 
+/* Recognition: the 3D carousel stage (pinned on every screen size) */
+.carousel-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes orb-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6vw, -4vh); }
+}
+@keyframes orb-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5vw, 5vh); }
+}
+@keyframes rise-dust {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: var(--o, 0.6); }
+  85% { opacity: var(--o, 0.6); }
+  100% { transform: translateY(-46vh); opacity: 0; }
+}
+@keyframes orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Hero photo plate: a full-height portrait panel on the right of landscape
    screens; a framed top panel on portrait ones. The type never sits on the face. */
 .hero-plate {
