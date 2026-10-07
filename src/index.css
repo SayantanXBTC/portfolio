@@ -403,3 +403,17 @@ html {
     display: none;
   }
 }
+
+/* Certificate pile: a slow idle sway, so the stack always reads as an object in space */
+@keyframes pile-sway {
+  0%,
+  100% {
+    transform: rotateY(-2.5deg) rotateX(1deg);
+  }
+  50% {
+    transform: rotateY(2.5deg) rotateX(-1deg);
+  }
+}
+.pile-sway {
+  animation: pile-sway 9s ease-in-out infinite;
+}
