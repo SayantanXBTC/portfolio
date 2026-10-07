@@ -8,13 +8,14 @@ export const setLenis = (lenis) => {
 };
 export const getLenis = () => instance;
 
-export function scrollToId(id, { immediate = false } = {}) {
+export function scrollToId(id, { immediate = false, offset = 0 } = {}) {
   const el = document.getElementById(id);
   if (!el) return;
   if (instance) {
-    instance.scrollTo(el, { offset: 0, duration: immediate ? 0 : 1.6, immediate });
+    instance.scrollTo(el, { offset, duration: immediate ? 0 : 1.6, immediate });
   } else {
-    el.scrollIntoView({ behavior: immediate ? "auto" : "smooth", block: "start" });
+    const top = el.getBoundingClientRect().top + window.scrollY + offset;
+    window.scrollTo({ top, behavior: immediate ? "auto" : "smooth" });
   }
 }
 

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { scrollToId } from "../../lib/scroll";
 
 export function Arrow({ className = "", dir = "right" }) {
-  const rotate = { right: 0, up: -45, down: 90, ur: -45 }[dir] ?? 0;
+  const rotate = { right: 0, up: -45, down: 90, left: 180, ur: -45 }[dir] ?? 0;
   return (
     <svg
       aria-hidden="true"

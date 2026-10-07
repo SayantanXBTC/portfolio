@@ -8,3 +8,9 @@ dist
 # Editor / OS
 .vscode
 .DS_Store
+
+# Local project notes (not published)
+projects.md
+
+# Raw screen recordings (compressed copies live in public/videos)
+public/videos/raw/
