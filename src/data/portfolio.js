@@ -87,13 +87,9 @@ export const experience = [
     role: "President",
     org: "ConverseE+ Club",
     summary:
-      "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. Built partnerships with local startups and helped students ship 8 small projects.",
+      "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. I built partnerships with local startups, helped students ship 8 small projects, grew the club's membership and raised sponsorships for our events.",
     points: [],
     impact: "Increased club membership and raised sponsorships for events.",
-    stats: [
-      { value: "15+", label: "workshops, hackathons and mentoring sessions" },
-      { value: "8", label: "student projects shipped" },
-    ],
     tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
     photos: [
       photo("PRES1", "Sayantan at a ConverseE+ Club event", { caption: "ConverseE+ Club" }),
@@ -113,10 +109,6 @@ export const experience = [
       "Created automated test suites for core modules with JUnit and TestNG",
     ],
     impact: "Reduced average request processing time by ~25% and improved test coverage to 88%",
-    gauges: [
-      { value: 88, display: "88%", label: "test coverage" },
-      { value: 25, display: "~25%", label: "faster average request processing" },
-    ],
     tech: ["Java", "JDBC", "Concurrency", "SQL", "JUnit", "TestNG"],
     document: {
       src: asset("images/certs/intern.webp"),

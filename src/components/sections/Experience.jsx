@@ -1,16 +1,38 @@
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useReducedMotion, useSpring } from "framer-motion";
 import { experience } from "../../data/portfolio";
 import { useFinePointer } from "../../hooks/useMedia";
-import { EASE } from "../../lib/asset";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal } from "../kit/Reveal";
 import { MaskLines } from "../kit/Text";
 import { useLightbox } from "../kit/Lightbox";
 import { Stagger, Item } from "../kit/Stagger";
-import { CountUp } from "../work/parts";
 
 const pad = (n) => String(n).padStart(2, "0");
+
+/** Leans its contents toward the pointer, like picking something up to look at it. */
+function useLean(strength = 10) {
+  const fine = useFinePointer();
+  const reduce = useReducedMotion();
+  const rx = useSpring(0, { stiffness: 140, damping: 16 });
+  const ry = useSpring(0, { stiffness: 140, damping: 16 });
+  const on = fine && !reduce;
+  return {
+    style: { rotateX: rx, rotateY: ry, transformPerspective: 1400 },
+    handlers: {
+      onPointerMove: (e) => {
+        if (!on) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        ry.set(((e.clientX - r.left) / r.width - 0.5) * strength);
+        rx.set(-((e.clientY - r.top) / r.height - 0.5) * strength * 0.8);
+      },
+      onPointerLeave: () => {
+        rx.set(0);
+        ry.set(0);
+      },
+    },
+  };
+}
 
 function Tags({ tech }) {
   return (
@@ -44,216 +66,129 @@ function Heading({ item, index, total }) {
 }
 
 /**
- * Two photographs lying on top of each other. They fan apart when you point
- * at them (or tap); the one you point at comes forward; click to see it full size.
+ * The club's photographs as a pair of prints. They lean toward the pointer and
+ * fan apart; click the one behind to bring it forward, click the one in front
+ * to see it full size. On touch: tap to bring forward, tap again to open.
  */
-function PhotoFan({ photos }) {
+function Prints({ photos }) {
   const { open } = useLightbox();
   const reduce = useReducedMotion();
   const fine = useFinePointer();
+  const ref = useRef(null);
+  const entered = useInView(ref, { once: true, amount: 0.35 });
+  const [front, setFront] = useState(0);
   const [spread, setSpread] = useState(false);
-  const [front, setFront] = useState(1);
-  const ref = useRef(null);
-  const entered = useInView(ref, { once: true, amount: 0.4 });
+  const lean = useLean(12);
   const slides = photos.map((p) => ({ src: p.src, alt: p.alt, caption: p.caption ? { title: p.caption, meta: "" } : undefined }));
-  const rest = [
-    { x: "-4%", y: "-4%", rotate: -5 },
-    { x: "4%", y: "6%", rotate: 4 },
-  ];
-  const fanned = [
-    { x: "-16%", y: "-8%", rotate: -9 },
-    { x: "16%", y: "8%", rotate: 8 },
-  ];
+
+  // where each print rests, depending on whether it is in front and whether the pair is fanned
+  const place = (i) => {
+    const isFront = i === front;
+    const side = i === 0 ? -1 : 1;
+    if (reduce) return { x: `${side * 6}%`, y: isFront ? "4%" : "-4%", rotate: 0, scale: isFront ? 1 : 0.94 };
+    return {
+      x: `${side * (spread ? 15 : 7)}%`,
+      y: isFront ? "5%" : "-5%",
+      rotate: side * (spread ? 6 : 3),
+      scale: isFront ? 1 : 0.92,
+    };
+  };
 
   return (
-    <div
-      ref={ref}
-      className="relative mx-auto aspect-[1.25] w-full max-w-[34rem]"
-      onPointerEnter={() => fine && setSpread(true)}
-      onPointerLeave={() => fine && setSpread(false)}
-    >
-      {photos.map((p, i) => (
-        <motion.button
-          key={p.src}
-          type="button"
-          aria-label={`Open photo: ${p.alt}`}
-          className="absolute left-[14%] top-[14%] w-[72%] origin-center"
-          style={{ zIndex: front === i ? 2 : 1 }}
-          initial={reduce ? false : { opacity: 0, x: "0%", y: "12%", rotate: 0 }}
-          animate={reduce ? rest[i] : entered ? { opacity: 1, ...(spread ? fanned[i] : rest[i]) } : { opacity: 0, x: "0%", y: "12%", rotate: 0 }}
-          transition={{ type: "spring", stiffness: 140, damping: 18, delay: entered && !spread ? i * 0.12 : 0 }}
-          onPointerEnter={() => setFront(i)}
-          onClick={() => {
-            if (!fine && !spread) {
-              setSpread(true);
-              return;
-            }
-            open(slides, i);
-          }}
-        >
-          <span className="block bg-paper p-1.5 shadow-[0_40px_70px_-30px_rgba(0,0,0,0.95)] transition-transform duration-500 ease-cine hover:-translate-y-1 md:p-2">
-            <img src={p.src} alt={p.alt} width={p.w} height={p.h} loading="lazy" decoding="async" draggable={false} className="block h-auto w-full" />
-          </span>
-        </motion.button>
-      ))}
-      <p className="label absolute -bottom-2 left-0 right-0 text-center text-dim">{fine ? "Point to spread · click to open" : "Tap to spread · tap again to open"}</p>
-    </div>
-  );
-}
-
-/** A ring that fills to its value when it comes into view. */
-function Gauge({ g }) {
-  const ref = useRef(null);
-  const seen = useInView(ref, { once: true, amount: 0.6 });
-  const reduce = useReducedMotion();
-  const r = 34;
-  return (
-    <div ref={ref} className="flex items-center gap-4">
-      <svg viewBox="0 0 80 80" className="h-20 w-20 -rotate-90" aria-hidden="true">
-        <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
-        <motion.circle
-          cx="40"
-          cy="40"
-          r={r}
-          fill="none"
-          stroke="rgb(var(--accent-strong-rgb))"
-          strokeWidth="5"
-          strokeLinecap="round"
-          initial={{ pathLength: reduce ? g.value / 100 : 0 }}
-          animate={{ pathLength: seen || reduce ? g.value / 100 : 0 }}
-          transition={{ duration: 1.6, ease: EASE, delay: 0.2 }}
-        />
-      </svg>
-      <div>
-        <p className="display text-[clamp(1.6rem,2.4vw,2.2rem)] leading-none">
-          <CountUp value={g.display} start={seen} />
-        </p>
-        <p className="mt-1.5 max-w-[14rem] text-sm leading-snug text-mute">{g.label}</p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * The internship, replayed as a test run: each piece of work passes in turn,
- * then the numbers it moved. "Run again" replays it.
- */
-function Terminal({ item }) {
-  const ref = useRef(null);
-  const seen = useInView(ref, { once: true, amount: 0.5 });
-  const reduce = useReducedMotion();
-  const [run, setRun] = useState(0);
-  const [shown, setShown] = useState(0);
-  const lines = [
-    ...item.points.map((p) => ({ ok: true, text: p })),
-    { meta: true, text: "coverage 88% · avg request time −25%" },
-    { done: true, text: "BUILD SUCCESS" },
-  ];
-
-  useEffect(() => {
-    if (!seen) return undefined;
-    if (reduce) {
-      setShown(lines.length);
-      return undefined;
-    }
-    setShown(0);
-    let i = 0;
-    const t = setInterval(() => {
-      i += 1;
-      setShown(i);
-      if (i >= lines.length) clearInterval(t);
-    }, 520);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seen, run, reduce]);
-
-  return (
-    <div ref={ref} className="overflow-hidden rounded-xl border border-white/[0.1] bg-[#0b0b0b] shadow-[0_50px_100px_-40px_rgba(0,0,0,0.95)]">
-      <div className="flex items-center gap-3 border-b border-white/[0.06] bg-[#111] px-4 py-2.5">
-        <span className="flex gap-1.5" aria-hidden="true">
-          <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-          <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-          <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-        </span>
-        <span className="mx-auto font-mono text-[0.68rem] text-paper/50">techvanto — internship</span>
-        <button
-          type="button"
-          onClick={() => setRun((r) => r + 1)}
-          className="label rounded-full border border-white/15 px-2.5 py-1 text-[0.6rem] text-paper/70 transition-colors hover:border-paper hover:text-paper"
-        >
-          Run again ↻
-        </button>
-      </div>
-      <div className="min-h-[17rem] space-y-2.5 p-5 font-mono text-[0.78rem] leading-relaxed md:p-6 md:text-[0.82rem]" aria-live="polite">
-        <p className="text-paper/50">
-          <span className="text-accent-strong">$</span> mvn test
-        </p>
-        <AnimatePresence initial={false}>
-          {lines.slice(0, shown).map((l, i) => (
-            <motion.p
-              key={`${run}-${i}`}
-              initial={reduce ? false : { opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.35, ease: EASE }}
-              className={l.done ? "pt-2 font-semibold text-[#4ade80]" : l.meta ? "pt-2 text-paper/70" : "flex gap-3 text-paper/85"}
+    <div ref={ref} className="relative">
+      <motion.div
+        className="relative mx-auto aspect-[1.32] w-full"
+        style={lean.style}
+        onPointerEnter={() => fine && setSpread(true)}
+        onPointerLeave={(e) => {
+          lean.handlers.onPointerLeave(e);
+          if (fine) setSpread(false);
+        }}
+        onPointerMove={lean.handlers.onPointerMove}
+      >
+        {photos.map((p, i) => (
+          <motion.button
+            key={p.src}
+            type="button"
+            aria-label={i === front ? `Open photo: ${p.alt}` : `Bring forward: ${p.alt}`}
+            className="absolute inset-x-[9%] top-[8%] origin-center"
+            style={{ zIndex: i === front ? 2 : 1 }}
+            initial={reduce ? false : { opacity: 0, y: "18%", rotate: 0, scale: 0.9 }}
+            animate={entered || reduce ? { opacity: 1, ...place(i) } : { opacity: 0, y: "18%", rotate: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 120, damping: 17, delay: entered && !spread ? i * 0.12 : 0 }}
+            onClick={() => (i === front ? open(slides, i) : setFront(i))}
+          >
+            <span
+              className={`block bg-paper p-1.5 transition-[box-shadow,filter] duration-500 md:p-2.5 ${
+                i === front ? "shadow-[0_50px_90px_-35px_rgba(0,0,0,0.95)]" : "shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)] brightness-[0.7] hover:brightness-90"
+              }`}
             >
-              {l.ok && <span className="shrink-0 text-[#4ade80]">✓</span>}
-              <span>{l.text}</span>
-            </motion.p>
-          ))}
-        </AnimatePresence>
-        {shown < lines.length && <span className="inline-block h-4 w-2 translate-y-0.5 animate-pulse bg-paper/70" aria-hidden="true" />}
+              <img src={p.src} alt={p.alt} width={p.w} height={p.h} loading="lazy" decoding="async" draggable={false} className="block h-auto w-full" />
+            </span>
+          </motion.button>
+        ))}
+      </motion.div>
+      <div className="mt-4 flex items-center justify-center gap-4">
+        {photos.map((p, i) => (
+          <button
+            key={p.src}
+            type="button"
+            onClick={() => setFront(i)}
+            aria-label={`Show photo ${i + 1}`}
+            aria-pressed={i === front}
+            className="group py-2"
+          >
+            <span className={`block h-[3px] rounded-full transition-all duration-500 ${i === front ? "w-10 bg-accent-strong" : "w-5 bg-white/20 group-hover:bg-white/40"}`} />
+          </button>
+        ))}
+        <span className="label text-dim">{fine ? "Click the back photo to bring it forward" : "Tap a photo to bring it forward"}</span>
       </div>
     </div>
   );
 }
 
-function CertificateLink({ doc }) {
+/** The internship certificate as a document you can pick up and tilt; click to read it. */
+function Certificate({ doc }) {
   const { open } = useLightbox();
+  const lean = useLean(14);
   return (
-    <button
-      type="button"
-      onClick={() => open([{ src: doc.src, alt: doc.alt, caption: doc.caption }], 0)}
-      className="group mt-5 flex w-full items-center gap-4 rounded-xl border border-white/[0.08] p-3 text-left transition-colors duration-500 hover:border-white/20 hover:bg-white/[0.02]"
-    >
-      <img src={doc.preview} alt="" loading="lazy" className="h-14 w-auto rounded-[3px] transition-transform duration-500 ease-cine group-hover:-rotate-3 group-hover:scale-105" />
-      <span className="flex-1">
-        <span className="block text-sm text-paper">{doc.caption.title}</span>
-        <span className="label mt-1 block text-dim">{doc.caption.meta}</span>
-      </span>
-      <span className="label pr-2 text-mute transition-colors group-hover:text-paper">View ↗</span>
-    </button>
+    <figure>
+      <motion.button
+        type="button"
+        onClick={() => open([{ src: doc.src, alt: doc.alt, caption: doc.caption }], 0)}
+        aria-label={`Open ${doc.alt}`}
+        className="group block w-full"
+        style={lean.style}
+        {...lean.handlers}
+      >
+        <span className="block -rotate-2 bg-white p-1 shadow-[0_50px_100px_-40px_rgba(0,0,0,0.95)] transition-transform duration-700 ease-cine group-hover:rotate-0 group-hover:scale-[1.02] motion-reduce:rotate-0">
+          <img src={doc.src} alt={doc.alt} loading="lazy" decoding="async" draggable={false} className="block h-auto w-full" />
+        </span>
+      </motion.button>
+      <figcaption className="label mt-5 flex items-center justify-between text-dim">
+        <span>
+          {doc.caption.title} · {doc.caption.meta}
+        </span>
+        <span className="text-mute">Click to read ↗</span>
+      </figcaption>
+    </figure>
   );
 }
 
 function Leadership({ item, index, total }) {
   return (
-    <article className="grid items-center gap-14 lg:grid-cols-12 lg:gap-16">
-      <div className="lg:col-span-6">
+    <article className="grid items-center gap-14 lg:grid-cols-12 lg:gap-12">
+      <div className="lg:col-span-5">
         <Heading item={item} index={index} total={total} />
-        <Reveal from="none" duration={1.4} className="mt-8 text-[clamp(1rem,1.3vw,1.18rem)] leading-[1.7] text-paper/85">
+        <Reveal from="none" duration={1.4} className="mt-8 text-[clamp(1rem,1.3vw,1.18rem)] leading-[1.75] text-paper/85">
           {item.summary}
         </Reveal>
-        <dl className="mt-10 grid grid-cols-2 gap-6 border-t border-white/[0.08] pt-8">
-          {item.stats.map((s) => (
-            <div key={s.label}>
-              <dd className="display text-[clamp(2.4rem,4vw,3.6rem)] leading-none">
-                <CountUp value={s.value} />
-              </dd>
-              <dt className="mt-2 text-sm leading-snug text-mute">{s.label}</dt>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-8 text-sm text-paper/70">
-          <span className="label mr-3 text-dim">Outcome</span>
-          {item.impact}
-        </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Tags tech={item.tech} />
         </div>
       </div>
-      <div className="lg:col-span-6">
-        <PhotoFan photos={item.photos} />
+      <div className="lg:col-span-7">
+        <Prints photos={item.photos} />
       </div>
     </article>
   );
@@ -261,32 +196,40 @@ function Leadership({ item, index, total }) {
 
 function Internship({ item, index, total }) {
   return (
-    <article className="grid items-start gap-14 lg:grid-cols-12 lg:gap-16">
+    <article className="grid items-center gap-14 lg:grid-cols-12 lg:gap-16">
       <div className="lg:col-span-6">
         <Heading item={item} index={index} total={total} />
-        <Reveal from="none" duration={1.4} className="mt-8 text-[clamp(1rem,1.3vw,1.18rem)] leading-[1.7] text-paper/85">
+        <Reveal from="none" duration={1.4} className="mt-8 text-[clamp(1rem,1.3vw,1.18rem)] leading-[1.75] text-paper/85">
           {item.summary}
         </Reveal>
-        <div className="mt-10 grid gap-8 border-t border-white/[0.08] pt-8 sm:grid-cols-2">
-          {item.gauges.map((g) => (
-            <Gauge key={g.label} g={g} />
+        <Stagger as="ol" className="mt-8 border-t border-white/[0.08]" gap={0.1}>
+          {item.points.map((p, i) => (
+            <Item
+              as="li"
+              kind="left"
+              key={p}
+              className="group relative flex gap-5 border-b border-white/[0.08] py-4 pl-1 text-[0.95rem] text-paper/75 transition-[color,padding] duration-500 ease-cine hover:pl-3 hover:text-paper"
+            >
+              <span aria-hidden="true" className="absolute inset-y-3 left-0 w-px origin-top scale-y-0 bg-accent-strong transition-transform duration-500 ease-cine group-hover:scale-y-100" />
+              <span className="label mt-1 text-dim transition-colors duration-500 group-hover:text-accent-strong">{pad(i + 1)}</span>
+              {p}
+            </Item>
           ))}
-        </div>
+        </Stagger>
         <div className="mt-8">
           <Tags tech={item.tech} />
         </div>
       </div>
-      <div className="lg:col-span-6 lg:pt-4">
-        <Reveal from="up" distance={0.4}>
-          <Terminal item={item} />
-          {item.document && <CertificateLink doc={item.document} />}
+      {item.document && (
+        <Reveal from="right" distance={0.4} className="lg:col-span-6">
+          <Certificate doc={item.document} />
         </Reveal>
-      </div>
+      )}
     </article>
   );
 }
 
-/** Experience: leadership, then engineering. Each one shows its work its own way. */
+/** Experience: leadership, then engineering. */
 export default function Experience() {
   return (
     <section id="experience" aria-labelledby="experience-title" className="section-y relative z-10 overflow-x-clip bg-ink">
