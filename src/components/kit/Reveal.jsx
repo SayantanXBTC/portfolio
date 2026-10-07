@@ -70,6 +70,7 @@ export function ClipReveal({
   delay = 0,
   duration = 1.5,
   amount = 0.15,
+  scaleFrom = 1.25,
   className,
   innerClassName,
   children,
@@ -84,7 +85,12 @@ export function ClipReveal({
     down: "inset(0 0 100% 0)",
   }[from];
 
-  if (reduce) return <div className={className}>{children}</div>;
+  if (reduce)
+    return (
+      <div className={className}>
+        <div className={innerClassName}>{children}</div>
+      </div>
+    );
 
   return (
     <div ref={ref} className={className}>
@@ -96,8 +102,8 @@ export function ClipReveal({
       >
         <motion.div
           className={innerClassName}
-          initial={{ scale: 1.25 }}
-          animate={{ scale: seen ? 1 : 1.25 }}
+          initial={{ scale: scaleFrom }}
+          animate={{ scale: seen ? 1 : scaleFrom }}
           transition={{ duration: duration + 0.6, delay, ease: EASE }}
         >
           {children}

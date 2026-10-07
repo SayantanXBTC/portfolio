@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { sections, profile } from "../../data/portfolio";
+import { sections, profile, chapters } from "../../data/portfolio";
 import { useActiveSection } from "../../hooks/useActiveSection";
 import { deepLink, scrollToId, lockScroll, unlockScroll } from "../../lib/scroll";
 import { EASE } from "../../lib/asset";
 import { ThemeSwitcher } from "../kit/ThemeSwitcher";
 import { Arrow } from "../kit/Button";
 
-const CENTER = sections.filter((s) => s.id !== "contact");
+const CENTER = sections.filter((s) => s.nav !== false);
 const IDS = sections.map((s) => s.id);
 
 function go(id, e) {
@@ -111,7 +111,7 @@ export default function Navbar() {
       <motion.header
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.6, duration: 1.2, ease: EASE }}
+        transition={{ delay: deepLink.id ? 0.4 : 3.0, duration: 1.4, ease: EASE }}
         className={`fixed inset-x-0 top-0 z-[75] transition-[background-color,border-color,backdrop-filter,padding] duration-700 ease-cine border-b ${
           scrolled || open
             ? "border-white/[0.07] bg-ink/70 backdrop-blur-xl py-3"
@@ -130,6 +130,24 @@ export default function Navbar() {
               Sayantan<span className="text-mute font-normal">XBTC</span>
             </span>
           </a>
+
+          {/* small screens: the current section name lives in the header */}
+          <div aria-hidden="true" className="relative h-4 flex-1 overflow-hidden lg:hidden">
+            <AnimatePresence mode="wait">
+              {chapters.some((c) => c.id === active) && (
+                <motion.span
+                  key={active}
+                  className="label absolute inset-0 flex items-center justify-center text-mute"
+                  initial={{ y: "100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "-100%", opacity: 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                >
+                  {String(chapters.findIndex((c) => c.id === active) + 1).padStart(2, "0")} · {chapters.find((c) => c.id === active).label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
 
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-1">
@@ -162,7 +180,7 @@ export default function Navbar() {
             <a
               href="#contact"
               onClick={(e) => go("contact", e)}
-              className="group hidden items-center gap-2.5 rounded-full border border-white/15 px-5 py-2 text-[0.78rem] tracking-wide transition-colors duration-500 hover:border-accent-strong hover:bg-accent sm:inline-flex"
+              className="group hidden items-center gap-2.5 rounded-full border border-white/15 px-5 py-2 text-[0.78rem] tracking-wide transition-colors duration-500 hover:border-paper hover:bg-paper hover:text-ink sm:inline-flex"
             >
               Contact
               <span className="transition-transform duration-500 ease-cine group-hover:translate-x-1">

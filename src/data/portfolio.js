@@ -5,18 +5,15 @@ import { asset } from "../lib/asset";
 export const profile = {
   name: "Sayantan Bhattacharjee",
   brand: "SayantanXBTC",
-  roles: ["Automation Engineer", "Applied Particle Physics Researcher", "Web Developer"],
-  eyebrow: "Automation Engineer / Applied Physics Researcher",
-  headline: ["Reliable systems,", "built with", "experimental rigor."],
-  typed: "I turn complex manual processes into streamlined, repeatable workflows.",
-  intro:
-    "B.Tech Computer Science student at Lovely Professional University, specializing in automation engineering and software quality assurance.",
+  greeting: "Hi, I'm",
+  nameLines: ["Sayantan", "Bhattacharjee."],
+  roles: ["Automation Engineer", "Full-Stack Developer"],
+  signature: "Based in India · Building for the web",
   location: "Agartala, Tripura, India",
   email: "bhattacharjeesayantan86@gmail.com",
   phones: ["+91 9366335595", "+91 8798144052"],
-  phoneLink: "tel:+919366335595",
   resume: asset("docs/Sayantan-General%20CV.pdf"),
-  portrait: asset("images/portrait.webp"),
+  portrait: asset("images/profile.webp"),
   socials: [
     { label: "GitHub", href: "https://github.com/SayantanXBTC" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/sayantan-bhattacharje/" },
@@ -25,16 +22,23 @@ export const profile = {
   ],
 };
 
+// Page order. `nav: false` keeps an entry out of the top navigation.
 export const sections = [
-  { id: "home", label: "Home" },
+  { id: "home", label: "Home", nav: false },
   { id: "about", label: "About" },
   { id: "experience", label: "Experience" },
-  { id: "projects", label: "Projects" },
+  { id: "projects", label: "Work" },
   { id: "skills", label: "Skills" },
-  { id: "achievements", label: "Achievements" },
+  { id: "achievements", label: "Recognition" },
   { id: "education", label: "Education" },
-  { id: "contact", label: "Contact" },
+  { id: "contact", label: "Contact", nav: false },
 ];
+// Numbered chapters (everything between the hero and the closing frame).
+export const chapters = sections.filter((s) => s.id !== "home" && s.id !== "contact");
+export const chapterIndex = (id) => {
+  const i = chapters.findIndex((c) => c.id === id);
+  return `${String(i + 1).padStart(2, "0")} / ${String(chapters.length).padStart(2, "0")}`;
+};
 
 export const about = {
   statement:
@@ -50,19 +54,28 @@ export const about = {
     { label: "Data & DevOps", value: "Docker, Git, GitHub Actions" },
     { label: "Tools", value: "Postman, Maven, Jenkins, Allure Reporting" },
   ],
-  // Every figure here already appears in the existing portfolio content.
-  stats: [
-    { value: 9.1, decimals: 1, suffix: "", label: "CGPA", note: "B.Tech CSE, LPU" },
-    { value: 88, decimals: 0, suffix: "%", label: "Test coverage", note: "Techvanto internship" },
-    { value: 25, decimals: 0, prefix: "~", suffix: "%", label: "Faster requests", note: "Avg. processing time" },
-    { value: 65000, decimals: 0, suffix: "+", label: "Quiz participants", note: "Ranked in the top 100" },
-  ],
 };
 
 export const experience = [
   {
+    kind: "Leadership",
+    year: "Student leadership",
+    role: "President",
+    org: "ConverseE+ Club",
+    summary:
+      "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. Built partnerships with local startups and helped students ship 8 small projects.",
+    points: [],
+    impact: "Increased club membership and raised sponsorships for events.",
+    tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
+    photos: [
+      { src: asset("images/PRES1.webp"), alt: "Sayantan leading a ConverseE+ Club event", caption: "ConverseE+ Club" },
+      { src: asset("images/PRES2.webp"), alt: "ConverseE+ Club session", caption: "Club session" },
+    ],
+  },
+  {
+    kind: "Internship",
     year: "Jun — Aug 2025",
-    role: "JAVA Programming Intern",
+    role: "Java Programming Intern",
     org: "Techvanto Academy",
     summary:
       "Developed advanced Java modules focusing on concurrency, collections, and JDBC. Designed unit & integration tests and improved performance across database operations.",
@@ -73,23 +86,12 @@ export const experience = [
     ],
     impact: "Reduced average request processing time by ~25% and improved test coverage to 88%",
     tech: ["Java", "JDBC", "Concurrency", "SQL", "JUnit", "TestNG"],
-    gallery: [{ src: asset("docs/sayantan-intern.jpg"), alt: "Techvanto Academy internship certificate" }],
-    galleryLabel: "View certificate",
-  },
-  {
-    year: "Leadership",
-    role: "President",
-    org: "ConverseE+ Club",
-    summary:
-      "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. Built partnerships with local startups and helped students ship 8 small projects.",
-    points: [],
-    impact: "Increased club membership and raised sponsorships for events.",
-    tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
-    gallery: [
-      { src: asset("images/PRES1.webp"), alt: "ConverseE+ Club event" },
-      { src: asset("images/PRES2.webp"), alt: "ConverseE+ Club session" },
-    ],
-    galleryLabel: "View gallery",
+    document: {
+      src: asset("images/certs/intern.webp"),
+      preview: asset("images/certs/intern-sm.webp"),
+      alt: "Techvanto Academy internship certificate",
+      caption: { title: "Certificate of completion", meta: "Techvanto Academy · 2025" },
+    },
   },
 ];
 
@@ -172,21 +174,12 @@ export const projects = [
   },
 ];
 
-export const skillGroups = [
-  { title: "Languages", items: ["Java", "JavaScript", "Python", "C", "C++"] },
-  { title: "Frontend", items: ["React", "HTML5", "CSS3", "Tailwind CSS", "Framer Motion"] },
-  { title: "Backend & Databases", items: ["Node.js", "Express.js", "MongoDB", "MySQL", "REST APIs"] },
-  { title: "Testing & Automation", items: ["Selenium", "TestNG", "JUnit", "Postman", "Testing Library"] },
-  { title: "DevOps & Tools", items: ["Git", "Docker", "Jenkins", "Maven", "GitHub Actions"] },
-  {
-    title: "Working Style",
-    items: ["Problem Solving", "Team Collaboration", "Communication", "Time Management", "Leadership", "Adaptability"],
-  },
-];
-
 export const achievements = [
   {
     title: "National Youth Festival 2025",
+    short: "National Youth Festival",
+    year: "2025",
+    where: "Representing Tripura",
     role: "State Representative",
     badge: "National Recognition",
     detail:
@@ -199,6 +192,9 @@ export const achievements = [
   },
   {
     title: "National Space Day 2025",
+    short: "National Space Day",
+    year: "2025",
+    where: "ISRO Sriharikota",
     role: "Quiz Winner",
     badge: "Top 100",
     detail:
@@ -208,6 +204,9 @@ export const achievements = [
   },
   {
     title: "CPE Multi-Event Winner",
+    short: "CPE Multi-Event",
+    year: "College",
+    where: "Debate · Quiz · Aptitude",
     role: "College level",
     badge: "Multi-Talented",
     detail:
@@ -220,32 +219,56 @@ export const achievements = [
   },
 ];
 
-export const education = [
-  {
-    years: "2023 — Now",
-    title: "B.Tech, Computer Science & Engineering",
-    place: "Lovely Professional University",
-    when: "Aug 2023 – Present",
-    details: "CGPA 9.1 · Data Structures, OS, DBMS, Software Testing",
+export const education = {
+  university: {
+    name: "Lovely Professional University",
+    degree: "B.Tech — Computer Science & Engineering",
+    years: "2023 — 2027",
+    cgpa: "8.71",
+    scale: "10",
+    minor: "History",
+    coursework: ["Data Structures", "Operating Systems", "DBMS", "Software Testing"],
     status: "Current",
   },
+  schools: [
+    {
+      years: "2020 — 2022",
+      title: "Intermediate",
+      place: "Hindi Higher Secondary School, Agartala, Tripura",
+      details: "93.6% · Focus: Physics & Maths",
+    },
+    {
+      years: "2019 — 2020",
+      title: "Matriculation",
+      place: "Holy Cross School, Agartala, Tripura",
+      details: "96%",
+    },
+  ],
+};
+
+// What I know -> what I build with -> what I keep exploring.
+// Every item maps back to the existing skills, projects, certificates or About copy.
+export const foundations = [
   {
-    years: "2020 — 2022",
-    title: "Intermediate",
-    place: "Hindi Higher Secondary School, Agartala, Tripura",
-    when: "2020 – 2022",
-    details: "93.6% · Focus: Physics & Maths",
-    status: "Completed",
+    key: "engineering",
+    title: "Engineering",
+    line: "What I work in every day",
+    items: ["Java", "JavaScript", "Python", "React", "Node.js", "Selenium", "TestNG", "JUnit", "REST Assured", "Postman"],
   },
   {
-    years: "2019 — 2020",
-    title: "Matriculation",
-    place: "Holy Cross School, Agartala, Tripura",
-    when: "2019 – 2020",
-    details: "96%",
-    status: "Completed",
+    key: "systems",
+    title: "Systems",
+    line: "How the pieces hold together",
+    items: ["REST APIs", "MongoDB", "MySQL", "JDBC & concurrency", "Docker", "Jenkins", "Maven", "GitHub Actions"],
+  },
+  {
+    key: "exploration",
+    title: "Exploration",
+    line: "What I keep coming back to",
+    items: ["Applied particle physics", "History", "Generative AI", "Virtual reality", "WebGL & 3D simulation", "Competitive quizzing"],
   },
 ];
+export const workingStyle = ["Problem Solving", "Team Collaboration", "Communication", "Time Management", "Leadership", "Adaptability"];
 
 export const certificates = [
   {
@@ -258,6 +281,8 @@ export const certificates = [
       "Practical VR UX and performance optimization",
     ],
     link: asset("docs/foundation-sb.pdf"),
+    image: asset("images/certs/foundation-sb.webp"),
+    preview: asset("images/certs/foundation-sb-sm.webp"),
   },
   {
     title: "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM",
@@ -269,6 +294,8 @@ export const certificates = [
       "Formal language theory and compiler design principles",
     ],
     link: asset("docs/chatgpt.pdf"),
+    image: asset("images/certs/chatgpt.webp"),
+    preview: asset("images/certs/chatgpt-sm.webp"),
   },
   {
     title: "Master Generative AI & Tools",
@@ -280,6 +307,8 @@ export const certificates = [
       "Hands-on projects using modern generative AI tools",
     ],
     link: asset("docs/master-sayantan.pdf"),
+    image: asset("images/certs/master-sayantan.webp"),
+    preview: asset("images/certs/master-sayantan-sm.webp"),
   },
   {
     title: "Build Generative AI Apps with No-Code",
@@ -291,6 +320,8 @@ export const certificates = [
       "End-to-end deployment for AI applications",
     ],
     link: asset("docs/buildgenainocode.pdf"),
+    image: asset("images/certs/buildgenainocode.webp"),
+    preview: asset("images/certs/buildgenainocode-sm.webp"),
   },
   {
     title: "Test Tribe REST Assured Course",
@@ -302,6 +333,8 @@ export const certificates = [
       "Integration with TestNG and Maven for CI/CD",
     ],
     link: asset("docs/microservices.pdf"),
+    image: asset("images/certs/microservices.webp"),
+    preview: asset("images/certs/microservices-sm.webp"),
   },
   {
     title: "Test Automation using SOAP UI",
@@ -313,12 +346,7 @@ export const certificates = [
       "Performance testing and load testing with SOAP UI",
     ],
     link: asset("docs/soapui.pdf"),
+    image: asset("images/certs/soapui.webp"),
+    preview: asset("images/certs/soapui-sm.webp"),
   },
 ];
-
-// Keywords for the scroll-velocity strip (all taken from the skills above).
-export const marqueeTop = ["Java", "Selenium", "TestNG", "REST Assured", "JUnit", "JDBC", "Maven", "Jenkins"];
-export const marqueeBottom = ["React", "Node.js", "MongoDB", "Docker", "GitHub Actions", "Python", "Three.js", "Postman"];
-
-export const videoSrc =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_041744_63efcd78-bf7d-4039-99e2-2461e8a61903.mp4";

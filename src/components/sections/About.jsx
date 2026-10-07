@@ -4,102 +4,84 @@ import { about, profile } from "../../data/portfolio";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal, ClipReveal } from "../kit/Reveal";
 import { WordReveal } from "../kit/Text";
-import { CountUp } from "../kit/CountUp";
 
 function Portrait() {
   const ref = useRef(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  const y = useTransform(scrollYProgress, [0, 1], ["-7%", "7%"]);
 
   return (
-    <div ref={ref} className="relative">
-      <ClipReveal from="right" className="relative aspect-[4/5] overflow-hidden rounded-sm bg-ink-800" innerClassName="h-full w-full">
+    <figure ref={ref}>
+      <ClipReveal
+        from="up"
+        duration={1.7}
+        scaleFrom={1.12}
+        className="relative aspect-[4/5] overflow-hidden bg-ink-800"
+        innerClassName="h-full w-full"
+      >
         <motion.img
           src={profile.portrait}
-          alt="Sayantan presenting at the National Youth Festival"
+          alt="Portrait of Sayantan Bhattacharjee"
           loading="lazy"
           decoding="async"
-          style={reduce ? undefined : { y, scale: 1.18 }}
-          className="h-full w-full object-cover object-[50%_30%]"
+          style={reduce ? undefined : { y, scale: 1.16 }}
+          className="h-full w-full object-cover object-[45%_25%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-accent/10 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent" />
       </ClipReveal>
-      <Reveal from="up" delay={0.5} className="label mt-4 flex items-center justify-between text-dim">
-        <span>National Youth Festival 2025</span>
-        <span>{profile.location.split(",")[0]}</span>
-      </Reveal>
-    </div>
+    </figure>
   );
 }
 
+/** About: the only section that is read, not watched. Words light up as you scroll. */
 export default function About() {
+  const [lead, ...rest] = about.paragraphs;
+
   return (
-    <section id="about" aria-labelledby="about-title" className="relative z-10 overflow-x-clip bg-ink py-28 md:py-44">
+    <section id="about" aria-labelledby="about-title" className="section-y relative z-10 overflow-x-clip bg-ink">
       <div className="container-x">
-        <SectionHeader index="01" label="About" lines={["Engineer", "by method."]} watermark="ABOUT" />
-        <h2 id="about-title" className="sr-only">
-          About me
-        </h2>
+        <SectionHeader id="about" label="About" note="Engineer · Builder · Explorer" />
 
         <WordReveal
           text={about.statement}
-          highlight={["reliable", "experimental"]}
-          className="display max-w-[26ch] text-[clamp(1.9rem,4.6vw,4.6rem)] leading-[1.08] tracking-[-0.035em]"
+          highlight={["reliable", "rigor."]}
+          className="editorial max-w-[24ch] text-[clamp(2rem,4.9vw,5rem)] text-paper"
         />
 
-        <div className="mt-24 grid gap-14 md:mt-36 lg:grid-cols-12 lg:gap-10">
-          <div className="space-y-6 lg:col-span-6">
-            {about.paragraphs.map((p, i) => (
-              <Reveal key={i} from="left" delay={i * 0.12} className="text-base leading-[1.75] text-mute md:text-[1.05rem]">
-                {p}
-              </Reveal>
-            ))}
-
-            <Reveal from="left" delay={0.2} className="pt-8">
-              <p className="label mb-5 text-paper">Technical snapshot</p>
-              <dl className="border-t border-white/10">
-                {about.snapshot.map((row, i) => (
-                  <Reveal
-                    as="div"
-                    key={row.label}
-                    from="left"
-                    distance={0.55}
-                    delay={i * 0.1}
-                    className="group grid grid-cols-[8.5rem_1fr] gap-4 border-b border-white/10 py-4 transition-colors duration-500 hover:bg-white/[0.02]"
-                  >
-                    <dt className="label pt-1 text-dim transition-colors duration-500 group-hover:text-accent-strong">{row.label}</dt>
-                    <dd className="text-sm text-paper/90 md:text-base">{row.value}</dd>
-                  </Reveal>
-                ))}
-              </dl>
-            </Reveal>
-          </div>
-
-          <div className="lg:col-span-5 lg:col-start-8">
+        <div className="mt-32 grid gap-16 md:mt-48 lg:grid-cols-12 lg:gap-12">
+          <div className="lg:col-span-5">
             <Portrait />
           </div>
-        </div>
 
-        <dl className="mt-24 grid grid-cols-2 gap-px overflow-hidden border border-white/10 bg-white/10 md:mt-36 lg:grid-cols-4">
-          {about.stats.map((s, i) => (
-            <Reveal
-              as="div"
-              key={s.label}
-              from={i % 2 === 0 ? "left" : "right"}
-              distance={0.6}
-              delay={i * 0.1}
-              className="bg-ink p-6 transition-colors duration-700 hover:bg-ink-700 md:p-9"
-            >
-              <dd className="display text-[clamp(2.1rem,3.6vw,3.8rem)] text-paper">
-                <CountUp value={s.value} decimals={s.decimals} prefix={s.prefix} suffix={s.suffix} />
-              </dd>
-              <dt className="mt-4 text-sm text-paper">{s.label}</dt>
-              <dd className="label mt-2 text-dim">{s.note}</dd>
+          <div className="lg:col-span-6 lg:col-start-7 lg:pt-24">
+            <Reveal from="none" duration={1.6} className="text-[clamp(1.15rem,1.6vw,1.45rem)] leading-[1.6] text-paper/90">
+              {lead}
             </Reveal>
-          ))}
-        </dl>
+            <div className="mt-10 space-y-6">
+              {rest.map((p, i) => (
+                <Reveal key={i} from="none" delay={0.1 + i * 0.1} duration={1.6} className="body-copy">
+                  {p}
+                </Reveal>
+              ))}
+            </div>
+
+            <div className="mt-20">
+              <p className="label mb-5 text-paper">Technical snapshot</p>
+              <dl className="border-t border-white/[0.08]">
+                {about.snapshot.map((row) => (
+                  <div
+                    key={row.label}
+                    className="group grid grid-cols-[8.5rem_1fr] gap-4 border-b border-white/[0.08] py-4 transition-colors duration-500 hover:bg-white/[0.015]"
+                  >
+                    <dt className="label pt-1 text-dim transition-colors duration-500 group-hover:text-paper">{row.label}</dt>
+                    <dd className="text-sm text-paper/85 md:text-[0.95rem]">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

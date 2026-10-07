@@ -6,9 +6,12 @@ import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal, ClipReveal } from "../kit/Reveal";
 import { Arrow } from "../kit/Button";
 
-function ProjectLinks({ project }) {
+// Each chapter gets its own light: the same accent, placed somewhere new.
+const LIGHT = ["18% 30%", "82% 24%", "24% 80%", "78% 76%", "50% 12%"];
+
+function CaseLinks({ project }) {
   const cls =
-    "group inline-flex items-center gap-3 border-b border-white/25 pb-1.5 text-sm text-paper transition-colors duration-500 hover:border-accent-strong";
+    "group inline-flex items-center gap-3 border-b border-white/20 pb-1.5 text-sm text-paper transition-colors duration-500 hover:border-paper";
   return (
     <div className="flex flex-wrap gap-x-8 gap-y-3">
       {project.live && (
@@ -20,7 +23,7 @@ function ProjectLinks({ project }) {
         </a>
       )}
       <a href={project.github} target="_blank" rel="noopener noreferrer" className={cls} aria-label={`${project.title}: source on GitHub`}>
-        Source
+        Source code
         <span className="transition-transform duration-500 ease-cine group-hover:-translate-y-0.5 group-hover:translate-x-1">
           <Arrow dir="up" />
         </span>
@@ -29,118 +32,126 @@ function ProjectLinks({ project }) {
   );
 }
 
-function Panel({ project, index, total, nextRef, innerRef, pinned }) {
+function Case({ project, index, total, nextRef, innerRef, pinned }) {
   const reduce = useReducedMotion();
   const fallback = useRef(null);
-  // As the next project slides over this one, this one recedes (scale + dim).
+  // As the next chapter rises, this one steps back into the dark.
   const { scrollYProgress } = useScroll({ target: nextRef ?? fallback, offset: ["start end", "start start"] });
   const last = index === total - 1;
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
-  const dim = useTransform(scrollYProgress, [0, 1], [1, 0.25]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.93]);
+  const dim = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
+  const lift = useTransform(scrollYProgress, [0, 1], ["0%", "-3%"]);
   const recede = pinned && !reduce && !last;
-
-  const flip = index % 2 === 1; // alternate which side the image sits on
-  const imgFrom = flip ? "right" : "left";
-  const textFrom = flip ? "left" : "right";
+  const flip = index % 2 === 1;
+  const n = String(index + 1).padStart(2, "0");
 
   return (
-    <div ref={innerRef} className="stack-panel border-t border-white/10 bg-ink">
-      <motion.div
-        style={recede ? { scale, opacity: dim, transformOrigin: "50% 100%" } : undefined}
-        className="container-x flex h-full flex-col justify-center py-14 md:py-12"
+    <div
+      ref={innerRef}
+      className="stack-panel border-t border-white/[0.08] bg-ink"
+      style={{ backgroundImage: `radial-gradient(60% 55% at ${LIGHT[index % LIGHT.length]}, rgb(var(--accent-rgb) / 0.07), transparent 70%)` }}
+    >
+      <motion.article
+        style={recede ? { scale, opacity: dim, y: lift, transformOrigin: "50% 0%" } : undefined}
+        className="container-x flex h-full flex-col justify-center py-20 lg:py-12"
+        aria-labelledby={`case-${index}`}
       >
-        <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-14">
+        {/* case header */}
+        <Reveal from="none" className="label mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 md:mb-10">
+          <span className="text-paper">Case {n}</span>
+          <span className="text-dim">/ {String(total).padStart(2, "0")}</span>
+          <span className="h-px w-10 bg-white/15" />
+          <span>{project.tag}</span>
+          {project.featured && <span className="text-accent-strong">Featured</span>}
+          <span className="ml-auto text-dim">{project.live ? "Live · Open source" : "Open source"}</span>
+        </Reveal>
+
+        <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-14">
           <div className={`lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
             <ClipReveal
-              from={imgFrom}
-              className="group relative aspect-[16/9] max-h-[52vh] w-full overflow-hidden rounded-sm border border-white/10 bg-ink-800 lg:aspect-auto lg:h-[52vh]"
+              from="up"
+              duration={1.6}
+              scaleFrom={1.1}
+              className="group relative aspect-[16/10] w-full overflow-hidden bg-ink-800 lg:aspect-auto lg:h-[54vh]"
               innerClassName="h-full w-full"
             >
-              <img
-                src={project.image}
-                alt={`${project.title} screenshot`}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover object-top transition-transform duration-[1400ms] ease-cine group-hover:scale-[1.06]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
-              <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-accent-strong transition-transform duration-[900ms] ease-cine group-hover:scale-x-100" />
+              <a
+                href={project.live ?? project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+               
+                aria-label={`${project.title}: open ${project.live ? "live site" : "repository"}`}
+                className="block h-full w-full"
+              >
+                <img
+                  src={project.image}
+                  alt={`${project.title} interface`}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover object-top transition-transform duration-[1600ms] ease-cine group-hover:scale-[1.035]"
+                />
+              </a>
+              <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.06]" />
             </ClipReveal>
+            <p className="label mt-3 flex justify-between text-dim">
+              <span>Fig. {n} — {project.title}</span>
+              <span className="hidden sm:inline">Interface</span>
+            </p>
           </div>
 
           <div className={`lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
-            <Reveal from={textFrom} className="mb-5 flex items-center gap-4">
-              <span className="display text-5xl text-accent-strong md:text-6xl">{String(index + 1).padStart(2, "0")}</span>
-              <span className="h-px flex-1 bg-white/10" />
-              <span className="label">{project.tag}</span>
-            </Reveal>
-
-            <Reveal from={textFrom} delay={0.08}>
-              <h3 className="display text-[clamp(2rem,3.8vw,3.8rem)]">{project.title}</h3>
-              {project.featured && <p className="label mt-3 text-accent-strong">Featured project</p>}
-            </Reveal>
-
-            <Reveal from={textFrom} delay={0.16} className="mt-5 text-sm leading-[1.7] text-mute md:text-base">
+            <h3 id={`case-${index}`} className="display text-[clamp(2.2rem,4.2vw,4.4rem)]">
+              {project.title}
+            </h3>
+            <Reveal from="none" delay={0.1} duration={1.4} className="mt-6 body-copy">
               {project.desc}
             </Reveal>
 
-            <ul className="mt-6 hidden border-t border-white/10 md:block">
-              {project.details.map((d, i) => (
-                <Reveal
-                  as="li"
-                  key={d}
-                  from={textFrom}
-                  distance={0.45}
-                  delay={0.2 + i * 0.07}
-                  className="flex gap-3 border-b border-white/10 py-2.5 text-[0.82rem] text-paper/85"
-                >
-                  <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-accent-strong" />
-                  {d}
-                </Reveal>
-              ))}
-            </ul>
+            <dl className="mt-8 border-t border-white/[0.08] text-sm">
+              <div className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5">
+                <dt className="label pt-0.5 text-dim">Stack</dt>
+                <dd className="text-paper/85">{project.tech.join(" / ")}</dd>
+              </div>
+              <div className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5 [@media(max-height:800px)]:hidden">
+                <dt className="label pt-0.5 text-dim">Highlights</dt>
+                <dd>
+                  <ul className="space-y-1.5 text-paper/75">
+                    {project.details.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
 
-            <Reveal from="up" delay={0.3} className="mt-6 flex flex-wrap gap-2">
-              {project.tech.map((t) => (
-                <span key={t} className="label rounded-full border border-white/12 px-3 py-1.5 text-mute">
-                  {t}
-                </span>
-              ))}
-            </Reveal>
-
-            <Reveal from="up" delay={0.35} className="mt-7">
-              <ProjectLinks project={project} />
-            </Reveal>
+            <div className="mt-8">
+              <CaseLinks project={project} />
+            </div>
           </div>
         </div>
-      </motion.div>
+      </motion.article>
     </div>
   );
 }
 
+/** Selected work: each project is a chapter that takes the whole frame, then steps back. */
 export default function Projects() {
   const pinned = usePinnedLayout();
   const refs = useRef(projects.map(() => ({ current: null })));
 
   return (
     <section id="projects" aria-labelledby="projects-title" className="relative z-10 bg-ink">
-      <div className="container-x overflow-x-clip pb-20 pt-28 md:pb-28 md:pt-44">
-        <SectionHeader
-          index="03"
-          label="Projects"
-          lines={["Selected", "work."]}
-          watermark="PROJECTS"
-        >
-          Five builds across 3D simulation, applied AI, full-stack and Java. Each one open source on GitHub.
+      <div className="container-x overflow-x-clip pb-16 pt-36 md:pb-24 md:pt-52">
+        <SectionHeader id="projects" label="Work" note="Selected case studies">
+          <Reveal from="none" delay={0.3} duration={1.6} className="mt-10 max-w-xl body-copy">
+            Builds across 3D simulation, applied AI, full-stack web and Java. Every one of them is open source.
+          </Reveal>
         </SectionHeader>
-        <h2 id="projects-title" className="sr-only">
-          Projects
-        </h2>
       </div>
 
       <div>
         {projects.map((p, i) => (
-          <Panel
+          <Case
             key={p.title}
             project={p}
             index={i}

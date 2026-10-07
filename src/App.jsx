@@ -3,14 +3,12 @@ import { AccentProvider } from "./context/AccentContext";
 import { LightboxProvider } from "./components/kit/Lightbox";
 import SmoothScroll from "./components/effects/SmoothScroll";
 import Grain from "./components/effects/Grain";
-import CursorEffects from "./components/effects/CursorEffects";
 import ScrollProgress from "./components/layout/ScrollProgress";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import HeroBackground from "./components/hero/HeroBackground";
 import Hero from "./components/hero/Hero";
 import About from "./components/sections/About";
-import Marquee from "./components/sections/Marquee";
 import Experience from "./components/sections/Experience";
 import Projects from "./components/sections/Projects";
 import Skills from "./components/sections/Skills";
@@ -52,14 +50,12 @@ export default function App() {
         <SmoothScroll />
         <ScrollProgress />
         <Grain />
-        <CursorEffects />
         <HeroBackground />
         <Navbar />
 
         <main id="main" tabIndex={-1} className="outline-none">
           <Hero />
           <About />
-          <Marquee />
           <Experience />
           <Projects />
           <Skills />

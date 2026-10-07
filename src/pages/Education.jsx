@@ -11,7 +11,7 @@ export default function Education() {
     {
       title: "B.Tech — Computer Science & Engineering",
       subtitle: "Lovely Professional University • Aug 2023 – Present",
-      details: "CGPA: 9.1 • Coursework: Data Structures, OS, DBMS, Software Testing",
+      details: "CGPA: 8.71 • Coursework: Data Structures, OS, DBMS, Software Testing",
       icon: <FaGraduationCap />,
       color: "from-blue-500 to-purple-600",
       status: "Current"

@@ -1,150 +1,198 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  useVelocity,
+} from "framer-motion";
 import { certificates, education } from "../../data/portfolio";
+import { useFinePointer } from "../../hooks/useMedia";
 import { EASE } from "../../lib/asset";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal } from "../kit/Reveal";
-import { Arrow } from "../kit/Button";
+import { MaskLines } from "../kit/Text";
+import { useLightbox } from "../kit/Lightbox";
 
-function Certificate({ cert, index, open, onToggle }) {
-  const from = index % 2 === 0 ? "left" : "right";
+const pad = (n) => String(n).padStart(2, "0");
+const PREVIEW_W = 340;
+
+const certSlides = certificates.map((c) => ({
+  src: c.image,
+  alt: `${c.title} certificate`,
+  caption: { title: c.title, meta: `${c.org} · ${c.date}`, points: c.points, link: c.link },
+}));
+
+/** The certificate follows the pointer like a document slid across a desk. */
+function FloatingPreview({ cert, x, y }) {
+  const reduce = useReducedMotion();
+  const sx = useSpring(x, { stiffness: 150, damping: 20, mass: 0.6 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20, mass: 0.6 });
+  const vx = useVelocity(sx);
+  const tilt = useSpring(useTransform(vx, [-1600, 0, 1600], [-7, -1.5, 4], { clamp: true }), { stiffness: 120, damping: 18 });
+  const left = useTransform(sx, (v) => (v > window.innerWidth * 0.6 ? v - PREVIEW_W - 36 : v + 36));
+  const top = useTransform(sy, (v) => v - 120);
+
   return (
-    <Reveal as="li" from={from} distance={0.7} delay={index * 0.05} className="group relative border-b border-white/10">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={`cert-${index}`}
-        className="relative flex w-full items-baseline gap-4 py-6 text-left md:gap-8 md:py-8"
-      >
-        <span className={`label w-7 shrink-0 transition-colors duration-500 ${open ? "text-accent-strong" : "text-dim"}`}>
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span
-            className={`display block text-[clamp(1.25rem,2.4vw,2.2rem)] leading-[1.1] transition-transform duration-700 ease-cine ${
-              open ? "translate-x-2 text-paper" : "group-hover:translate-x-2"
-            }`}
-          >
-            {cert.title}
-          </span>
-          <span className="mt-2 block text-sm text-mute">{cert.org}</span>
-        </span>
-        <span className="label hidden shrink-0 text-dim sm:block">{cert.date}</span>
-        <span
-          aria-hidden="true"
-          className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-all duration-500 ease-cine ${
-            open ? "rotate-45 border-accent-strong bg-accent" : "border-white/15 group-hover:border-accent-strong"
-          }`}
-        >
-          <svg viewBox="0 0 12 12" className="h-3 w-3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round">
-            <path d="M6 1v10M1 6h10" />
-          </svg>
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute -bottom-px left-0 h-px w-full origin-left scale-x-0 bg-accent-strong transition-transform duration-[900ms] ease-cine group-hover:scale-x-100"
-        />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            id={`cert-${index}`}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.8, ease: EASE }}
-            className="overflow-hidden"
-          >
-            <div className="grid gap-6 pb-8 pl-11 md:grid-cols-12 md:pl-[3.75rem]">
-              <ul className="space-y-3 md:col-span-8">
-                {cert.points.map((p, i) => (
-                  <motion.li
-                    key={p}
-                    initial={{ opacity: 0, x: 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.12 + i * 0.08, duration: 0.8, ease: EASE }}
-                    className="flex gap-3 text-sm text-paper/85 md:text-base"
-                  >
-                    <span className="mt-[0.6rem] h-1 w-1 shrink-0 rounded-full bg-accent-strong" />
-                    {p}
-                  </motion.li>
-                ))}
-              </ul>
-              <div className="md:col-span-4 md:text-right">
-                <a
-                  href={cert.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group/link inline-flex items-center gap-3 border-b border-white/25 pb-1.5 text-sm text-paper transition-colors duration-500 hover:border-accent-strong"
-                >
-                  View certificate
-                  <span className="transition-transform duration-500 ease-cine group-hover/link:-translate-y-0.5 group-hover/link:translate-x-1">
-                    <Arrow dir="up" />
-                  </span>
-                </a>
-              </div>
-            </div>
-          </motion.div>
+    <motion.div
+      aria-hidden="true"
+      className="pointer-events-none fixed left-0 top-0 z-[70]"
+      style={reduce ? { x: left, y: top } : { x: left, y: top, rotate: tilt }}
+    >
+      <AnimatePresence mode="popLayout">
+        {cert && (
+          <motion.img
+            key={cert.preview}
+            src={cert.preview}
+            alt=""
+            width={PREVIEW_W}
+            className="block rounded-[2px] shadow-[0_50px_100px_-30px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.06)]"
+            style={{ width: PREVIEW_W }}
+            initial={{ opacity: 0, scale: 0.86, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.25 } }}
+            transition={{ duration: 0.55, ease: EASE }}
+          />
         )}
       </AnimatePresence>
-    </Reveal>
+    </motion.div>
   );
 }
 
-export default function Education() {
-  const [open, setOpen] = useState(0);
+function Certifications() {
+  const { open } = useLightbox();
+  const fine = useFinePointer();
+  const [hover, setHover] = useState(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   return (
-    <section id="education" aria-labelledby="education-title" className="relative z-10 overflow-x-clip bg-ink py-28 md:py-44">
-      <div className="container-x">
-        <SectionHeader index="06" label="Education" lines={["Foundations", "& learning."]} watermark="EDUCATION" align="right" />
-        <h2 id="education-title" className="sr-only">
-          Education and certificates
-        </h2>
+    <div className="mt-40 md:mt-56">
+      <div className="mb-12 flex items-end justify-between gap-6">
+        <MaskLines as="h3" lines={["Certifications"]} className="display text-[clamp(2rem,4.2vw,3.8rem)]" />
+        <p className="label pb-2 text-dim">{fine ? "Hover to preview · click to open" : "Tap to open"}</p>
+      </div>
 
-        <ol className="border-t border-white/10">
-          {education.map((e, i) => (
-            <li key={e.title} className="group relative grid gap-4 border-b border-white/10 py-8 md:grid-cols-12 md:gap-10 md:py-12">
-              <Reveal from="left" delay={i * 0.06} className="md:col-span-3">
-                <p className="display text-[clamp(1.8rem,3.2vw,3rem)] text-paper/35 transition-colors duration-700 group-hover:text-accent-strong">
-                  {e.years}
-                </p>
-              </Reveal>
-              <Reveal from="right" delay={i * 0.06 + 0.08} className="md:col-span-7">
-                <h3 className="display text-[clamp(1.5rem,2.8vw,2.6rem)]">{e.title}</h3>
-                <p className="mt-3 text-mute">{e.place}</p>
-                <p className="mt-2 text-sm text-paper/80">{e.details}</p>
-              </Reveal>
-              <Reveal from="right" delay={i * 0.06 + 0.16} className="md:col-span-2 md:text-right">
-                <span
-                  className={`label inline-block rounded-full border px-3.5 py-2 ${
-                    e.status === "Current" ? "border-accent text-accent-strong" : "border-white/15 text-dim"
-                  }`}
-                >
-                  {e.status}
-                </span>
-              </Reveal>
+      <ul
+        className="border-t border-white/[0.08]"
+        onPointerMove={(e) => {
+          x.set(e.clientX);
+          y.set(e.clientY);
+        }}
+        onPointerLeave={() => setHover(null)}
+      >
+        {certificates.map((c, i) => (
+          <li key={c.title} className="border-b border-white/[0.08]">
+            <button
+              type="button"
+              onClick={() => open(certSlides, i)}
+              onPointerEnter={() => fine && setHover(i)}
+              onFocus={() => setHover(null)}
+             
+              aria-label={`${c.title}, ${c.org}, ${c.date}. Open certificate`}
+              className="group relative grid w-full grid-cols-[2.25rem_1fr] items-baseline gap-x-4 gap-y-1 py-6 text-left md:grid-cols-[3rem_1fr_12rem_9rem] md:py-8"
+            >
+              <span className={`label transition-colors duration-500 ${hover === i ? "text-accent-strong" : "text-dim"}`}>{pad(i + 1)}</span>
               <span
-                aria-hidden="true"
-                className="absolute -bottom-px left-0 h-px w-full origin-left scale-x-0 bg-accent-strong transition-transform duration-[1100ms] ease-cine group-hover:scale-x-100"
-              />
-            </li>
-          ))}
-        </ol>
+                className={`text-[clamp(1.1rem,2vw,1.75rem)] leading-[1.2] tracking-tight transition-[color,transform] duration-700 ease-cine ${
+                  hover === null ? "text-paper" : hover === i ? "translate-x-2 text-paper" : "text-paper/35"
+                }`}
+              >
+                {c.title}
+              </span>
+              <span className="col-start-2 text-sm text-mute md:col-start-auto">{c.org}</span>
+              <span className="label col-start-2 text-dim md:col-start-auto md:text-right">{c.date}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
-        <div className="mt-28 md:mt-40">
-          <Reveal from="left" className="mb-10 flex items-end justify-between gap-6">
-            <h3 className="display text-[clamp(2rem,4.6vw,4.4rem)]">Certifications</h3>
-            <span className="label pb-2 text-dim">{certificates.length} completed</span>
-          </Reveal>
-          <ul className="border-t border-white/10">
-            {certificates.map((c, i) => (
-              <Certificate key={c.title} cert={c} index={i} open={open === i} onToggle={() => setOpen(open === i ? -1 : i)} />
+      {fine && <FloatingPreview cert={hover !== null ? certificates[hover] : null} x={x} y={y} />}
+    </div>
+  );
+}
+
+/** Education as a story: the university first, then where it started, drawn as a line. */
+export default function Education() {
+  const u = education.university;
+  const line = useRef(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: line, offset: ["start 0.8", "end 0.6"] });
+  const draw = useSpring(scrollYProgress, { stiffness: 90, damping: 24 });
+
+  const record = [
+    { k: "Degree", v: u.degree },
+    { k: "Years", v: u.years },
+    { k: "Minor", v: u.minor },
+    { k: "Coursework", v: u.coursework.join(", ") },
+  ];
+
+  return (
+    <section id="education" aria-labelledby="education-title" className="section-y relative z-10 overflow-x-clip bg-ink">
+      <div className="container-x">
+        <SectionHeader id="education" label="Education" note="2019 — 2027" />
+
+        <Reveal from="none" className="label mb-6 flex items-center gap-3">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent-strong" />
+          <span className="text-paper">{u.status}</span>
+          <span className="text-dim">— {u.years}</span>
+        </Reveal>
+        <MaskLines
+          as="h3"
+          lines={["Lovely Professional", "University."]}
+          className="display text-[clamp(2.6rem,7.4vw,7.6rem)]"
+        />
+
+        <div className="mt-16 grid gap-12 md:mt-24 lg:grid-cols-12">
+          <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-7">
+            {record.map((r, i) => (
+              <Reveal key={r.k} from="none" delay={i * 0.08} className="border-t border-white/[0.08] pt-4">
+                <dt className="label mb-2 text-dim">{r.k}</dt>
+                <dd className="text-paper/85">{r.v}</dd>
+              </Reveal>
             ))}
-          </ul>
+          </dl>
+          <Reveal from="none" delay={0.2} className="lg:col-span-4 lg:col-start-9">
+            <div className="border-t border-white/[0.08] pt-4">
+              <p className="label mb-3 text-dim">CGPA</p>
+              <p className="display text-[clamp(3.4rem,6vw,5.6rem)] tabular-nums">
+                {u.cgpa}
+                <span className="editorial ml-2 text-[0.4em] text-mute">/ {u.scale}</span>
+              </p>
+            </div>
+          </Reveal>
         </div>
+
+        {/* where it started: a line draws down through the earlier chapters */}
+        <div ref={line} className="relative mt-32 pl-8 md:mt-44 md:pl-0">
+          <span aria-hidden="true" className="absolute bottom-0 left-0 top-0 w-px bg-white/[0.08] md:left-[25%]" />
+          <motion.span
+            aria-hidden="true"
+            style={reduce ? undefined : { scaleY: draw }}
+            className="absolute bottom-0 left-0 top-0 w-px origin-top bg-paper/50 md:left-[25%]"
+          />
+          <p className="label mb-12 text-dim md:pl-[calc(25%+2.5rem)]">Before university</p>
+          <ol className="space-y-16">
+            {education.schools.map((s) => (
+              <li key={s.title} className="relative grid gap-3 md:grid-cols-[25%_1fr]">
+                <span aria-hidden="true" className="absolute -left-8 top-2 h-2 w-2 -translate-x-1/2 rounded-full border border-paper/60 bg-ink md:left-[25%]" />
+                <Reveal from="none" className="label text-mute md:pr-10 md:pt-2 md:text-right">
+                  {s.years}
+                </Reveal>
+                <Reveal from="left" distance={0.25} className="md:pl-10">
+                  <h4 className="text-[clamp(1.4rem,2.4vw,2.2rem)] font-medium tracking-tight">{s.title}</h4>
+                  <p className="mt-2 text-mute">{s.place}</p>
+                  <p className="label mt-3 text-dim">{s.details}</p>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <Certifications />
       </div>
     </section>
   );

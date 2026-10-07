@@ -8,6 +8,7 @@ export const useLightbox = () => useContext(LightboxContext);
 
 function Overlay({ images, index, setIndex, close }) {
   const closeRef = useRef(null);
+  const dialogRef = useRef(null);
   const count = images.length;
   const next = useCallback(() => setIndex((i) => (i + 1) % count), [count, setIndex]);
   const prev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count, setIndex]);
@@ -20,6 +21,20 @@ function Overlay({ images, index, setIndex, close }) {
       if (e.key === "Escape") close();
       if (e.key === "ArrowRight") next();
       if (e.key === "ArrowLeft") prev();
+      // keep keyboard focus inside the dialog
+      if (e.key === "Tab" && dialogRef.current) {
+        const f = [...dialogRef.current.querySelectorAll("button, a[href]")];
+        if (!f.length) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -35,6 +50,7 @@ function Overlay({ images, index, setIndex, close }) {
 
   return (
     <motion.div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Image viewer"
@@ -76,17 +92,50 @@ function Overlay({ images, index, setIndex, close }) {
       )}
 
       <AnimatePresence mode="wait">
-        <motion.img
+        <motion.figure
           key={img.src}
-          src={img.src}
-          alt={img.alt ?? ""}
           onClick={(e) => e.stopPropagation()}
-          className="max-h-[86vh] max-w-full rounded-lg object-contain shadow-2xl"
-          initial={{ opacity: 0, scale: 0.94, y: 20 }}
+          className="flex max-w-full flex-col items-center"
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97 }}
-          transition={{ duration: 0.55, ease: EASE }}
-        />
+          transition={{ duration: 0.7, ease: EASE }}
+        >
+          <img
+            src={img.src}
+            alt={img.alt ?? ""}
+            className={`max-w-full rounded-sm object-contain shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)] ${
+              img.caption?.points ? "max-h-[62vh]" : img.caption ? "max-h-[72vh]" : "max-h-[84vh]"
+            }`}
+          />
+          {img.caption && (
+            <figcaption className="mt-6 flex w-full max-w-3xl flex-wrap items-end justify-between gap-4 text-left">
+              <span>
+                <span className="block text-lg font-medium tracking-tight text-paper">{img.caption.title}</span>
+                <span className="label mt-2 block text-dim">{img.caption.meta}</span>
+                {img.caption.points && (
+                  <span className="mt-4 block space-y-1 text-sm text-mute">
+                    {img.caption.points.map((p) => (
+                      <span key={p} className="block">
+                        — {p}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </span>
+              {img.caption.link && (
+                <a
+                  href={img.caption.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="label link-underline pb-1 text-mute hover:text-paper"
+                >
+                  Open PDF ↗
+                </a>
+              )}
+            </figcaption>
+          )}
+        </motion.figure>
       </AnimatePresence>
 
       {count > 1 && (

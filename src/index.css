@@ -12,9 +12,9 @@
   --accent-rgb: 177 18 38;
   --accent-strong-rgb: 214 31 54;
   --accent-soft-rgb: 127 13 29;
+  --on-accent: #ffffff;
 
   --ease-cine: cubic-bezier(0.16, 1, 0.3, 1);
-  --scrub: 0;
 }
 
 html[data-accent="blue"] {
@@ -26,10 +26,10 @@ html[data-accent="blue"] {
   --accent-soft-rgb: 27 63 158;
 }
 html[data-accent="emerald"] {
-  --accent: #0f9d6e;
+  --accent: #0b8a5f;
   --accent-strong: #19c58b;
   --accent-soft: #0a6247;
-  --accent-rgb: 15 157 110;
+  --accent-rgb: 11 138 95;
   --accent-strong-rgb: 25 197 139;
   --accent-soft-rgb: 10 98 71;
 }
@@ -48,6 +48,7 @@ html[data-accent="amber"] {
   --accent-rgb: 217 119 6;
   --accent-strong-rgb: 245 158 11;
   --accent-soft-rgb: 138 75 4;
+  --on-accent: #0a0a0a;
 }
 
 /* ------------------------------------------------------------------ */
@@ -79,7 +80,7 @@ html.lenis body {
 body {
   margin: 0;
   background: #050505;
-  color: #f5f5f5;
+  color: #efede9;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   overflow-x: clip;
 }
@@ -134,10 +135,36 @@ html {
     color: #a1a1a1;
   }
 
+  /* Type system: display (titles) / editorial (statements) / label (technical) / body */
   .display {
     font-weight: 600;
     letter-spacing: -0.045em;
     line-height: 0.95;
+  }
+  .editorial {
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+  }
+  .body-copy {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #a19e99;
+  }
+  @media (min-width: 768px) {
+    .body-copy {
+      font-size: 1.0625rem;
+    }
+  }
+  .section-y {
+    padding-top: 9rem;
+    padding-bottom: 9rem;
+  }
+  @media (min-width: 768px) {
+    .section-y {
+      padding-top: 13rem;
+      padding-bottom: 13rem;
+    }
   }
 
   .hairline {
@@ -160,6 +187,10 @@ html {
     color: transparent;
     -webkit-text-stroke: 1px rgba(255, 255, 255, 0.14);
   }
+
+  .on-accent {
+    color: var(--on-accent);
+  }
 }
 
 /* Stacked, pinned project panels - only where the viewport can hold one */
@@ -174,16 +205,31 @@ html {
   }
 }
 
-/* Pinned horizontal track - same rule */
-.hpin-outer {
-  position: relative;
-}
+/* Pinned archive stage - same idea, slightly more forgiving height */
 @media (min-width: 1024px) and (min-height: 640px) {
-  .hpin-sticky {
+  .pin-stage {
     position: sticky;
     top: 0;
     height: 100svh;
     overflow: hidden;
+  }
+}
+
+/* Hero photo plate: a full-height portrait panel on the right of landscape
+   screens; a framed top panel on portrait ones. The type never sits on the face. */
+.hero-plate {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(56vw, calc(100svh * 0.78));
+}
+@media (orientation: portrait) {
+  .hero-plate {
+    left: 0;
+    bottom: auto;
+    width: auto;
+    height: 60svh;
   }
 }
 

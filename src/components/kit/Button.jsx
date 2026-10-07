@@ -23,8 +23,8 @@ export function Arrow({ className = "", dir = "right" }) {
 const base =
   "group relative inline-flex items-center gap-3 overflow-hidden rounded-full border px-6 py-3 text-[0.8rem] font-medium tracking-wide transition-colors duration-500 ease-cine select-none";
 const variants = {
-  primary: "border-accent bg-accent text-white hover:bg-accent-strong hover:border-accent-strong",
-  ghost: "border-white/15 text-paper hover:border-accent-strong hover:text-white",
+  primary: "border-accent bg-accent on-accent hover:bg-accent-strong hover:border-accent-strong",
+  ghost: "border-white/15 text-paper hover:border-paper hover:text-ink",
 };
 
 /**
@@ -60,10 +60,10 @@ export function Button({ href, variant = "ghost", children, arrow = true, onClic
       {variant === "ghost" && (
         <span
           aria-hidden="true"
-          className="absolute inset-0 -z-0 origin-left scale-x-0 bg-accent/90 transition-transform duration-700 ease-cine group-hover:scale-x-100"
+          className="absolute inset-0 -z-0 origin-left scale-x-0 bg-paper transition-transform duration-700 ease-cine group-hover:scale-x-100"
         />
       )}
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 transition-transform duration-500 ease-cine group-hover:translate-x-0.5">{children}</span>
       {arrow && (
         <span className="relative z-10 transition-transform duration-500 ease-cine group-hover:translate-x-1">
           <Arrow />

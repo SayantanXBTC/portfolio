@@ -15,6 +15,7 @@ export function MaskLines({
   trigger = "view",
   from = "up",
   as = "h2",
+  id,
   renderLine,
 }) {
   const reduce = useReducedMotion();
@@ -27,7 +28,7 @@ export function MaskLines({
   const hidden = from === "left" ? { x: "-105%", y: 0 } : from === "right" ? { x: "105%", y: 0 } : { y: "112%", x: 0 };
 
   return (
-    <Tag ref={ref} className={className}>
+    <Tag ref={ref} id={id} className={className}>
       {lines.map((line, i) => (
         <span key={i} className="block overflow-hidden pb-[0.14em] -mb-[0.14em]">
           <motion.span

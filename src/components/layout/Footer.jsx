@@ -1,14 +1,19 @@
 import { profile } from "../../data/portfolio";
-import { Reveal } from "../kit/Reveal";
 
 export default function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/[0.07] bg-ink">
-      <Reveal from="up" distance={0.4} className="container-x flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
+      <div className="container-x grid gap-6 py-10 md:grid-cols-3 md:items-center">
         <p className="label text-dim">
           {profile.name} <span className="mx-2">·</span> © {new Date().getFullYear()}
         </p>
-        <ul className="flex flex-wrap gap-x-7 gap-y-3">
+        <p className="label text-dim md:text-center">
+          {profile.location} <span className="mx-2">·</span>
+          <a href={`tel:${profile.phones[0].replace(/\s/g, "")}`} className="link-underline pb-0.5 hover:text-paper">
+            {profile.phones[0]}
+          </a>
+        </p>
+        <ul className="flex flex-wrap gap-x-7 gap-y-3 md:justify-end">
           {profile.socials.map((s) => (
             <li key={s.label}>
               <a
@@ -22,7 +27,7 @@ export default function Footer() {
             </li>
           ))}
         </ul>
-      </Reveal>
+      </div>
     </footer>
   );
 }
