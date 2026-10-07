@@ -2,11 +2,24 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { profile } from "../../data/portfolio";
 import { clamp } from "../../lib/asset";
 
+// Page and viewport heights, measured when they change rather than on every
+// scroll frame (reading scrollHeight mid-scroll can force a layout).
+const size = { page: 0, vh: 0 };
+if (typeof window !== "undefined") {
+  const measure = () => {
+    size.page = document.documentElement.scrollHeight;
+    size.vh = window.innerHeight;
+  };
+  measure();
+  new ResizeObserver(measure).observe(document.documentElement);
+  window.addEventListener("resize", measure);
+}
+
 // Visible at the top (opening shot) and again at the very end (closing frame).
 function plateOpacity(y) {
-  const vh = window.innerHeight;
+  const vh = size.vh || window.innerHeight;
   const opening = 1 - y / (vh * 0.9);
-  const toEnd = document.documentElement.scrollHeight - (y + vh);
+  const toEnd = size.page - (y + vh);
   const closing = 1 - toEnd / (vh * 1.1);
   return clamp(Math.max(opening, closing), 0, 1);
 }

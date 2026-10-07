@@ -9,11 +9,9 @@ export default function SmoothScroll() {
 
   useEffect(() => {
     if (reduce) return undefined;
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
+    // lerp (rather than a fixed duration) keeps the page glued to the wheel:
+    // it follows immediately and only eases the last stretch.
+    const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true });
     setLenis(lenis);
 
     let raf;

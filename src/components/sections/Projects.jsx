@@ -28,8 +28,8 @@ const pad = (n) => String(n).padStart(2, "0");
 const sceneId = (p) => `work-${p.slug}`;
 
 const rise = {
-  hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
-  show: (d = 0) => ({ opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 1, delay: d, ease: EASE } }),
+  hidden: { opacity: 0, y: 28 },
+  show: (d = 0) => ({ opacity: 1, y: 0, transition: { duration: 1, delay: d, ease: EASE } }),
 };
 
 /** The five chapters at a glance; each one jumps to its scene. */
@@ -150,8 +150,8 @@ function Device({ project, videoRef, playing, onOpen, beat, style }) {
       {/* bloom and back plate give the window a body */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-[6%] rounded-[2rem] opacity-50 blur-[70px]"
-        style={{ background: project.color, transform: "translateZ(-120px)" }}
+        className="pointer-events-none absolute -inset-[12%] opacity-60"
+        style={{ background: `radial-gradient(closest-side, ${project.color}, transparent)`, transform: "translateZ(-120px)" }}
       />
       <div
         aria-hidden="true"
@@ -339,7 +339,8 @@ function Scene({ project, index, pinned, onOpen, onJump }) {
   // Ambient light in the project's own colour, plus the recording's first frame, far behind.
   const backdrop = (
     <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden" style={cinematic ? { opacity: glow } : undefined}>
-      <img src={project.poster} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-[0.12] blur-2xl" loading="lazy" />
+      {/* a 64px copy stretched to fill: the browser's smoothing does the blur for free */}
+      <img src={project.posterTiny} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-[0.14]" loading="lazy" />
       <div
         className="absolute inset-0"
         style={{

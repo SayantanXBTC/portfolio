@@ -6,8 +6,8 @@ const POP = [0.34, 1.32, 0.64, 1];
 
 const ITEM = {
   rise: {
-    hidden: { opacity: 0, y: 32, filter: "blur(4px)" },
-    show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 1, ease: EASE } },
+    hidden: { opacity: 0, y: 32 },
+    show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } },
   },
   left: {
     hidden: { opacity: 0, x: -40 },

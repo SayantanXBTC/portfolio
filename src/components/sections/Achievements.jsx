@@ -215,12 +215,12 @@ function Carousel() {
             }}
           />
           <div
-            className="absolute left-[8%] top-[14%] h-[38vmax] w-[38vmax] rounded-full opacity-40 blur-[90px]"
-            style={{ background: "rgb(var(--accent-soft-rgb) / 0.55)", animation: "orb-a 18s ease-in-out infinite" }}
+            className="absolute left-[2%] top-[6%] h-[52vmax] w-[52vmax] opacity-40"
+            style={{ background: "radial-gradient(closest-side, rgb(var(--accent-soft-rgb) / 0.55), transparent)", animation: "orb-a 18s ease-in-out infinite" }}
           />
           <div
-            className="absolute bottom-[4%] right-[6%] h-[30vmax] w-[30vmax] rounded-full opacity-30 blur-[100px]"
-            style={{ background: "rgb(var(--accent-rgb) / 0.45)", animation: "orb-b 22s ease-in-out infinite" }}
+            className="absolute bottom-[-4%] right-[0%] h-[44vmax] w-[44vmax] opacity-30"
+            style={{ background: "radial-gradient(closest-side, rgb(var(--accent-rgb) / 0.45), transparent)", animation: "orb-b 22s ease-in-out infinite" }}
           />
           {/* spotlight from above */}
           <div
@@ -251,9 +251,9 @@ function Carousel() {
               key={owner}
               className="stroke-text display absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 select-none text-[34vmin] leading-none"
               style={{ WebkitTextStroke: "1px rgba(255,255,255,0.09)" }}
-              initial={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
               transition={{ duration: 0.9, ease: EASE }}
             >
               {pad(owner + 1)}
@@ -480,11 +480,13 @@ function ArchiveList() {
 }
 
 export default function Achievements() {
+  const sectionRef = useRef(null);
+  const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const reduce = useReducedMotion();
   const slides = useMemo(() => SLIDES.length, []);
 
   return (
-    <section id="achievements" aria-labelledby="achievements-title" className="relative z-10 bg-ink">
+    <section ref={sectionRef} data-live={live} id="achievements" aria-labelledby="achievements-title" className="relative z-10 bg-ink">
       <div className="container-x overflow-x-clip pb-10 pt-36 md:pt-52">
         <SectionHeader id="achievements" label="Recognition" note={`An archive — ${slides} photographs`} />
       </div>

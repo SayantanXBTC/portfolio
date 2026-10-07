@@ -25,7 +25,7 @@ function MobileMenu({ open, onClose, active }) {
           role="dialog"
           aria-modal="true"
           aria-label="Site navigation"
-          className="fixed inset-0 z-[70] flex flex-col bg-ink/[0.97] px-6 pb-8 pt-24 backdrop-blur-xl"
+          className="fixed inset-0 z-[70] flex flex-col bg-ink/[0.98] px-6 pb-8 pt-24"
           initial={{ clipPath: "inset(0 0 100% 0)" }}
           animate={{ clipPath: "inset(0 0 0% 0)" }}
           exit={{ clipPath: "inset(0 0 100% 0)" }}
@@ -114,7 +114,7 @@ export default function Navbar() {
         transition={{ delay: deepLink.id ? 0.4 : 3.0, duration: 1.4, ease: EASE }}
         className={`fixed inset-x-0 top-0 z-[75] transition-[background-color,border-color,backdrop-filter,padding] duration-700 ease-cine border-b ${
           scrolled || open
-            ? "border-white/[0.07] bg-ink/70 backdrop-blur-xl py-3"
+            ? "border-white/[0.07] bg-ink/[0.92] py-3"
             : "border-transparent bg-transparent py-5 md:py-6"
         }`}
       >

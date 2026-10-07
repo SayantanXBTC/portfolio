@@ -124,6 +124,7 @@ const film = (slug) => ({
   slug,
   video: asset(`videos/${slug}.mp4`),
   poster: asset(`videos/${slug}.webp`),
+  posterTiny: asset(`videos/${slug}-tiny.webp`),
   w: 1440,
   h: 788,
 });
@@ -331,26 +332,31 @@ export const achievements = [
 export const education = {
   university: {
     name: "Lovely Professional University",
+    short: "LPU",
     degree: "B.Tech — Computer Science & Engineering",
     years: "2023 — 2027",
     cgpa: "8.71",
     scale: "10",
-    minor: "History",
+    minor: "Software Testing & Quality Assurance",
+    openMinor: "History",
     coursework: ["Data Structures", "Operating Systems", "DBMS", "Software Testing"],
     status: "Current",
+    image: asset("images/lpu.webp"),
   },
   schools: [
     {
       years: "2020 — 2022",
-      title: "Intermediate",
+      title: "Senior Secondary",
       place: "Hindi Higher Secondary School, Agartala, Tripura",
-      details: "93.6% · Focus: Physics & Maths",
+      score: "93.6",
+      image: asset("images/hhss.webp"),
     },
     {
       years: "2019 — 2020",
       title: "Matriculation",
       place: "Holy Cross School, Agartala, Tripura",
-      details: "96%",
+      score: "96",
+      image: asset("images/hcs.webp"),
     },
   ],
 };

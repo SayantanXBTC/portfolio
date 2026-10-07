@@ -60,7 +60,7 @@ export default function CaseStudy({ index, setIndex, close }) {
   }, [index]);
 
   const navBtn =
-    "grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-ink/60 text-paper backdrop-blur transition-colors duration-300 hover:border-paper hover:bg-paper hover:text-ink";
+    "grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-ink/80 text-paper transition-colors duration-300 hover:border-paper hover:bg-paper hover:text-ink";
 
   return createPortal(
     <motion.div
@@ -81,7 +81,7 @@ export default function CaseStudy({ index, setIndex, close }) {
         style={{ backgroundImage: `radial-gradient(70% 50% at 50% 0%, ${p.color}24, transparent 70%)` }}
       >
         {/* top bar */}
-        <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-ink/75 backdrop-blur-md">
+        <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-ink/[0.92]">
           <div className="container-x flex items-center gap-4 py-3.5">
             <p className="label flex min-w-0 items-center gap-3">
               <span className="text-paper">Case {pad(index + 1)}</span>
@@ -144,8 +144,8 @@ export default function CaseStudy({ index, setIndex, close }) {
             >
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-[8%] rounded-[2rem] opacity-40 blur-[90px]"
-                style={{ background: p.color }}
+                className="pointer-events-none absolute -inset-[10%] opacity-50"
+                style={{ background: `radial-gradient(closest-side, ${p.color}, transparent)` }}
               />
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-ink-800 shadow-[0_80px_160px_-60px_rgba(0,0,0,0.95)]">
                 <WindowBar project={p} />

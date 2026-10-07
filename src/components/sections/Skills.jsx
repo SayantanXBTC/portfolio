@@ -96,13 +96,13 @@ function Icon3D({ item }) {
       <span className="icon3d-shadow" />
       <span className="icon3d-bob">
         {/* thickness of the plate */}
-        {[7, 6, 5, 4, 3, 2, 1].map((d) => (
+        {[4, 3, 2, 1].map((d) => (
           <span
             key={d}
             className="icon3d-slab"
             style={{
-              transform: `translateZ(${-d * 1.6}px)`,
-              background: `color-mix(in srgb, var(--c) ${62 - d * 4}%, black)`,
+              transform: `translateZ(${-d * 2.8}px)`,
+              background: `color-mix(in srgb, var(--c) ${62 - d * 7}%, black)`,
             }}
           />
         ))}
@@ -110,11 +110,11 @@ function Icon3D({ item }) {
           <span className="icon3d-gloss" />
         </span>
         {/* the logo, embossed: darker layers underneath, bright layer on top */}
-        {[1, 2, 3].map((d) => (
+        {[1, 2].map((d) => (
           <span
             key={d}
             className="icon3d-glyph"
-            style={{ transform: `translateZ(${d * 1.6}px)`, color: `color-mix(in srgb, ${glyph} 45%, black)` }}
+            style={{ transform: `translateZ(${d * 2.1}px)`, color: `color-mix(in srgb, ${glyph} 45%, black)` }}
           >
             <Glyph item={item} />
           </span>
@@ -204,8 +204,8 @@ function Tile({ item }) {
         {/* coloured glow under the object */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[40%] h-14 w-14 rounded-full blur-2xl transition-opacity duration-500"
-          style={{ background: tint, opacity: hot ? 0.5 : 0.12, transform: "translate(-50%,-50%) translateZ(4px)" }}
+          className="pointer-events-none absolute left-1/2 top-[40%] h-28 w-28 transition-opacity duration-500"
+          style={{ background: `radial-gradient(closest-side, ${tint}, transparent)`, opacity: hot ? 0.5 : 0.12, transform: "translate(-50%,-50%) translateZ(4px)" }}
         />
         {/* the icon: lifts toward you and does one full turn on hover */}
         <span
@@ -233,12 +233,14 @@ export default function Skills() {
   const [focus, setFocus] = useState(null);
   const sceneRef = useRef(null);
   const visible = useInView(sceneRef, { margin: "200px 0px 200px 0px" });
+  const sectionRef = useRef(null);
+  const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const reduce = useReducedMotion();
   const { accent } = useAccent();
   const turn = focus === null ? 0 : focus - 1;
 
   return (
-    <section id="skills" aria-labelledby="skills-title" className="section-y relative z-10 overflow-x-clip bg-ink">
+    <section ref={sectionRef} data-live={live} id="skills" aria-labelledby="skills-title" className="section-y relative z-10 overflow-x-clip bg-ink">
       <div
         ref={sceneRef}
         aria-hidden="true"

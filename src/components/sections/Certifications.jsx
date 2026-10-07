@@ -254,7 +254,7 @@ function Pile({ active, step, goTo, peek, onOpen }) {
             <div className="relative aspect-[1.36]">
               <motion.span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-[8%] -bottom-8 h-16 rounded-[50%] bg-black blur-2xl"
+                className="pointer-events-none absolute inset-x-[2%] -bottom-12 h-24 bg-[radial-gradient(closest-side,rgba(0,0,0,0.95),transparent)]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: entered ? 0.9 : 0 }}
                 transition={{ duration: 1.4, delay: 0.3 }}
