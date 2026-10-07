@@ -1,87 +1,74 @@
-import React from "react"
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom"
-import { AnimatePresence, motion } from "framer-motion"
-import { ThemeProvider, useTheme } from "./contexts/ThemeContext"
-import AnimatedBackground from "./components/AnimatedBackground"
-
-import Navbar from "./components/Navbar"
-import Footer from "./components/Footer"
-
-import Home from "./pages/Home"
-import About from "./pages/About"
-import Skills from "./pages/Skills"
-import Projects from "./pages/Projects"
-import Internships from "./pages/Internships"
-import Certificates from "./pages/Certificates"
-import Achievements from "./pages/Achievements"
-import Education from "./pages/Education"
-import Contact from "./pages/Contact"
-
-function AnimatedRoutes() {
-  const location = useLocation()
-
-  // Scroll to top on route change
-  React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [location.pathname])
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.main
-        key={location.pathname}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ 
-          duration: 0.3, 
-          ease: [0.22, 1, 0.36, 1]
-        }}
-        className="pt-16"
-      >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/skills" element={<Skills />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/internships" element={<Internships />} />
-          <Route path="/certificates" element={<Certificates />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="/contact" element={<Contact />} />
-
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </motion.main>
-    </AnimatePresence>
-  )
-}
-
-function AppContent() {
-  const theme = useTheme()
-  
-  return (
-    <div className={`min-h-screen ${theme.text.primary} transition-all duration-500 relative`}>
-      <AnimatedBackground />
-      <div className="relative" style={{ zIndex: 10 }}>
-        <Navbar />
-        <AnimatedRoutes />
-        <Footer />
-      </div>
-    </div>
-  )
-}
+import { useEffect } from "react";
+import { AccentProvider } from "./context/AccentContext";
+import { LightboxProvider } from "./components/kit/Lightbox";
+import SmoothScroll from "./components/effects/SmoothScroll";
+import Grain from "./components/effects/Grain";
+import CursorEffects from "./components/effects/CursorEffects";
+import ScrollProgress from "./components/layout/ScrollProgress";
+import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
+import HeroBackground from "./components/hero/HeroBackground";
+import Hero from "./components/hero/Hero";
+import About from "./components/sections/About";
+import Marquee from "./components/sections/Marquee";
+import Experience from "./components/sections/Experience";
+import Projects from "./components/sections/Projects";
+import Skills from "./components/sections/Skills";
+import Achievements from "./components/sections/Achievements";
+import Education from "./components/sections/Education";
+import Contact from "./components/sections/Contact";
+import { deepLink, scrollToId } from "./lib/scroll";
 
 export default function App() {
+  // Deep links (/portfolio/#projects): jump once layout has settled.
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+    if (!deepLink.id) {
+      deepLink.done = true;
+      return undefined;
+    }
+    const t = setTimeout(() => {
+      scrollToId(deepLink.id, { immediate: true });
+      deepLink.done = true;
+    }, 700);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <ThemeProvider>
-      <Router basename="/portfolio">
-        <AppContent />
-      </Router>
-    </ThemeProvider>
-  )
+    <AccentProvider>
+      <LightboxProvider>
+        <a
+          href="#about"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("main")?.focus();
+            scrollToId("about", { immediate: true });
+          }}
+          className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-full bg-paper px-5 py-2.5 text-sm font-medium text-ink transition-transform focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+
+        <SmoothScroll />
+        <ScrollProgress />
+        <Grain />
+        <CursorEffects />
+        <HeroBackground />
+        <Navbar />
+
+        <main id="main" tabIndex={-1} className="outline-none">
+          <Hero />
+          <About />
+          <Marquee />
+          <Experience />
+          <Projects />
+          <Skills />
+          <Achievements />
+          <Education />
+          <Contact />
+        </main>
+        <Footer />
+      </LightboxProvider>
+    </AccentProvider>
+  );
 }
