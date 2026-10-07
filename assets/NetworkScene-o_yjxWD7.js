@@ -1,4 +1,4 @@
-import{r as nt,g as Sy,j as $t}from"./index-D3cG2rjo.js";/**
+import{r as nt,g as Sy,j as $t}from"./index-Dow80jcX.js";/**
  * @license
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
