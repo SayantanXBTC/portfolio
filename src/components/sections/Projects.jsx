@@ -31,10 +31,6 @@ const rise = {
   hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
   show: (d = 0) => ({ opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 1, delay: d, ease: EASE } }),
 };
-const pop = {
-  hidden: { opacity: 0, scale: 0.6, y: 20 },
-  show: (d = 0) => ({ opacity: 1, scale: 1, y: 0, transition: { duration: 0.9, delay: d, ease: [0.34, 1.4, 0.64, 1] } }),
-};
 
 /** The five chapters at a glance; each one jumps to its scene. */
 function ThroughLine({ onJump }) {
@@ -143,15 +139,11 @@ function Hud({ project, index, videoRef, playing, setPlaying, onJump }) {
 }
 
 /**
- * The recording inside a browser window that has real depth: a back plate,
- * a coloured bloom and two notes floating in front of the glass.
+ * The recording inside a browser window that has real depth: a back plate
+ * and a coloured bloom behind the glass.
  */
-function Device({ project, videoRef, playing, onOpen, beat, side, notes: withNotes, style }) {
+function Device({ project, videoRef, playing, onOpen, beat, style }) {
   const reduce = useReducedMotion();
-  const notes = [
-    { text: project.callouts[0], cls: side > 0 ? "-left-[7%] top-[16%]" : "-right-[7%] top-[16%]", z: 90 },
-    { text: project.callouts[1], cls: side > 0 ? "-right-[4%] bottom-[12%]" : "-left-[4%] bottom-[12%]", z: 140 },
-  ];
 
   return (
     <motion.div style={{ ...style, transformStyle: "preserve-3d" }} className="relative will-change-transform">
@@ -194,22 +186,6 @@ function Device({ project, videoRef, playing, onOpen, beat, side, notes: withNot
         </button>
       </div>
 
-      {withNotes &&
-        notes.map((n, i) => (
-          <motion.span
-            key={n.text}
-            aria-hidden="true"
-            className={`pointer-events-none absolute hidden items-center gap-2.5 whitespace-nowrap rounded-full border border-white/15 bg-[#0d0d0d]/90 px-4 py-2.5 text-[0.8rem] text-paper shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] lg:flex ${n.cls}`}
-            style={{ z: n.z }}
-            variants={pop}
-            custom={0.25 + i * 0.15}
-            initial={reduce ? false : "hidden"}
-            animate={beat >= 2 ? "show" : "hidden"}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: project.color, boxShadow: `0 0 12px ${project.color}` }} />
-            {n.text}
-          </motion.span>
-        ))}
     </motion.div>
   );
 }
@@ -352,8 +328,6 @@ function Scene({ project, index, pinned, onOpen, onJump }) {
         playing={playing}
         onOpen={onOpen}
         beat={shown}
-        side={side}
-        notes={pinned}
         style={cinematic ? { rotateX, rotateY, scale, y: lift } : { rotateX: py, rotateY: px }}
       />
     </div>
@@ -437,8 +411,9 @@ export default function Projects() {
       <div className="container-x overflow-x-clip pb-20 pt-36 md:pb-28 md:pt-52">
         <SectionHeader id="projects" label="Work" note="Five builds · one through-line">
           <Reveal from="none" delay={0.3} duration={1.6} className="mt-10 max-w-xl body-copy">
-            Five products, in the order they tell the story: testing software, then teaching AI to test it, then seeing,
-            simulating and syncing in real time. Every one is live and open source.
+            Five projects chosen from the many I&rsquo;ve built. Together they run from automated testing, to AI that
+            tests software, to computer vision, physics simulation and real-time multiplayer. Each one is live, with its
+            source on GitHub.
           </Reveal>
         </SectionHeader>
         <ThroughLine onJump={jump} />

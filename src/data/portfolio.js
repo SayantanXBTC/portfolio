@@ -136,14 +136,13 @@ export const projects = [
     descriptor: "Autonomous Web Testing & Bug Intelligence",
     color: "#a78bfa",
     summary:
-      "An AI-driven QA platform that discovers web applications, generates Playwright tests, executes them, and turns failures into deduplicated bug reports.",
+      "Give it a website and AI does the QA work: it explores the pages, writes Playwright tests, runs them, and groups related failures into a short list of real bugs.",
     core: "What if a QA engineer could give an AI a website and let it discover, test, and organize bugs automatically?",
     stats: [
       { value: "329", label: "automated tests" },
       { value: "DB + API", label: "multi-tenant isolation" },
       { value: "Sonnet 4.6", label: "writes the Playwright tests" },
     ],
-    callouts: ["Claude Sonnet 4.6 → Playwright", "Failures → deduplicated bugs"],
     tech: ["TypeScript", "React", "Express", "Playwright", "Claude Sonnet 4.6", "PostgreSQL / Neon", "Google auth", "Vercel", "Render"],
     story: [
       "AI Bug Hunter is an autonomous web testing and bug-intelligence platform designed to reduce the amount of repetitive manual work involved in discovering and organizing software defects. Instead of requiring a tester to manually explore an application and write individual test cases, the platform can discover a public web application, use Claude Sonnet 4.6 to generate Playwright-based tests, execute those tests against the application, and analyze the resulting failures. The goal is not simply to report every failed test, but to turn raw automated failures into useful, consolidated bug information.",
@@ -168,14 +167,13 @@ export const projects = [
     descriptor: "AI-Powered Visual Regression Testing Suite",
     color: "#ff7a45",
     summary:
-      "Captures every page of a new deployment, compares it against approved baselines, and has Claude vision explain each visual change in plain English with a severity level.",
+      "Catches unintended UI changes between releases: it screenshots each page, pixel-diffs it against an approved baseline, and Claude vision explains each change in plain English and rates its severity.",
     core: "Automated visual QA that doesn't just show what changed — it explains why the change matters.",
     stats: [
       { value: "10", label: "pages crawled per run, at most" },
       { value: "Severity", label: "on every change, from Claude vision" },
       { value: "PDF", label: "comparison reports via PDFKit" },
     ],
-    callouts: ["Resemble.js pixel diff", "Claude vision · severity"],
     tech: ["React", "Vite", "Node.js", "Express", "Playwright", "Resemble.js", "Claude API", "Supabase", "PostgreSQL", "PDFKit", "Docker", "Railway", "Vercel"],
     story: [
       "VisuGuard is an automated visual regression testing platform built to detect and explain visual changes between different versions or deployments of a web application. The platform addresses a common problem in modern web development: an application can remain functionally correct while a deployment unintentionally changes its visual appearance. Instead of relying entirely on manual inspection, VisuGuard automates the process of capturing screenshots, comparing them against approved baselines, identifying visual differences, and presenting those differences in an understandable report.",
@@ -202,14 +200,13 @@ export const projects = [
     descriptor: "AI-Powered Dementia Assistance Platform",
     color: "#7b8cff",
     summary:
-      "Helps people living with dementia recognise the people around them: real-time face recognition that answers with a spoken memory card.",
+      "Helps people with dementia recognise loved ones: the camera turns a face into an embedding (a numeric fingerprint), finds the closest match in PostgreSQL with pgvector, and speaks a memory card.",
     core: "Using computer vision, vector search, and conversational AI to make everyday interactions easier for people living with memory-related difficulties.",
     stats: [
       { value: "<200ms", label: "recognition latency at scale" },
       { value: "512-d", label: "face embeddings · pgvector + HNSW" },
       { value: "28", label: "REST endpoints with consent + audit" },
     ],
-    callouts: ["InsightFace · 512-d embeddings", "EDITH voice assistant"],
     tech: ["Next.js 15", "Python", "Flask", "InsightFace", "PostgreSQL", "pgvector", "HNSW", "REST APIs", "Claude", "Docker"],
     story: [
       "RecallPal is an AI-powered assistance platform designed around the problem of helping people with dementia recognize and remember the people around them. The application combines real-time facial recognition with personalized memory information. When a person is recognized, RecallPal can retrieve the corresponding memory information and present it as a spoken memory card, creating a more natural and accessible way for the user to receive contextual information about someone they know.",
@@ -235,14 +232,13 @@ export const projects = [
     descriptor: "Interactive Physics Exploration & Simulation Platform",
     color: "#f43f5e",
     summary:
-      "An interactive physics platform where you change the conditions and watch the laws respond — simulations, formulas, physicists and challenges in one place.",
+      "Physics you can play with: run simulations like orbits, pendulums and black holes, tweak parameters such as gravity, and watch the system respond live. Formulas, physicists and challenges sit alongside.",
     core: "Turning physics from something you study into something you can interact with.",
     stats: [
       { value: "8+", label: "simulation families" },
       { value: "Live", label: "parameters you can change" },
       { value: "Full-stack", label: "React · Express · MongoDB" },
     ],
-    callouts: ["Lorenz · black holes · waves", "Change the conditions"],
     tech: ["React", "TypeScript", "Node.js", "Express.js", "MongoDB", "REST APIs"],
     story: [
       "PhysVerse is an interactive physics platform created for people who want to explore physics through visualization, experimentation, and simulation rather than only reading static explanations. The platform brings together educational content about physics, famous physicists, formulas, challenges, user profiles, and interactive simulations into a single experience. Its central idea is to make abstract physical concepts easier to understand by allowing users to actually interact with and experiment with them.",
@@ -266,14 +262,13 @@ export const projects = [
     descriptor: "Real-Time Multiplayer Board Game",
     color: "#a3e635",
     summary:
-      "A 2–4 player board game played in real time over Socket.io, built on an authoritative server that keeps every player's private hand hidden.",
+      "A 2–4 player board game synced live over WebSockets. The server holds the official game state, so every move is checked there and no player can see another's cards.",
     core: "A board game used as a playground for real-time systems, networking, security, and state synchronization.",
     stats: [
       { value: "2–4", label: "players, synced in real time" },
       { value: "~50%", label: "lower hosting cost" },
       { value: "Auto", label: "reconnect after a drop" },
     ],
-    callouts: ["Authoritative server", "Socket.io · 2–4 players"],
     tech: ["React 18", "Node.js", "Socket.io", "JavaScript", "Railway", "WebSockets"],
     story: [
       "Tiki Topple is a real-time multiplayer digital board game built to explore networking, synchronization, game-state management, and secure client-server architecture. The game supports 2–4 players and uses a React frontend with a Node.js backend and Socket.io to maintain real-time communication between connected players. Rather than treating the browser as the authority over the game, the application uses an authoritative server architecture so that important game state remains controlled by the backend.",
