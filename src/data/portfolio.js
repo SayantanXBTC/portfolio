@@ -1,5 +1,33 @@
 import { asset } from "../lib/asset";
 
+// Natural pixel sizes, so every photo is shown at its own aspect ratio (no cropping).
+const DIMS = {
+  PRES1: [1400, 982],
+  PRES2: [1400, 933],
+  NYF1: [1400, 1867],
+  NYF2: [1400, 2489],
+  NYF3: [1400, 1194],
+  NYF4: [1400, 764],
+  NYF5: [1400, 1867],
+  SPACE: [1400, 664],
+  CPE1: [1400, 1050],
+  CPE2: [1400, 1107],
+  CPE3: [1400, 1668],
+  CPE4: [1400, 1453],
+  physsverse: [1600, 740],
+  humanityos: [1600, 743],
+  druganalysis: [1600, 785],
+  redcross: [1600, 747],
+  bankmanagement: [1600, 906],
+};
+const photo = (name, alt, extra = {}) => ({
+  src: asset(`images/${name}.webp`),
+  alt,
+  w: DIMS[name][0],
+  h: DIMS[name][1],
+  ...extra,
+});
+
 // All content below comes from the existing portfolio. Nothing is invented.
 
 export const profile = {
@@ -68,8 +96,8 @@ export const experience = [
     impact: "Increased club membership and raised sponsorships for events.",
     tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
     photos: [
-      { src: asset("images/PRES1.webp"), alt: "Sayantan leading a ConverseE+ Club event", caption: "ConverseE+ Club" },
-      { src: asset("images/PRES2.webp"), alt: "ConverseE+ Club session", caption: "Club session" },
+      photo("PRES1", "Sayantan at a ConverseE+ Club event", { caption: "ConverseE+ Club" }),
+      photo("PRES2", "ConverseE+ Club session", { caption: "Club session" }),
     ],
   },
   {
@@ -111,7 +139,8 @@ export const projects = [
     github: "https://github.com/SayantanXBTC/PhysVerse",
     live: "https://physsversee.netlify.app/",
     image: asset("images/physsverse.webp"),
-    ratio: 2543 / 1176,
+    w: 1600,
+    h: 740,
   },
   {
     title: "Humanity OS",
@@ -127,6 +156,8 @@ export const projects = [
     github: "https://github.com/SayantanXBTC/Humanity-OS",
     live: "https://humanity-os.netlify.app/",
     image: asset("images/humanityos.webp"),
+    w: 1600,
+    h: 743,
   },
   {
     title: "Drug Analysis Platform",
@@ -142,6 +173,8 @@ export const projects = [
     github: "https://github.com/SayantanXBTC/Medical-Analysis-Platform",
     live: "https://medicalanalysisplatform.netlify.app/",
     image: asset("images/druganalysis.webp"),
+    w: 1600,
+    h: 785,
   },
   {
     title: "Red Cross Society Website",
@@ -157,6 +190,8 @@ export const projects = [
     github: "https://github.com/SayantanXBTC/RedCrossAGT",
     live: "https://redcrosstrp.netlify.app/",
     image: asset("images/redcross.webp"),
+    w: 1600,
+    h: 747,
   },
   {
     title: "Bank Management System",
@@ -171,6 +206,8 @@ export const projects = [
     ],
     github: "https://github.com/SayantanXBTC/Bank-Management-System-",
     image: asset("images/bankmanagement.webp"),
+    w: 1600,
+    h: 906,
   },
 ];
 
@@ -185,10 +222,7 @@ export const achievements = [
     detail:
       "Selected as the state representative from Tripura to present 'Tech for Viksit Bharat 2047' at the National Youth Festival. Presented a 12-minute talk outlining technology-driven education initiatives and prototype ideas for scalable learning platforms.",
     impact: "Presented to national leaders; selected among top delegates for a follow-up workshop.",
-    images: [1, 2, 3, 4, 5].map((n) => ({
-      src: asset(`images/NYF${n}.webp`),
-      alt: `National Youth Festival 2025, photo ${n}`,
-    })),
+    images: [1, 2, 3, 4, 5].map((n) => photo(`NYF${n}`, `National Youth Festival 2025, photo ${n}`)),
   },
   {
     title: "National Space Day 2025",
@@ -200,7 +234,7 @@ export const achievements = [
     detail:
       "Ranked among the top 100 participants in a national-level space quiz (65,000+ participants). Shortlisted and invited to the ISRO Sriharikota facility for a special outreach program.",
     impact: "Hands-on exposure to launch operations and research teams at ISRO.",
-    images: [{ src: asset("images/SPACE.webp"), alt: "National Space Day 2025" }],
+    images: [photo("SPACE", "Invitation to visit ISRO, National Space Day Quiz 2025")],
   },
   {
     title: "CPE Multi-Event Winner",
@@ -212,10 +246,7 @@ export const achievements = [
     detail:
       "Won multiple events across debates, quizzes, vocabulary & aptitude at the college level. Regular member of quiz teams and debate squads.",
     impact: "Overall holistic development.",
-    images: [1, 2, 3, 4].map((n) => ({
-      src: asset(`images/CPE${n}.webp`),
-      alt: `CPE multi-event winner, photo ${n}`,
-    })),
+    images: [1, 2, 3, 4].map((n) => photo(`CPE${n}`, `CPE multi-event winner, photo ${n}`)),
   },
 ];
 

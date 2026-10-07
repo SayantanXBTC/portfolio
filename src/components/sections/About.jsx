@@ -1,43 +1,14 @@
-import { useRef } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { about, profile } from "../../data/portfolio";
+import { about } from "../../data/portfolio";
 import { SectionHeader } from "../kit/SectionHeader";
-import { Reveal, ClipReveal } from "../kit/Reveal";
 import { WordReveal } from "../kit/Text";
+import { Stagger, Item } from "../kit/Stagger";
 
-function Portrait() {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ["-7%", "7%"]);
-
-  return (
-    <figure ref={ref}>
-      <ClipReveal
-        from="up"
-        duration={1.7}
-        scaleFrom={1.12}
-        className="relative aspect-[4/5] overflow-hidden bg-ink-800"
-        innerClassName="h-full w-full"
-      >
-        <motion.img
-          src={profile.portrait}
-          alt="Portrait of Sayantan Bhattacharjee"
-          loading="lazy"
-          decoding="async"
-          style={reduce ? undefined : { y, scale: 1.16 }}
-          className="h-full w-full object-cover object-[45%_25%]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent" />
-      </ClipReveal>
-    </figure>
-  );
-}
-
-/** About: the only section that is read, not watched. Words light up as you scroll. */
+/**
+ * About is read, not looked at: no photo here (the face belongs to the hero).
+ * The statement lights up word by word, then the story arrives paragraph by
+ * paragraph, then the technical snapshot row by row.
+ */
 export default function About() {
-  const [lead, ...rest] = about.paragraphs;
-
   return (
     <section id="about" aria-labelledby="about-title" className="section-y relative z-10 overflow-x-clip bg-ink">
       <div className="container-x">
@@ -46,40 +17,44 @@ export default function About() {
         <WordReveal
           text={about.statement}
           highlight={["reliable", "rigor."]}
-          className="editorial max-w-[24ch] text-[clamp(2rem,4.9vw,5rem)] text-paper"
+          className="editorial max-w-[22ch] text-[clamp(2.2rem,5.4vw,5.6rem)] text-paper"
         />
 
-        <div className="mt-32 grid gap-16 md:mt-48 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-5">
-            <Portrait />
-          </div>
+        <div className="mt-28 grid gap-16 md:mt-40 lg:grid-cols-12 lg:gap-12">
+          <Stagger className="space-y-10 lg:col-span-7" gap={0.18}>
+            {about.paragraphs.map((p, i) => (
+              <Item
+                key={i}
+                as="p"
+                className={
+                  i === 0
+                    ? "text-[clamp(1.3rem,2vw,1.75rem)] leading-[1.55] text-paper/90"
+                    : "text-[clamp(1.1rem,1.5vw,1.35rem)] leading-[1.7] text-mute"
+                }
+              >
+                {p}
+              </Item>
+            ))}
+          </Stagger>
 
-          <div className="lg:col-span-6 lg:col-start-7 lg:pt-24">
-            <Reveal from="none" duration={1.6} className="text-[clamp(1.15rem,1.6vw,1.45rem)] leading-[1.6] text-paper/90">
-              {lead}
-            </Reveal>
-            <div className="mt-10 space-y-6">
-              {rest.map((p, i) => (
-                <Reveal key={i} from="none" delay={0.1 + i * 0.1} duration={1.6} className="body-copy">
-                  {p}
-                </Reveal>
-              ))}
-            </div>
-
-            <div className="mt-20">
-              <p className="label mb-5 text-paper">Technical snapshot</p>
+          <div className="lg:col-span-4 lg:col-start-9 lg:pt-2">
+            <Stagger gap={0.1} delay={0.2}>
+              <Item as="p" kind="fade" className="label mb-5 text-paper">
+                Technical snapshot
+              </Item>
               <dl className="border-t border-white/[0.08]">
                 {about.snapshot.map((row) => (
-                  <div
+                  <Item
                     key={row.label}
-                    className="group grid grid-cols-[8.5rem_1fr] gap-4 border-b border-white/[0.08] py-4 transition-colors duration-500 hover:bg-white/[0.015]"
+                    kind="left"
+                    className="group border-b border-white/[0.08] py-5 transition-colors duration-500 hover:bg-white/[0.015]"
                   >
-                    <dt className="label pt-1 text-dim transition-colors duration-500 group-hover:text-paper">{row.label}</dt>
-                    <dd className="text-sm text-paper/85 md:text-[0.95rem]">{row.value}</dd>
-                  </div>
+                    <dt className="label mb-2 text-dim transition-colors duration-500 group-hover:text-accent-strong">{row.label}</dt>
+                    <dd className="text-[1.05rem] text-paper/90">{row.value}</dd>
+                  </Item>
                 ))}
               </dl>
-            </div>
+            </Stagger>
           </div>
         </div>
       </div>

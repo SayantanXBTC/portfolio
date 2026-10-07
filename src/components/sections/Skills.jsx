@@ -4,6 +4,7 @@ import { foundations, workingStyle } from "../../data/portfolio";
 import { useAccent } from "../../context/AccentContext";
 import { EASE } from "../../lib/asset";
 import { SectionHeader } from "../kit/SectionHeader";
+import { Stagger, Item } from "../kit/Stagger";
 
 const NetworkScene = lazy(() => import("../effects/NetworkScene"));
 
@@ -71,13 +72,17 @@ export default function Skills() {
                 </p>
                 <h3 className="display mt-8 text-[clamp(2rem,3.4vw,3.4rem)]">{col.title}</h3>
                 <p className="label mt-3 text-dim">{col.line}</p>
-                <ul className="mt-10 space-y-2.5">
+                <Stagger as="ul" className="mt-10 space-y-2.5" gap={0.06} delay={0.3 + i * 0.15}>
                   {col.items.map((item) => (
-                    <li key={item} className="editorial text-[clamp(1.15rem,1.55vw,1.5rem)] text-paper/85">
+                    <Item
+                      as="li"
+                      key={item}
+                      className="editorial text-[clamp(1.15rem,1.55vw,1.5rem)] text-paper/85 transition-colors duration-300 hover:text-paper"
+                    >
                       {item}
-                    </li>
+                    </Item>
                   ))}
-                </ul>
+                </Stagger>
               </motion.div>
             );
           })}

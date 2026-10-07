@@ -5,6 +5,7 @@ import { usePinnedLayout } from "../../hooks/useMedia";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal, ClipReveal } from "../kit/Reveal";
 import { Arrow } from "../kit/Button";
+import { Stagger, Item } from "../kit/Stagger";
 
 // Each chapter gets its own light: the same accent, placed somewhere new.
 const LIGHT = ["18% 30%", "82% 24%", "24% 80%", "78% 76%", "50% 12%"];
@@ -57,7 +58,7 @@ function Case({ project, index, total, nextRef, innerRef, pinned }) {
         aria-labelledby={`case-${index}`}
       >
         {/* case header */}
-        <Reveal from="none" className="label mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 md:mb-10">
+        <Reveal from="left" distance={0.3} className="label mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 md:mb-10">
           <span className="text-paper">Case {n}</span>
           <span className="text-dim">/ {String(total).padStart(2, "0")}</span>
           <span className="h-px w-10 bg-white/15" />
@@ -72,8 +73,8 @@ function Case({ project, index, total, nextRef, innerRef, pinned }) {
               from="up"
               duration={1.6}
               scaleFrom={1.1}
-              className="group relative aspect-[16/10] w-full overflow-hidden bg-ink-800 lg:aspect-auto lg:h-[54vh]"
-              innerClassName="h-full w-full"
+              className="group relative w-full overflow-hidden bg-ink-800"
+              innerClassName="w-full"
             >
               <a
                 href={project.live ?? project.github}
@@ -81,14 +82,16 @@ function Case({ project, index, total, nextRef, innerRef, pinned }) {
                 rel="noopener noreferrer"
                
                 aria-label={`${project.title}: open ${project.live ? "live site" : "repository"}`}
-                className="block h-full w-full"
+                className="block w-full"
               >
                 <img
                   src={project.image}
                   alt={`${project.title} interface`}
+                  width={project.w}
+                  height={project.h}
                   loading="lazy"
                   decoding="async"
-                  className="h-full w-full object-cover object-top transition-transform duration-[1600ms] ease-cine group-hover:scale-[1.035]"
+                  className="block h-auto w-full transition-transform duration-[1600ms] ease-cine group-hover:scale-[1.035]"
                 />
               </a>
               <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.06]" />
@@ -99,20 +102,26 @@ function Case({ project, index, total, nextRef, innerRef, pinned }) {
             </p>
           </div>
 
-          <div className={`lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
-            <h3 id={`case-${index}`} className="display text-[clamp(2.2rem,4.2vw,4.4rem)]">
+          <Stagger className={`lg:col-span-5 ${flip ? "lg:order-1" : ""}`} gap={0.09} delay={0.15}>
+            <Item as="h3" id={`case-${index}`} className="display text-[clamp(2.2rem,4.2vw,4.4rem)]">
               {project.title}
-            </h3>
-            <Reveal from="none" delay={0.1} duration={1.4} className="mt-6 body-copy">
+            </Item>
+            <Item as="p" className="mt-6 body-copy">
               {project.desc}
-            </Reveal>
+            </Item>
 
             <dl className="mt-8 border-t border-white/[0.08] text-sm">
-              <div className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5">
+              <Item kind="left" className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5">
                 <dt className="label pt-0.5 text-dim">Stack</dt>
-                <dd className="text-paper/85">{project.tech.join(" / ")}</dd>
-              </div>
-              <div className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5 [@media(max-height:800px)]:hidden">
+                <dd className="flex flex-wrap gap-1.5">
+                  {project.tech.map((t) => (
+                    <span key={t} className="rounded-full border border-white/12 px-2.5 py-0.5 text-[0.78rem] text-paper/80">
+                      {t}
+                    </span>
+                  ))}
+                </dd>
+              </Item>
+              <Item kind="left" className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/[0.08] py-3.5 [@media(max-height:800px)]:hidden">
                 <dt className="label pt-0.5 text-dim">Highlights</dt>
                 <dd>
                   <ul className="space-y-1.5 text-paper/75">
@@ -121,13 +130,13 @@ function Case({ project, index, total, nextRef, innerRef, pinned }) {
                     ))}
                   </ul>
                 </dd>
-              </div>
+              </Item>
             </dl>
 
-            <div className="mt-8">
+            <Item kind="pop" className="mt-8">
               <CaseLinks project={project} />
-            </div>
-          </div>
+            </Item>
+          </Stagger>
         </div>
       </motion.article>
     </div>

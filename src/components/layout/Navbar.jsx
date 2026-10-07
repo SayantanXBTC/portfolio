@@ -137,13 +137,14 @@ export default function Navbar() {
               {chapters.some((c) => c.id === active) && (
                 <motion.span
                   key={active}
-                  className="label absolute inset-0 flex items-center justify-center text-mute"
+                  className="absolute inset-0 flex items-center justify-center whitespace-nowrap font-mono text-[0.6rem] uppercase tracking-[0.14em] text-mute"
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: "-100%", opacity: 0 }}
                   transition={{ duration: 0.5, ease: EASE }}
                 >
-                  {String(chapters.findIndex((c) => c.id === active) + 1).padStart(2, "0")} · {chapters.find((c) => c.id === active).label}
+                  <span className="hidden sm:inline">{String(chapters.findIndex((c) => c.id === active) + 1).padStart(2, "0")} ·&nbsp;</span>
+                  {chapters.find((c) => c.id === active).label}
                 </motion.span>
               )}
             </AnimatePresence>

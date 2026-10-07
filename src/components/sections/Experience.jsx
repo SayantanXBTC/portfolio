@@ -6,85 +6,8 @@ import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal, ClipReveal } from "../kit/Reveal";
 import { MaskLines } from "../kit/Text";
 import { useLightbox } from "../kit/Lightbox";
-
-/** Two photographs that arrive into the frame, then answer the cursor at different depths. */
-function PhotoPair({ photos }) {
-  const ref = useRef(null);
-  const { open } = useLightbox();
-  const { x, y } = usePointerParallax(ref);
-  const nearX = useTransform(x, [-1, 1], [-10, 10]);
-  const nearY = useTransform(y, [-1, 1], [-8, 8]);
-  const farX = useTransform(x, [-1, 1], [16, -16]);
-  const farY = useTransform(y, [-1, 1], [12, -12]);
-  const [main, second] = photos;
-  const gallery = photos.map((p) => ({ src: p.src, alt: p.alt }));
-
-  return (
-    <div ref={ref} className="relative grid grid-cols-12 items-end gap-4 md:gap-0">
-      <motion.figure style={{ x: nearX, y: nearY }} className="col-span-12 md:col-span-8">
-        <ClipReveal
-          from="left"
-          duration={1.8}
-          scaleFrom={1.08}
-          amount={0.25}
-          className="relative aspect-[16/10] overflow-hidden bg-ink-800"
-          innerClassName="h-full w-full"
-        >
-          <button
-            type="button"
-            onClick={() => open(gallery, 0)}
-           
-            aria-label={`Open photo: ${main.alt}`}
-            className="group block h-full w-full"
-          >
-            <img
-              src={main.src}
-              alt={main.alt}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-[1600ms] ease-cine group-hover:scale-[1.03]"
-            />
-          </button>
-        </ClipReveal>
-        <figcaption className="label mt-3 text-dim">Fig. — {main.caption}</figcaption>
-      </motion.figure>
-
-      {second && (
-        <motion.figure
-          style={{ x: farX, y: farY }}
-          className="relative z-10 col-span-7 col-start-6 md:col-span-4 md:col-start-auto md:-ml-[12%] md:mb-[-10%]"
-        >
-          <ClipReveal
-            from="up"
-            delay={0.45}
-            duration={1.6}
-            scaleFrom={1.08}
-            amount={0.25}
-            className="relative aspect-[4/5] overflow-hidden bg-ink-800 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.9)]"
-            innerClassName="h-full w-full"
-          >
-            <button
-              type="button"
-              onClick={() => open(gallery, 1)}
-             
-              aria-label={`Open photo: ${second.alt}`}
-              className="group block h-full w-full"
-            >
-              <img
-                src={second.src}
-                alt={second.alt}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition-transform duration-[1600ms] ease-cine group-hover:scale-[1.04]"
-              />
-            </button>
-          </ClipReveal>
-          <figcaption className="label mt-3 text-dim">Fig. — {second.caption}</figcaption>
-        </motion.figure>
-      )}
-    </div>
-  );
-}
+import { PhotoRow } from "../kit/PhotoRow";
+import { Stagger, Item } from "../kit/Stagger";
 
 /** A certificate shown as a document: small, slightly turned, readable on click. */
 function DocumentCard({ doc }) {
@@ -140,7 +63,7 @@ function Chapter({ item, index, total }) {
       {item.photos ? (
         <>
           <div className="mt-16 md:mt-24">
-            <PhotoPair photos={item.photos} />
+            <PhotoRow photos={item.photos} />
           </div>
           <div className="mt-20 grid gap-10 md:mt-32 md:grid-cols-12">
             <Reveal from="none" duration={1.6} className="text-[clamp(1.1rem,1.6vw,1.4rem)] leading-[1.6] text-paper/90 md:col-span-6">
@@ -157,14 +80,14 @@ function Chapter({ item, index, total }) {
             <Reveal from="none" duration={1.6} className="text-[clamp(1.1rem,1.6vw,1.4rem)] leading-[1.6] text-paper/90">
               {item.summary}
             </Reveal>
-            <ol className="mt-10 border-t border-white/[0.08]">
+            <Stagger as="ol" className="mt-10 border-t border-white/[0.08]" gap={0.12}>
               {item.points.map((p, i) => (
-                <li key={p} className="flex gap-5 border-b border-white/[0.08] py-4 text-sm text-paper/80 md:text-[0.95rem]">
+                <Item as="li" kind="left" key={p} className="flex gap-5 border-b border-white/[0.08] py-4 text-sm text-paper/80 md:text-[0.95rem]">
                   <span className="label mt-1 text-dim">{String(i + 1).padStart(2, "0")}</span>
                   {p}
-                </li>
+                </Item>
               ))}
-            </ol>
+            </Stagger>
             <div className="mt-10">
               <Meta item={item} />
             </div>
@@ -182,23 +105,24 @@ function Chapter({ item, index, total }) {
 
 function Meta({ item }) {
   return (
-    <dl className="space-y-6">
-      <div>
+    <Stagger as="dl" className="space-y-6" gap={0.12}>
+      <Item>
         <dt className="label mb-2 text-dim">Outcome</dt>
         <dd className="text-paper/85">{item.impact}</dd>
-      </div>
-      <div>
+      </Item>
+      <Item>
         <dt className="label mb-3 text-dim">Practice</dt>
-        <dd className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-mute">
-          {item.tech.map((t, i) => (
-            <span key={t}>
-              {t}
-              {i < item.tech.length - 1 && <span className="ml-4 text-dim">/</span>}
-            </span>
-          ))}
+        <dd>
+          <Stagger className="flex flex-wrap gap-2" gap={0.06} delay={0.2}>
+            {item.tech.map((t) => (
+              <Item key={t} kind="pop" as="span" className="rounded-full border border-white/12 px-3.5 py-1.5 text-sm text-mute transition-colors duration-500 hover:border-paper/50 hover:text-paper">
+                {t}
+              </Item>
+            ))}
+          </Stagger>
         </dd>
-      </div>
-    </dl>
+      </Item>
+    </Stagger>
   );
 }
 

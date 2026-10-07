@@ -19,25 +19,35 @@ import { useLightbox } from "../kit/Lightbox";
 const pad = (n) => String(n).padStart(2, "0");
 const LIGHT = ["30% 40%", "70% 30%", "45% 75%"];
 
-/** Thumbnails of the other photos, laid out like fragments on a table. */
-function Fragments({ item, onOpen, className = "" }) {
+/** The other photos of an entry: small, uncropped, popping in one after another. */
+function Fragments({ item, onOpen, className = "", delay = 0 }) {
   const rest = item.images.slice(1, 5);
   if (!rest.length) return null;
   return (
-    <div className={`flex gap-2.5 ${className}`}>
+    <motion.div
+      className={`flex items-end gap-2.5 ${className}`}
+      initial="hidden"
+      animate="show"
+      variants={{ show: { transition: { staggerChildren: 0.09, delayChildren: delay } } }}
+    >
       {rest.map((img, i) => (
-        <button
+        <motion.button
           key={img.src}
           type="button"
           onClick={() => onOpen(i + 1)}
-         
           aria-label={`Open photo ${i + 2} of ${item.images.length}: ${item.title}`}
-          className="group relative block aspect-[4/3] w-20 overflow-hidden bg-ink-800 xl:w-24"
+          className="group relative block h-16 overflow-hidden bg-ink-800 xl:h-20"
+          style={{ aspectRatio: `${img.w} / ${img.h}` }}
+          variants={{
+            hidden: { opacity: 0, y: 24, scale: 0.7 },
+            show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: [0.34, 1.4, 0.64, 1] } },
+          }}
+          whileHover={{ y: -4 }}
         >
-          <img src={img.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover opacity-60 transition duration-700 ease-cine group-hover:scale-110 group-hover:opacity-100" />
-        </button>
+          <img src={img.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover opacity-70 transition duration-700 ease-cine group-hover:opacity-100" />
+        </motion.button>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -127,39 +137,45 @@ function ArchiveStage() {
               </motion.span>
             </AnimatePresence>
 
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-800">
+            {/* the object: shown whole, at its own aspect ratio, inside a fixed frame */}
+            <div className="relative h-[54vh] w-full">
               <AnimatePresence initial={false}>
-                <motion.button
+                <motion.div
                   key={item.title}
-                  type="button"
-                  onClick={() => open(item.images, 0)}
-                 
-                  aria-label={`Open ${item.title} photo gallery`}
-                  className="group absolute inset-0 block"
-                  initial={{ clipPath: "inset(100% 0 0 0)" }}
-                  animate={{ clipPath: seen ? "inset(0% 0 0 0)" : "inset(100% 0 0 0)" }}
-                  exit={{ opacity: 0, transition: { duration: 0.6, delay: 0.5 } }}
-                  transition={{ duration: 1.3, delay: d(0.15), ease: EASE }}
+                  className="absolute inset-0 flex items-center justify-center"
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.6, delay: 0.4 } }}
                 >
-                  <motion.img
-                    src={item.images[0].src}
-                    alt={item.images[0].alt}
-                    decoding="async"
-                    className="h-full w-full object-cover"
-                    initial={{ scale: 1.12 }}
-                    animate={{ scale: seen ? 1 : 1.12 }}
-                    transition={{ duration: 2, delay: d(0.15), ease: EASE }}
-                  />
-                </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={() => open(item.images, 0)}
+                    aria-label={`Open ${item.title} photo gallery`}
+                    className="group relative block max-w-full overflow-hidden shadow-[0_50px_120px_-40px_rgba(0,0,0,0.95)]"
+                    initial={{ clipPath: "inset(100% 0 0 0)", y: 30 }}
+                    animate={{ clipPath: seen ? "inset(0% 0 0 0)" : "inset(100% 0 0 0)", y: seen ? 0 : 30 }}
+                    transition={{ duration: 1.3, delay: d(0.15), ease: EASE }}
+                  >
+                    <motion.img
+                      src={item.images[0].src}
+                      alt={item.images[0].alt}
+                      width={item.images[0].w}
+                      height={item.images[0].h}
+                      decoding="async"
+                      className="block h-auto max-h-[54vh] w-auto max-w-full"
+                      initial={{ scale: 1.12 }}
+                      animate={{ scale: seen ? 1 : 1.12 }}
+                      transition={{ duration: 2, delay: d(0.15), ease: EASE }}
+                    />
+                    <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.06]" />
+                  </motion.button>
+                </motion.div>
               </AnimatePresence>
-              <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.06]" />
             </div>
 
             <div className="mt-4 flex items-start justify-between gap-4">
               <p className="label text-dim">
                 Obj. {pad(active + 1)} — {item.images.length} {item.images.length === 1 ? "photograph" : "photographs"}
               </p>
-              <Fragments key={item.title} item={item} onOpen={(i) => open(item.images, i)} />
+              {seen && <Fragments key={item.title} item={item} onOpen={(i) => open(item.images, i)} delay={0.7} />}
             </div>
           </div>
 
@@ -235,9 +251,22 @@ function ArchiveList() {
           <p className="label mt-3 text-dim">
             {a.role} · {a.where}
           </p>
-          <ClipReveal from="up" duration={1.5} scaleFrom={1.1} className="mt-8 aspect-[4/3] overflow-hidden bg-ink-800" innerClassName="h-full w-full">
+          <ClipReveal
+            from="up"
+            duration={1.5}
+            scaleFrom={1.1}
+            className="mt-8 overflow-hidden bg-ink-800 [&>div]:h-auto"
+            innerClassName="w-full"
+          >
             <button type="button" onClick={() => open(a.images, 0)} aria-label={`Open ${a.title} photo gallery`} className="block h-full w-full">
-              <img src={a.images[0].src} alt={a.images[0].alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <img
+                src={a.images[0].src}
+                alt={a.images[0].alt}
+                loading="lazy"
+                decoding="async"
+                className="block max-h-[80vh] w-full object-contain"
+                style={{ aspectRatio: `${a.images[0].w} / ${a.images[0].h}` }}
+              />
             </button>
           </ClipReveal>
           <Fragments item={a} onOpen={(k) => open(a.images, k)} className="mt-3" />

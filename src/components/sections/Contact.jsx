@@ -4,6 +4,7 @@ import { MaskLines } from "../kit/Text";
 import { Reveal } from "../kit/Reveal";
 import { Arrow } from "../kit/Button";
 import { Magnetic } from "../kit/Magnetic";
+import { Stagger, Item } from "../kit/Stagger";
 
 const links = [
   { label: "GitHub", href: profile.socials.find((s) => s.label === "GitHub").href },
@@ -70,9 +71,9 @@ export default function Contact() {
           </Reveal>
 
           <Reveal from="none" delay={0.55} duration={1.6} className="mt-10">
-            <ul className="flex flex-wrap gap-3">
+            <Stagger as="ul" className="flex flex-wrap gap-3" gap={0.1} delay={0.5}>
               {links.map((l) => (
-                <li key={l.label}>
+                <Item as="li" kind="pop" key={l.label}>
                   <Magnetic>
                     <a
                       href={l.href}
@@ -86,9 +87,9 @@ export default function Contact() {
                       </span>
                     </a>
                   </Magnetic>
-                </li>
+                </Item>
               ))}
-            </ul>
+            </Stagger>
           </Reveal>
         </div>
       </div>

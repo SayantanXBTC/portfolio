@@ -16,6 +16,7 @@ import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal } from "../kit/Reveal";
 import { MaskLines } from "../kit/Text";
 import { useLightbox } from "../kit/Lightbox";
+import { Stagger, Item } from "../kit/Stagger";
 
 const pad = (n) => String(n).padStart(2, "0");
 const PREVIEW_W = 340;
@@ -76,7 +77,9 @@ function Certifications() {
         <p className="label pb-2 text-dim">{fine ? "Hover to preview · click to open" : "Tap to open"}</p>
       </div>
 
-      <ul
+      <Stagger
+        as="ul"
+        gap={0.07}
         className="border-t border-white/[0.08]"
         onPointerMove={(e) => {
           x.set(e.clientX);
@@ -85,7 +88,7 @@ function Certifications() {
         onPointerLeave={() => setHover(null)}
       >
         {certificates.map((c, i) => (
-          <li key={c.title} className="border-b border-white/[0.08]">
+          <Item as="li" key={c.title} className="border-b border-white/[0.08]">
             <button
               type="button"
               onClick={() => open(certSlides, i)}
@@ -106,9 +109,9 @@ function Certifications() {
               <span className="col-start-2 text-sm text-mute md:col-start-auto">{c.org}</span>
               <span className="label col-start-2 text-dim md:col-start-auto md:text-right">{c.date}</span>
             </button>
-          </li>
+          </Item>
         ))}
-      </ul>
+      </Stagger>
 
       {fine && <FloatingPreview cert={hover !== null ? certificates[hover] : null} x={x} y={y} />}
     </div>
@@ -147,14 +150,14 @@ export default function Education() {
         />
 
         <div className="mt-16 grid gap-12 md:mt-24 lg:grid-cols-12">
-          <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-7">
-            {record.map((r, i) => (
-              <Reveal key={r.k} from="none" delay={i * 0.08} className="border-t border-white/[0.08] pt-4">
+          <Stagger as="dl" className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-7" gap={0.1}>
+            {record.map((r) => (
+              <Item key={r.k} className="border-t border-white/[0.08] pt-4">
                 <dt className="label mb-2 text-dim">{r.k}</dt>
                 <dd className="text-paper/85">{r.v}</dd>
-              </Reveal>
+              </Item>
             ))}
-          </dl>
+          </Stagger>
           <Reveal from="none" delay={0.2} className="lg:col-span-4 lg:col-start-9">
             <div className="border-t border-white/[0.08] pt-4">
               <p className="label mb-3 text-dim">CGPA</p>
