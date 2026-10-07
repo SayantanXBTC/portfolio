@@ -69,8 +69,8 @@ export const about = {
     "I'm a Computer Science engineer focused on software engineering, testing and automation, building reliable systems with experimental rigor.",
   paragraphs: [
     "I'm a B.Tech Computer Science student at Lovely Professional University, specializing in automation engineering and software quality assurance. My journey began with solving automation challenges, which evolved into a passion for designing robust testing frameworks and reliable software systems.",
-    "My background in applied particle physics research has shaped my approach to software development. I apply experimental methodology to engineering: formulate hypotheses, design controlled tests, measure outcomes, and iterate based on data. This scientific rigor translates directly into building maintainable, well-tested codebases.",
-    "Beyond development, I actively participate in competitive quizzing, contribute to research discussions, and optimize automation pipelines for performance. I focus on transforming complex manual processes into streamlined, repeatable workflows that deliver consistent results.",
+    "Outside engineering, quizzing is what I keep coming back to. I'm a regular on my college's quiz teams, and in 2025 I ranked in the top 100 of more than 65,000 participants in the National Space Day quiz, which earned an invitation to ISRO's Sriharikota facility.",
+    "I also debate, lead the ConverseE+ Club as President, and represented Tripura at the National Youth Festival 2025 with a talk on Tech for Viksit Bharat 2047. Along the way I've won debate, quiz, vocabulary and aptitude events at college level. Thinking on my feet and explaining things clearly carry straight into how I test and build software.",
   ],
   snapshot: [
     { label: "Primary", value: "Java, Selenium, TestNG, REST API testing" },
@@ -90,6 +90,10 @@ export const experience = [
       "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. Built partnerships with local startups and helped students ship 8 small projects.",
     points: [],
     impact: "Increased club membership and raised sponsorships for events.",
+    stats: [
+      { value: "15+", label: "workshops, hackathons and mentoring sessions" },
+      { value: "8", label: "student projects shipped" },
+    ],
     tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
     photos: [
       photo("PRES1", "Sayantan at a ConverseE+ Club event", { caption: "ConverseE+ Club" }),
@@ -109,6 +113,10 @@ export const experience = [
       "Created automated test suites for core modules with JUnit and TestNG",
     ],
     impact: "Reduced average request processing time by ~25% and improved test coverage to 88%",
+    gauges: [
+      { value: 88, display: "88%", label: "test coverage" },
+      { value: 25, display: "~25%", label: "faster average request processing" },
+    ],
     tech: ["Java", "JDBC", "Concurrency", "SQL", "JUnit", "TestNG"],
     document: {
       src: asset("images/certs/intern.webp"),
@@ -402,12 +410,11 @@ export const foundations = [
     title: "Exploration",
     line: "What I keep coming back to",
     items: [
-      { name: "Particle physics", icon: "Atom", tint: "#8FD3FF" },
+      { name: "Quizzing", icon: "Trophy", tint: "#F5C451" },
       { name: "History", icon: "ScrollText", tint: "#D9B77E" },
       { name: "Generative AI", icon: "BrainCircuit", tint: "#B794F6" },
       { name: "Virtual reality", icon: "Glasses", tint: "#6EE7B7" },
       { name: "WebGL & 3D", icon: "siThreedotjs" },
-      { name: "Quizzing", icon: "Trophy", tint: "#F5C451" },
     ],
   },
 ];

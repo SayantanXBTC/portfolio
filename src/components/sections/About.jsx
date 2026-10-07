@@ -8,11 +8,11 @@ import { Stagger, Item } from "../kit/Stagger";
 
 // Scroll budget of the pinned frame: the statement lights up first, then each
 // paragraph takes its turn in focus.
-const STATEMENT = [0, 0.3];
+const STATEMENT = [0, 0.28];
 const PARAS = [
-  [0.3, 0.52],
-  [0.52, 0.74],
-  [0.74, 1],
+  [0.28, 0.52],
+  [0.52, 0.76],
+  [0.76, 1],
 ];
 const HOT = ["reliable", "rigor."];
 
@@ -54,7 +54,7 @@ function Paragraph({ progress, range, last, children }) {
       <span aria-hidden="true" className="absolute bottom-1 left-0 top-1 w-px bg-white/10">
         <motion.span style={{ scaleY: bar }} className="absolute inset-0 origin-top bg-accent-strong" />
       </span>
-      <p className="text-[clamp(1rem,1.2vw,1.18rem)] leading-[1.75] text-paper/90">{children}</p>
+      <p className="text-[clamp(0.95rem,1.1vw,1.1rem)] leading-[1.7] text-paper/90 [@media(max-height:760px)]:text-[0.9rem] [@media(max-height:760px)]:leading-[1.6]">{children}</p>
     </motion.div>
   );
 }
@@ -118,7 +118,7 @@ export default function About() {
       <div className="container-x overflow-x-clip pt-36 md:pt-52">
         <SectionHeader id="about" label="About" note="Engineer · Builder · Explorer" />
       </div>
-      <div ref={outer} className="relative" style={{ height: "280vh" }}>
+      <div ref={outer} className="relative" style={{ height: "290vh" }}>
         <div className="sticky top-0 flex h-[100svh] items-center pb-8 pt-24">
           <div className="container-x grid items-center gap-16 lg:grid-cols-12">
             <div className="lg:col-span-5">
@@ -127,7 +127,7 @@ export default function About() {
                 <Snapshot />
               </div>
             </div>
-            <div className="space-y-8 lg:col-span-6 lg:col-start-7 [@media(max-height:760px)]:space-y-5">
+            <div className="space-y-6 lg:col-span-6 lg:col-start-7 [@media(max-height:760px)]:space-y-4">
               {about.paragraphs.map((p, i) => (
                 <Paragraph key={i} progress={scrollYProgress} range={PARAS[i]} last={i === PARAS.length - 1}>
                   {p}
