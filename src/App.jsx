@@ -14,6 +14,7 @@ import Projects from "./components/sections/Projects";
 import Skills from "./components/sections/Skills";
 import Achievements from "./components/sections/Achievements";
 import Education from "./components/sections/Education";
+import Certifications from "./components/sections/Certifications";
 import Contact from "./components/sections/Contact";
 import { deepLink, scrollToId } from "./lib/scroll";
 
@@ -61,6 +62,7 @@ export default function App() {
           <Projects />
           <Achievements />
           <Education />
+          <Certifications />
           <Contact />
         </main>
         <Footer />

@@ -5,13 +5,16 @@ import {
   useAnimationControls,
   useInView,
   useMotionValue,
+  useMotionValueEvent,
   useReducedMotion,
+  useScroll,
   useSpring,
 } from "framer-motion";
 import { certificates } from "../../data/portfolio";
-import { useFinePointer } from "../../hooks/useMedia";
+import { useFinePointer, usePinnedLayout } from "../../hooks/useMedia";
+import { scrollToY } from "../../lib/scroll";
 import { EASE } from "../../lib/asset";
-import { MaskLines } from "../kit/Text";
+import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal } from "../kit/Reveal";
 import { Arrow } from "../kit/Button";
 import { useLightbox } from "../kit/Lightbox";
@@ -133,8 +136,6 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
       onDragEnd={(_, info) => {
         if (Math.abs(info.offset.x) > 100 || Math.abs(info.velocity.x) > 550) onFling(info.offset.x < 0 ? 1 : -1);
       }}
-      whileHover={top && !reduce ? { z: 34, y: -10, transition: { type: "spring", stiffness: 220, damping: 20 } } : undefined}
-      whileDrag={{ z: 70, rotateY: 0, cursor: "grabbing" }}
     >
       <button
         type="button"
@@ -148,8 +149,10 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
           if (top) onOpen(i);
           else onPick(i);
         }}
-        className={`relative block w-full overflow-hidden rounded-[3px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.25)] ${
-          top ? "cursor-grab" : "cursor-pointer"
+        className={`relative block w-full overflow-hidden rounded-[3px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.25)] transition-[transform,box-shadow] duration-500 ease-cine ${
+          top
+            ? "cursor-grab hover:-translate-y-2 hover:shadow-[0_50px_80px_-30px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,0,0,0.25)] active:cursor-grabbing motion-reduce:hover:translate-y-0"
+            : "cursor-pointer"
         }`}
       >
         <img src={cert.preview} alt="" draggable={false} loading="lazy" decoding="async" className="pointer-events-none block h-auto w-full" />
@@ -176,12 +179,11 @@ function Sheet({ cert, i, depth, move, entered, peeked, onPick, onOpen, onFling 
  * The pile, lying on a desk seen at an angle. It breathes slowly, leans toward
  * the pointer, and the top sheet can be thrown aside or clicked to read.
  */
-function Pile({ active, setActive, peek, onOpen }) {
+function Pile({ active, step, goTo, peek, onOpen }) {
   const reduce = useReducedMotion();
   const fine = useFinePointer();
   const ref = useRef(null);
   const entered = useInView(ref, { once: true, amount: 0.35 });
-  const step = (d) => setActive((a) => (a + d + N) % N);
 
   // which way the pile last moved, so sheets know which side to swing out on
   // (away from the index on the left, unless the sheet was thrown by hand)
@@ -257,7 +259,7 @@ function Pile({ active, setActive, peek, onOpen }) {
                 move={move.current}
                 entered={entered || reduce}
                 peeked={peek === i && i !== active}
-                onPick={setActive}
+                onPick={goTo}
                 onOpen={onOpen}
                 onFling={fling}
               />
@@ -270,7 +272,7 @@ function Pile({ active, setActive, peek, onOpen }) {
 }
 
 /** One line of the index. The selected line opens up to show what the course covered. */
-function Entry({ cert, index, active, onSelect, onPeek, onOpen }) {
+function Entry({ cert, index, active, compact, onSelect, onPeek, onOpen }) {
   const reduce = useReducedMotion();
   const on = index === active;
   return (
@@ -282,7 +284,7 @@ function Entry({ cert, index, active, onSelect, onPeek, onOpen }) {
         onPointerLeave={() => onPeek(null)}
         aria-expanded={on}
         aria-controls={`cert-${index}`}
-        className="group relative grid w-full grid-cols-[2.25rem_1fr_auto] items-baseline gap-x-3 py-5 text-left md:py-6"
+        className={`group relative grid w-full grid-cols-[2.25rem_1fr_auto] items-baseline gap-x-3 text-left ${compact ? "py-4" : "py-5 md:py-6"}`}
       >
         <span
           aria-hidden="true"
@@ -311,7 +313,7 @@ function Entry({ cert, index, active, onSelect, onPeek, onOpen }) {
             transition={{ duration: 0.6, ease: EASE }}
             className="overflow-hidden"
           >
-            <div className="pb-7 pl-[calc(2.25rem+0.75rem)]">
+            <div className={`pl-[calc(2.25rem+0.75rem)] ${compact ? "pb-5" : "pb-7"}`}>
               <p className="label flex flex-wrap items-center gap-x-3 gap-y-2 text-mute">
                 <span>{cert.org}</span>
                 <span className="text-dim">·</span>
@@ -342,53 +344,93 @@ function Entry({ cert, index, active, onSelect, onPeek, onOpen }) {
   );
 }
 
-/** Certifications: an index on one side, the pile of paper on the other. */
-export default function Certifications() {
-  const { open } = useLightbox();
+/** The index and the pile, side by side. */
+function Desk({ active, step, goTo, onOpen, compact, pinned }) {
   const fine = useFinePointer();
-  const [active, setActive] = useState(0);
   const [peek, setPeek] = useState(null);
-  const onOpen = (i) => open(slides, i);
-  const step = (d) => setActive((a) => (a + d + N) % N);
   const nav =
-    "grid h-10 w-10 place-items-center rounded-full border border-white/15 text-paper transition-colors duration-300 hover:border-paper hover:bg-paper hover:text-ink";
+    "grid h-10 w-10 place-items-center rounded-full border border-white/15 text-paper transition-[color,background-color,border-color,opacity] duration-300 hover:border-paper hover:bg-paper hover:text-ink disabled:pointer-events-none disabled:opacity-30";
 
   return (
-    <div className="mt-40 md:mt-56">
-      <div className="mb-14 flex flex-wrap items-end justify-between gap-6 md:mb-20">
-        <MaskLines as="h3" lines={["Certifications"]} className="display text-[clamp(2rem,4.2vw,3.8rem)]" />
-        <p className="label pb-2 text-dim">
-          {N} certificates · {span}
-        </p>
-      </div>
-
-      <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
-        <Reveal from="up" distance={0.5} className="lg:order-2 lg:col-span-7">
-          <Pile active={active} setActive={setActive} peek={fine ? peek : null} onOpen={onOpen} />
-          <div className="mx-auto mt-6 flex max-w-[40rem] items-center gap-4 pr-10 md:pr-16">
-            <button type="button" onClick={() => step(-1)} aria-label="Previous certificate" className={nav}>
-              <Arrow dir="left" />
-            </button>
-            <button type="button" onClick={() => step(1)} aria-label="Next certificate" className={nav}>
-              <Arrow />
-            </button>
-            <p className="label tabular-nums text-paper">
-              {pad(active + 1)} <span className="text-dim">/ {pad(N)}</span>
-            </p>
-            <p className="label ml-auto hidden text-right text-dim sm:block">
-              {fine ? "Drag the top sheet · click to read" : "Swipe the top sheet · tap to read"}
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="lg:order-1 lg:col-span-5">
-          <ul className="border-t border-white/[0.08] pl-4 md:pl-6">
-            {certificates.map((c, i) => (
-              <Entry key={c.title} cert={c} index={i} active={active} onSelect={setActive} onPeek={setPeek} onOpen={onOpen} />
-            ))}
-          </ul>
+    <div className="grid w-full items-center gap-14 lg:grid-cols-12 lg:gap-16">
+      <Reveal from="up" distance={0.5} className="lg:order-2 lg:col-span-7">
+        <Pile active={active} step={step} goTo={goTo} peek={fine ? peek : null} onOpen={onOpen} />
+        <div className="mx-auto mt-6 flex max-w-[40rem] items-center gap-4 pr-10 md:pr-16">
+          <button type="button" onClick={() => step(-1)} disabled={pinned && active === 0} aria-label="Previous certificate" className={nav}>
+            <Arrow dir="left" />
+          </button>
+          <button type="button" onClick={() => step(1)} disabled={pinned && active === N - 1} aria-label="Next certificate" className={nav}>
+            <Arrow />
+          </button>
+          <p className="label tabular-nums text-paper">
+            {pad(active + 1)} <span className="text-dim">/ {pad(N)}</span>
+          </p>
+          <p className="label ml-auto hidden text-right text-dim sm:block">
+            {pinned ? "Scroll or drag through the pile" : fine ? "Drag the top sheet · click to read" : "Swipe the top sheet · tap to read"}
+          </p>
         </div>
+      </Reveal>
+
+      <div className="lg:order-1 lg:col-span-5">
+        <ul className="border-t border-white/[0.08] pl-4 md:pl-6">
+          {certificates.map((c, i) => (
+            <Entry key={c.title} cert={c} index={i} active={active} compact={compact} onSelect={goTo} onPeek={setPeek} onOpen={onOpen} />
+          ))}
+        </ul>
       </div>
     </div>
+  );
+}
+
+/**
+ * Certificates. On large screens the section holds still while you scroll and
+ * the scroll itself deals the pile, one sheet at a time, with the index
+ * following along. Picking a line, the arrows or a drag scroll you to it.
+ */
+export default function Certifications() {
+  const { open } = useLightbox();
+  const reduce = useReducedMotion();
+  const pinned = usePinnedLayout() && !reduce;
+  const outer = useRef(null);
+  const [active, setActive] = useState(0);
+  const onOpen = (i) => open(slides, i);
+
+  const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    if (pinned) setActive(Math.min(N - 1, Math.max(0, Math.floor(p * N))));
+  });
+
+  const goTo = (i) => {
+    if (!pinned) {
+      setActive(((i % N) + N) % N);
+      return;
+    }
+    const el = outer.current;
+    if (!el || i < 0 || i >= N) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    scrollToY(top + ((i + 0.5) / N) * (el.offsetHeight - window.innerHeight));
+  };
+  const step = (d) => goTo(active + d);
+
+  return (
+    <section id="certifications" aria-labelledby="certifications-title" className="relative z-10 bg-ink">
+      <div className="container-x pt-36 md:pt-52">
+        <SectionHeader id="certifications" label="Certificates" note={`${N} certificates · ${span}`} />
+      </div>
+
+      {pinned ? (
+        <div ref={outer} className="relative" style={{ height: `${100 + N * 60}vh` }}>
+          <div className="sticky top-0 flex h-[100svh] items-center pb-6 pt-20">
+            <div className="container-x">
+              <Desk active={active} step={step} goTo={goTo} onOpen={onOpen} compact pinned />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="container-x pb-36 md:pb-52">
+          <Desk active={active} step={step} goTo={goTo} onOpen={onOpen} />
+        </div>
+      )}
+    </section>
   );
 }

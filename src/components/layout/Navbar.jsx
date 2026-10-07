@@ -158,7 +158,7 @@ export default function Navbar() {
                     href={`#${s.id}`}
                     onClick={(e) => go(s.id, e)}
                     aria-current={active === s.id ? "page" : undefined}
-                    className={`relative block px-3.5 py-2 text-[0.78rem] tracking-wide transition-colors duration-500 ${
+                    className={`relative block px-2.5 py-2 text-[0.78rem] tracking-wide xl:px-3.5 transition-colors duration-500 ${
                       active === s.id ? "text-paper" : "text-mute hover:text-paper"
                     }`}
                   >
@@ -166,7 +166,7 @@ export default function Navbar() {
                     {active === s.id && (
                       <motion.span
                         layoutId="nav-indicator"
-                        className="absolute inset-x-3.5 -bottom-px h-px bg-accent-strong"
+                        className="absolute inset-x-2.5 -bottom-px h-px bg-accent-strong xl:inset-x-3.5"
                         transition={{ duration: 0.7, ease: EASE }}
                       />
                     )}
@@ -181,7 +181,7 @@ export default function Navbar() {
             <a
               href="#contact"
               onClick={(e) => go("contact", e)}
-              className="group hidden items-center gap-2.5 rounded-full border border-white/15 px-5 py-2 text-[0.78rem] tracking-wide transition-colors duration-500 hover:border-paper hover:bg-paper hover:text-ink sm:inline-flex"
+              className="group hidden items-center gap-2.5 rounded-full border border-white/15 px-5 py-2 text-[0.78rem] tracking-wide transition-colors duration-500 hover:border-paper hover:bg-paper hover:text-ink sm:inline-flex lg:hidden"
             >
               Contact
               <span className="transition-transform duration-500 ease-cine group-hover:translate-x-1">

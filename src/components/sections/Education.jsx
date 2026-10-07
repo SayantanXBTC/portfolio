@@ -5,7 +5,6 @@ import { SectionHeader } from "../kit/SectionHeader";
 import { Reveal } from "../kit/Reveal";
 import { MaskLines } from "../kit/Text";
 import { Stagger, Item } from "../kit/Stagger";
-import Certifications from "./Certifications";
 
 /** Education as a story: the university first, then where it started, drawn as a line. */
 export default function Education() {
@@ -23,7 +22,7 @@ export default function Education() {
   ];
 
   return (
-    <section id="education" aria-labelledby="education-title" className="section-y relative z-10 overflow-x-clip bg-ink">
+    <section id="education" aria-labelledby="education-title" className="relative z-10 overflow-x-clip bg-ink pt-36 md:pt-52">
       <div className="container-x">
         <SectionHeader id="education" label="Education" note="2019 — 2027" />
 
@@ -84,7 +83,6 @@ export default function Education() {
           </ol>
         </div>
 
-        <Certifications />
       </div>
     </section>
   );

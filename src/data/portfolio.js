@@ -54,7 +54,8 @@ export const sections = [
   { id: "projects", label: "Work" },
   { id: "achievements", label: "Recognition" },
   { id: "education", label: "Education" },
-  { id: "contact", label: "Contact", nav: false },
+  { id: "certifications", label: "Certificates" },
+  { id: "contact", label: "Contact" },
 ];
 // Numbered chapters (everything between the hero and the closing frame).
 export const chapters = sections.filter((s) => s.id !== "home" && s.id !== "contact");

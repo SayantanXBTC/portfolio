@@ -19,6 +19,11 @@ export function scrollToId(id, { immediate = false, offset = 0 } = {}) {
   }
 }
 
+export function scrollToY(y, { duration = 1.1 } = {}) {
+  if (instance) instance.scrollTo(y, { duration });
+  else window.scrollTo({ top: y, behavior: "smooth" });
+}
+
 export function lockScroll() {
   if (instance) instance.stop();
   document.documentElement.style.overflow = "hidden";
