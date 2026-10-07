@@ -40,7 +40,7 @@ export function SectionHeader({ id, label, note, children }) {
       </div>
 
       {/* masked at the content edge: the name slides out of frame, never over the rail */}
-      <div className="-mb-[0.15em] overflow-hidden pb-[0.15em]">
+      <div className="-mb-[0.26em] overflow-hidden pb-[0.26em] text-[clamp(3.2rem,10vw,10rem)]">
         <motion.div style={reduce ? undefined : { x, opacity }}>
           <MaskLines id={`${id}-title`} lines={[label]} className="display text-[clamp(3.2rem,10vw,10rem)] leading-[0.9]" />
         </motion.div>

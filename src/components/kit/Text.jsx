@@ -30,7 +30,7 @@ export function MaskLines({
   return (
     <Tag ref={ref} id={id} className={className}>
       {lines.map((line, i) => (
-        <span key={i} className="block overflow-hidden pb-[0.14em] -mb-[0.14em]">
+        <span key={i} className="block overflow-hidden pb-[0.24em] -mb-[0.24em]">
           <motion.span
             className={`block will-change-transform ${lineClassName ?? ""}`}
             initial={reduce ? false : hidden}
