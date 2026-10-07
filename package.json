@@ -2,9 +2,6 @@
   "name": "sayantan-portfolio-react",
   "version": "1.0.0",
   "private": true,
-
-  "homepage": "https://sayantanxbtc.github.io/portfolio/",
-
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,11 +9,11 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-
   "dependencies": {
     "aos": "^2.3.4",
     "emailjs-com": "^3.2.0",
     "framer-motion": "^12.23.24",
+    "lucide-react": "^0.563.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
@@ -26,7 +23,6 @@
     "tsparticles": "^2.10.1",
     "typed.js": "^2.1.0"
   },
-
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
     "@vitejs/plugin-react": "^4.0.0",
