@@ -416,6 +416,7 @@ export const education = {
     coursework: ["Data Structures", "Operating Systems", "DBMS", "Software Testing"],
     status: "Current",
     image: asset("images/lpu.webp"),
+    photo: asset("images/lpu-photo.webp"),
   },
   schools: [
     {
@@ -424,6 +425,7 @@ export const education = {
       place: "Hindi Higher Secondary School, Agartala, Tripura",
       score: "93.6",
       image: asset("images/hhss.webp"),
+      photo: asset("images/hhss-photo.webp"),
     },
     {
       years: "2019 — 2020",
@@ -431,6 +433,7 @@ export const education = {
       place: "Holy Cross School, Agartala, Tripura",
       score: "96",
       image: asset("images/hcs.webp"),
+      photo: asset("images/hcs-photo.webp"),
     },
   ],
 };

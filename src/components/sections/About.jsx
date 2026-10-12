@@ -41,49 +41,23 @@ const actOf = (p) => (p < ACTS[1][0] ? 0 : p < ACTS[2][0] ? 1 : 2);
 /* The three scenes behind the words                                   */
 /* ------------------------------------------------------------------ */
 
-// A plan of a building, drawn line by line: walls, rooms, doors, columns, dimensions.
-const PLAN = [
-  "M940 170 H1500 V720 H940 Z",
-  "M940 420 H1180 M1180 170 V560 M1180 560 H1500 M1320 170 V420 M1320 420 H1500",
-  "M1040 420 A60 60 0 0 1 1100 360 M1180 640 A60 60 0 0 0 1240 580 M1320 300 A50 50 0 0 1 1370 250",
-  "M1000 230 h40 v40 h-40 Z M1440 230 h-40 v40 h40 Z M1000 660 h40 v-40 h-40 Z M1440 660 h-40 v-40 h40 Z",
-  "M940 120 H1500 M940 110 V130 M1500 110 V130 M1550 170 V720 M1540 170 H1560 M1540 720 H1560",
-  "M1220 600 H1470 V700 H1220 Z M1220 630 H1470 M1300 630 V700",
-];
-
+/** A drafting room: a cool tint and a fine grid that fades toward the edges. */
 function Blueprint({ p, opacity }) {
-  const draw = PLAN.map((_, i) => useTransform(p, [0.02 + i * 0.07, 0.4 + i * 0.07], [0, 1], { clamp: true })); // eslint-disable-line react-hooks/rules-of-hooks
-  const y = useTransform(p, [0, 1], [20, -20]);
+  const y = useTransform(p, [0, 1], [16, -16]);
   return (
-    <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity }}>
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <pattern id="bp-minor" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M40 0H0V40" fill="none" stroke="rgba(150,180,255,0.05)" strokeWidth="1" />
-          </pattern>
-          <pattern id="bp-major" width="200" height="200" patternUnits="userSpaceOnUse">
-            <rect width="200" height="200" fill="url(#bp-minor)" />
-            <path d="M200 0H0V200" fill="none" stroke="rgba(150,180,255,0.09)" strokeWidth="1" />
-          </pattern>
-          <radialGradient id="bp-fade" cx="70%" cy="50%" r="70%">
-            <stop offset="0" stopColor="white" stopOpacity="1" />
-            <stop offset="1" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <mask id="bp-mask">
-            <rect width="1600" height="900" fill="url(#bp-fade)" />
-          </mask>
-        </defs>
-        <rect width="1600" height="900" fill="#060a14" opacity="0.55" />
-        <rect width="1600" height="900" fill="url(#bp-major)" mask="url(#bp-mask)" />
-        <motion.g style={{ y }} fill="none" stroke="rgba(170,200,255,0.32)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          {PLAN.map((d, i) => (
-            <motion.path key={i} d={d} style={{ pathLength: draw[i] }} strokeDasharray={i === 2 ? "6 6" : undefined} />
-          ))}
-          <motion.text x="1230" y="688" className="font-mono text-[13px] uppercase tracking-[0.3em]" fill="rgba(170,200,255,0.5)" stroke="none" style={{ opacity: draw[5] }}>
-            B.Tech · CSE
-          </motion.text>
-        </motion.g>
-      </svg>
+    <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden" style={{ opacity }}>
+      <div className="absolute inset-0 bg-[#060a14]/60" />
+      <motion.div
+        className="absolute -inset-y-8 inset-x-0"
+        style={{
+          y,
+          backgroundImage:
+            "linear-gradient(rgba(150,180,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(150,180,255,0.07) 1px, transparent 1px), linear-gradient(rgba(150,180,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(150,180,255,0.035) 1px, transparent 1px)",
+          backgroundSize: "200px 200px, 200px 200px, 40px 40px, 40px 40px",
+          WebkitMaskImage: "radial-gradient(75% 70% at 68% 50%, black, transparent 80%)",
+          maskImage: "radial-gradient(75% 70% at 68% 50%, black, transparent 80%)",
+        }}
+      />
     </motion.div>
   );
 }
@@ -187,41 +161,100 @@ function Starfield({ p, opacity }) {
   );
 }
 
-const MOTES = Array.from({ length: 18 }, (_, i) => ({ left: 30 + rand(i, 21) * 40, top: 40 + rand(i, 22) * 55, size: 1 + rand(i, 23) * 2, dur: 7 + rand(i, 24) * 8, delay: -rand(i, 25) * 12, o: 0.2 + rand(i, 26) * 0.5 }));
+const MOTES = Array.from({ length: 26 }, (_, i) => ({ left: 22 + rand(i, 21) * 56, top: 18 + rand(i, 22) * 78, size: 1 + rand(i, 23) * 2.2, dur: 7 + rand(i, 24) * 9, delay: -rand(i, 25) * 14, o: 0.2 + rand(i, 26) * 0.55 }));
 
+/**
+ * A stage light rigged above the words. It starts dark and aimed off to the
+ * side; as the scene arrives it swings onto the text, sputters to life and
+ * settles into a full beam: a hazy cone with a brighter core, dust drifting
+ * through it, and a hard-edged pool of light on the floor. All driven by the
+ * scroll, so it plays forward and back.
+ */
 function Stage({ p, opacity, x = "70%" }) {
-  const fall = useTransform(p, [0.02, 0.28], [0, 1], { clamp: true });
-  const slide = useTransform(p, [0.18, 0.38], [0, 1], { clamp: true });
+  // aim: swings in from the side and settles on the text
+  const aim = useTransform(p, [0, 0.22, 0.3], [-34, 3, 0], { clamp: true });
+  // power: a few flickers before it holds
+  const power = useTransform(p, [0.04, 0.07, 0.09, 0.11, 0.13, 0.16, 0.22], [0, 0.55, 0.08, 0.7, 0.25, 0.95, 1], { clamp: true });
+  const lamp = useTransform(power, [0, 1], [0.15, 1]);
+  const [h, setH] = useState(800);
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver(([e]) => setH(e.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // where the beam meets the floor follows the aim
+  const poolX = useTransform(aim, (a) => -Math.tan((a * Math.PI) / 180) * h * 0.86);
+  const beamRotate = aim;
+
   return (
-    <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[#050404]" style={{ opacity }}>
-      {/* the talk slide, projected on the back wall */}
-      <motion.div className="absolute inset-0 flex items-center justify-center" style={{ opacity: slide }}>
-        <div
-          className="projector relative flex aspect-[16/9] w-[min(62vw,58rem)] flex-col justify-end p-[3%]"
-          style={{ transform: "perspective(1600px) rotateY(-6deg)", left: `calc(${x} - 50%)`, background: "linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015))", boxShadow: "0 0 120px rgba(255,240,220,0.06)" }}
-        >
-          <p className="label text-[clamp(0.55rem,0.8vw,0.75rem)] text-white/30">National Youth Festival 2025 · Representing Tripura</p>
-          <p className="display mt-3 text-[clamp(2.2rem,5.2vw,5.6rem)] leading-[0.92] text-white/[0.13]">
-            Tech for
-            <br />
-            Viksit Bharat 2047
-          </p>
-        </div>
+    <motion.div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[#040303]" style={{ opacity }}>
+      {/* haze in the room, lit faintly by the beam */}
+      <motion.div className="absolute inset-0" style={{ opacity: power, background: "radial-gradient(60% 70% at 70% 45%, rgba(255,236,210,0.05), transparent 70%)" }} />
+
+      {/* the floor pool: an ellipse lying flat, a hot centre and a crisp rim */}
+      <motion.div className="absolute bottom-[3%] h-[14%] w-[min(46vw,40rem)]" style={{ left: x, x: "-50%", opacity: power }}>
+        <motion.div className="absolute inset-0" style={{ x: poolX }}>
+          <div className="absolute inset-0 rounded-[50%]" style={{ background: "radial-gradient(closest-side, rgba(255,240,214,0.42), rgba(255,226,186,0.16) 62%, rgba(255,226,186,0.04) 92%, transparent)" }} />
+          <div className="absolute inset-[2%] rounded-[50%] border border-[rgba(255,236,206,0.16)]" />
+        </motion.div>
       </motion.div>
-      {/* the spotlight falling from above, and the pool it makes */}
-      <motion.div className="absolute top-0 h-full w-[min(60vw,56rem)] origin-top" style={{ left: x, x: "-50%", scaleY: fall, opacity: fall }}>
+
+      {/* the beam, pivoting at the lamp */}
+      <motion.div className="absolute top-[34px] h-[calc(100%-34px)] w-[min(52vw,46rem)] origin-top" style={{ left: x, x: "-50%", rotate: beamRotate, opacity: power }}>
+        {/* the soft outer cone */}
         <div
           className="absolute inset-0"
-          style={{ clipPath: "polygon(44% 0, 56% 0, 100% 100%, 0 100%)", background: "linear-gradient(to bottom, rgba(255,244,226,0.2), rgba(255,244,226,0.05) 65%, transparent)" }}
+          style={{
+            clipPath: "polygon(47% 0, 53% 0, 100% 100%, 0 100%)",
+            background: "linear-gradient(to bottom, rgba(255,242,220,0.24), rgba(255,236,206,0.09) 55%, rgba(255,236,206,0.03))",
+            WebkitMaskImage: "linear-gradient(90deg, transparent, black 22%, black 78%, transparent)",
+            maskImage: "linear-gradient(90deg, transparent, black 22%, black 78%, transparent)",
+          }}
         />
-        {MOTES.map((m, i) => (
-          <span key={i} className="absolute rounded-full bg-[#fff4e2]" style={{ left: `${m.left}%`, top: `${m.top}%`, width: m.size, height: m.size, "--o": m.o, animation: `rise-dust ${m.dur}s linear ${m.delay}s infinite` }} />
-        ))}
+        {/* the brighter core */}
+        <div
+          className="absolute inset-0"
+          style={{
+            clipPath: "polygon(48.5% 0, 51.5% 0, 74% 100%, 26% 100%)",
+            background: "linear-gradient(to bottom, rgba(255,250,236,0.3), rgba(255,244,222,0.07) 70%, transparent)",
+            WebkitMaskImage: "linear-gradient(90deg, transparent, black 30%, black 70%, transparent)",
+            maskImage: "linear-gradient(90deg, transparent, black 30%, black 70%, transparent)",
+          }}
+        />
+        {/* dust drifting through the light */}
+        <div className="absolute inset-0" style={{ clipPath: "polygon(47% 0, 53% 0, 100% 100%, 0 100%)" }}>
+          {MOTES.map((m, i) => (
+            <span key={i} className="absolute rounded-full bg-[#fff6e6]" style={{ left: `${m.left}%`, top: `${m.top}%`, width: m.size, height: m.size, "--o": m.o, animation: `rise-dust ${m.dur}s linear ${m.delay}s infinite` }} />
+          ))}
+        </div>
       </motion.div>
-      <motion.div
-        className="absolute bottom-[6%] h-[16%] w-[min(54vw,48rem)] -translate-x-1/2 rounded-[50%]"
-        style={{ left: x, opacity: fall, background: "radial-gradient(closest-side, rgba(255,240,220,0.18), transparent)" }}
-      />
+
+      {/* the lamp itself, on its rig */}
+      <motion.div className="absolute top-0 h-[54px] w-[80px]" style={{ left: x, x: "-50%", rotate: beamRotate, transformOrigin: "50% 38px" }}>
+        <svg viewBox="0 0 80 54" className="h-full w-full">
+          <defs>
+            <linearGradient id="can" x1="0" x2="1">
+              <stop offset="0" stopColor="#1a1a1c" />
+              <stop offset="0.5" stopColor="#3a3a3e" />
+              <stop offset="1" stopColor="#141416" />
+            </linearGradient>
+            <radialGradient id="lens">
+              <stop offset="0" stopColor="#fffaf0" />
+              <stop offset="0.6" stopColor="rgba(255,226,170,0.8)" />
+              <stop offset="1" stopColor="rgba(255,200,120,0)" />
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="80" height="6" fill="#151517" />
+          <path d="M40 6 V14" stroke="#2a2a2d" strokeWidth="3" />
+          <path d="M22 14 H58 L54 38 H26 Z" fill="url(#can)" />
+          <path d="M16 36 L26 38 M64 36 L54 38" stroke="#26262a" strokeWidth="3" strokeLinecap="round" />
+          <motion.ellipse cx="40" cy="38" rx="15" ry="5" fill="url(#lens)" style={{ opacity: lamp }} />
+        </svg>
+      </motion.div>
+      <motion.div className="absolute top-[18px] h-24 w-24 rounded-full" style={{ left: x, x: "-50%", opacity: power, background: "radial-gradient(closest-side, rgba(255,232,190,0.55), transparent)" }} />
     </motion.div>
   );
 }
@@ -233,8 +266,8 @@ function Stage({ p, opacity, x = "70%" }) {
 const CHIPS = about.snapshot.flatMap((row, r) => row.items.map((it, k) => ({ ...it, row: r, k })));
 
 function Chip({ item, i, t }) {
-  const dx = (rand(i, 31) - 0.5) * 360;
-  const dy = (rand(i, 32) - 0.5) * 220 - 40;
+  const dx = (rand(i, 31) - 0.5) * 240;
+  const dy = (rand(i, 32) - 0.5) * 140;
   const rot = (rand(i, 33) - 0.5) * 70;
   const e = useTransform(t, (v) => ease3(clamp((v - (i % 5) * 0.03) / 0.85, 0, 1)));
   const x = useTransform(e, (v) => (1 - v) * dx);
@@ -257,27 +290,70 @@ function Chip({ item, i, t }) {
   );
 }
 
-/** The everyday toolkit, scattered across the plan, then assembling into place. */
+/** The everyday toolkit: scattered, then assembling into place on a drafting board that draws itself around it. */
 function Workbench({ p }) {
   const t = useTransform(p, [0.22, 0.72], [0, 1], { clamp: true });
+  const frame = useTransform(p, [0.04, 0.3], [0, 1], { clamp: true });
+  const ticks = useTransform(p, [0.2, 0.42], [0, 1], { clamp: true });
   const labels = useTransform(t, [0.8, 1], [0, 1]);
   let i = -1;
   return (
-    <dl className="grid grid-cols-2 gap-x-5 gap-y-3">
-      {about.snapshot.map((row) => (
-        <div key={row.label}>
-          <motion.dt className="label mb-2 text-[0.6rem] text-[#9fb6e8]" style={{ opacity: labels }}>
-            {row.label}
-          </motion.dt>
-          <dd className="flex flex-wrap gap-1.5">
-            {row.items.map((it) => {
-              i += 1;
-              return <Chip key={it.name} item={it} i={i} t={t} />;
-            })}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className="relative px-5 pb-5 pt-7">
+      {/* the board: its edge draws in, then the dimension lines and corner marks */}
+      <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <motion.rect x="0.3" y="0.5" width="99.4" height="99" rx="1.2" fill="rgba(10,16,32,0.55)" stroke="rgba(160,190,255,0.35)" strokeWidth="1" vectorEffect="non-scaling-stroke" style={{ pathLength: frame }} />
+      </svg>
+      <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: ticks }}>
+        {/* corner marks */}
+        {["left-0 top-0", "right-0 top-0 rotate-90", "right-0 bottom-0 rotate-180", "left-0 bottom-0 -rotate-90"].map((c) => (
+          <span key={c} className={`absolute h-3 w-3 border-l border-t border-[#9fb6e8] ${c}`} style={{ margin: -5 }} />
+        ))}
+        {/* a dimension line across the top, with its label */}
+        <span className="absolute -top-4 left-0 right-0 flex items-center gap-2">
+          <span className="h-2 w-px bg-[#9fb6e8]/60" />
+          <span className="h-px flex-1 bg-[#9fb6e8]/35" />
+          <span className="label text-[0.52rem] text-[#9fb6e8]/80">Toolkit</span>
+          <span className="h-px flex-1 bg-[#9fb6e8]/35" />
+          <span className="h-2 w-px bg-[#9fb6e8]/60" />
+        </span>
+      </motion.div>
+
+      <dl className="relative grid grid-cols-2 gap-x-5 gap-y-3">
+        {about.snapshot.map((row) => (
+          <div key={row.label}>
+            <motion.dt className="label mb-2 text-[0.6rem] text-[#9fb6e8]" style={{ opacity: labels }}>
+              {row.label}
+            </motion.dt>
+            <dd className="flex flex-wrap gap-1.5">
+              {row.items.map((it) => {
+                i += 1;
+                return <Chip key={it.name} item={it} i={i} t={t} />;
+              })}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** The talk, on a screen that flickers on behind the speaker's words. */
+function TalkSlide({ p }) {
+  const on = useTransform(p, [0.12, 0.16, 0.18, 0.24], [0, 0.6, 0.2, 1], { clamp: true });
+  const rise = useTransform(p, [0.12, 0.3], [18, 0], { clamp: true });
+  return (
+    <motion.div aria-hidden="true" className="relative" style={{ opacity: on, y: rise }}>
+      <div className="projector relative aspect-[16/7] w-full max-w-[30rem] overflow-hidden rounded-[6px] border border-white/10 bg-[linear-gradient(135deg,#1a1714,#0d0c0b)] p-[4.5%] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.95),0_0_70px_-20px_rgba(255,236,206,0.18)]">
+        <div className="absolute inset-0 bg-[radial-gradient(80%_90%_at_30%_0%,rgba(255,240,214,0.12),transparent_70%)]" />
+        <p className="label relative text-[0.55rem] text-white/45">National Youth Festival 2025 · Representing Tripura</p>
+        <p className="display relative mt-3 text-[clamp(1.4rem,2.6vw,2.3rem)] leading-[0.98] text-white/85">
+          Tech for
+          <br />
+          Viksit Bharat 2047
+        </p>
+        <span className="absolute bottom-[8%] right-[5%] h-1.5 w-1.5 rounded-full bg-accent-strong shadow-[0_0_10px_rgb(var(--accent-strong-rgb))]" />
+      </div>
+    </motion.div>
   );
 }
 
@@ -505,14 +581,21 @@ function Rich({ text }) {
 
 const SCENES = [Blueprint, Starfield, Stage];
 const FRONT = [Workbench, Countdown, null];
+const BEFORE = [null, null, TalkSlide];
 
 /** One paragraph's turn on the stage (pinned frame). */
 function Act({ index, opacity, p, text }) {
   const y = useTransform(opacity, [0, 1], [24, 0]);
   const pointerEvents = useTransform(opacity, (v) => (v > 0.5 ? "auto" : "none"));
   const Front = FRONT[index];
+  const Before = BEFORE[index];
   return (
     <motion.div className="[grid-area:1/1]" style={{ opacity, y, pointerEvents }} aria-hidden={undefined}>
+      {Before && (
+        <div className="mb-8 [@media(max-height:760px)]:mb-5">
+          <Before p={p} />
+        </div>
+      )}
       <p className="text-[clamp(1rem,1.2vw,1.2rem)] leading-[1.75] text-paper/90 [@media(max-height:760px)]:text-[0.95rem]">
         <Rich text={text} />
       </p>
@@ -532,6 +615,7 @@ function FlowAct({ index, text }) {
   const p = useTransform(scrollYProgress, [0.18, 0.62], [0, 1], { clamp: true });
   const Scene = SCENES[index];
   const Front = FRONT[index];
+  const Before = BEFORE[index];
   return (
     <div ref={ref} className="relative isolate overflow-hidden">
       <Scene p={p} opacity={1} x="50%" />
@@ -539,6 +623,11 @@ function FlowAct({ index, text }) {
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
       <div className="container-x relative flex min-h-[92svh] flex-col justify-center py-24">
         <p className="label mb-6 text-paper/70">{String(index + 1).padStart(2, "0")}</p>
+        {Before && (
+          <div className="mb-8">
+            <Before p={p} />
+          </div>
+        )}
         <p className="text-[clamp(1.02rem,2.8vw,1.2rem)] leading-[1.75] text-paper/90">
           <Rich text={text} />
         </p>
