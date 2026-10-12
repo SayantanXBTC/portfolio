@@ -357,6 +357,17 @@ html {
   pointer-events: none;
 }
 
+/* About: rings pulsing out of the quiz buzzer */
+.buzz-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: buzz-ring 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes buzz-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
 /* Skills globe: a ring that pulses out from a chosen skill */
 .sphere-ping {
   animation: sphere-ping 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;

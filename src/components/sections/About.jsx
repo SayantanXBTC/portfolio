@@ -166,74 +166,113 @@ const MOTES = Array.from({ length: 26 }, (_, i) => ({ left: 22 + rand(i, 21) * 5
 
 /*
  * Three figures on the stage, cut from real photographs of Sayantan (with
- * Apple Vision person masks), head to shoes: standing at a debate desk,
- * speaking at the National Youth Festival lectern, and at a quiz buzzer.
- * Each is a solid silhouette with a matching rim of light along its real
- * outline. `ratio` is the cut-out's width / height.
+ * Apple Vision person masks): standing behind a debate desk, speaking at the
+ * National Youth Festival lectern, and seated at a quiz desk with his hand on
+ * the buzzer. Each is a solid silhouette with a matching rim of light along
+ * its real outline. `ratio` is the cut-out's width / height; `size` is its
+ * height as a share of the stage figure height; `raise` lifts it off the
+ * floor (to sit at a desk).
  */
 const SIL = (name) => ({ body: asset(`images/sil-${name}-body.webp`), rim: asset(`images/sil-${name}-rim.webp`) });
 const FIGURES = [
-  { ...SIL("debate"), ratio: 259 / 900, prop: "desk" },
-  { ...SIL("speak"), ratio: 505 / 900 },
-  { ...SIL("quiz"), ratio: 298 / 900, prop: "buzzer" },
+  { ...SIL("debate"), ratio: 259 / 900, size: 1, raise: 0, prop: "debate" },
+  { ...SIL("speak"), ratio: 505 / 900, size: 1, raise: 0 },
+  { ...SIL("seat"), ratio: 773 / 900, size: 0.7, raise: 0.33, prop: "quiz" },
 ];
 const RIM = "rgb(255 226 184)";
+const INK = "#070605";
 
-/** The debate desk beside the debater: a nameplate, papers and a gooseneck microphone on a table, its edges catching the light. */
-function DebateDesk({ lit }) {
-  const rim = useTransform(lit, [0, 1], [0.15, 1]);
+/**
+ * The debate desk he stands behind: a wide table with a front panel, a
+ * nameplate, papers and a glass of water, and a gooseneck microphone rising
+ * toward him. Its edges catch the light along with him.
+ */
+function DebateDesk({ lit, h, w }) {
+  const rim = useTransform(lit, [0, 1], [0.12, 1]);
+  const dh = h * 0.46;
+  const dw = Math.max(w * 2.4, h * 0.74);
   return (
-    <svg viewBox="0 0 160 150" className="absolute bottom-0 right-[56%] h-[40%] w-auto overflow-visible" style={{ aspectRatio: "160 / 150" }} aria-hidden="true">
-      <motion.g style={{ opacity: rim }} fill="none" stroke={RIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 62 H158" />
-        <path d="M112 60 V40 Q112 26 98 22" strokeOpacity="0.8" />
-        <path d="M30 60 l6 -16 h40 l-6 16" strokeOpacity="0.7" />
+    <svg viewBox="0 0 300 160" preserveAspectRatio="none" className="absolute bottom-0 overflow-visible" style={{ width: dw, height: dh, left: w / 2 - dw * 0.46 }} aria-hidden="true">
+      {/* microphone on a gooseneck, rising toward him from the desk */}
+      <path d="M150 22 V-6 Q150 -40 132 -56" fill="none" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
+      <path d="M124 -66 q8 -6 15 3 l-5 11 q-9 2 -13 -6 Z" fill={INK} />
+      <path d="M140 18 h20 v6 h-20 Z" fill={INK} />
+      {/* glass of water, papers, nameplate */}
+      <path d="M214 22 l3 -22 h14 l3 22 Z" fill={INK} />
+      <path d="M58 21 l44 -5 l3 5 Z M66 21 l40 -3 l2 3 Z" fill={INK} />
+      <path d="M170 22 l7 -18 h52 l-7 18 Z" fill={INK} transform="translate(-112 0)" />
+      {/* the desk: top, front panel with a lighter band, and a base */}
+      <path d="M0 22 H300 V32 H0 Z" fill={INK} />
+      <path d="M10 32 H290 V150 H10 Z" fill={INK} />
+      <path d="M0 150 H300 V160 H0 Z" fill={INK} />
+      <motion.g style={{ opacity: rim }} fill="none" stroke={RIM} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 22 H298" strokeWidth="2.2" />
+        <path d="M150 22 V-6 Q150 -40 132 -56" strokeWidth="1.4" strokeOpacity="0.7" />
+        <path d="M214 22 l3 -22 h14 l3 22" strokeWidth="1.2" strokeOpacity="0.6" />
+        <path d="M58 22 l7 -18 h52 l-7 18" strokeWidth="1.2" strokeOpacity="0.55" />
+        <path d="M10 54 H290 M10 60 H290" strokeWidth="1" strokeOpacity="0.18" />
+        <text x="150" y="104" textAnchor="middle" fill={RIM} stroke="none" fillOpacity="0.32" className="font-mono" fontSize="13" letterSpacing="6">
+          DEBATE
+        </text>
       </motion.g>
-      {/* microphone on its gooseneck */}
-      <path d="M112 60 V40 Q112 26 98 22" fill="none" stroke="#070605" strokeWidth="3" />
-      <path d="M93 16 q5 -4 10 2 l-4 8 q-6 1 -8 -4 Z" fill="#070605" />
-      <path d="M104 58 h16 v4 h-16 Z" fill="#070605" />
-      {/* nameplate */}
-      <path d="M30 60 l6 -16 h40 l-6 16 Z" fill="#070605" />
-      {/* papers */}
-      <path d="M118 59 l26 -3 l2 3 Z" fill="#070605" />
-      {/* the table: top, front skirt, legs */}
-      <path d="M0 60 H160 V68 H0 Z M8 68 H152 V96 H8 Z M10 96 H20 V150 H10 Z M140 96 H150 V150 H140 Z" fill="#070605" />
     </svg>
   );
 }
 
-/** A quiz buzzer on its stand beside the quizzer: it lights up red when the beam finds him, and a question rises above. */
-function BuzzerStand({ lit }) {
+/**
+ * The quiz desk he sits at: a contestant's desk with his hand on a big buzzer.
+ * When the light finds him the buzzer lights up and rings of light pulse out
+ * from it, the contestant number on the front lights up, and a question mark
+ * rises above him.
+ */
+function QuizDesk({ lit, h, w }) {
   const glow = useTransform(lit, [0, 1], [0, 1]);
-  const rim = useTransform(lit, [0, 1], [0.15, 1]);
-  const q = useTransform(lit, [0.4, 1], [12, 0]);
+  const rim = useTransform(lit, [0, 1], [0.12, 1]);
+  const q = useTransform(lit, [0.4, 1], [14, 0]);
+  const dh = h * 0.37;
+  const dw = Math.max(w * 1.55, h * 0.86);
+  const left = w * 0.5 - dw * 0.6;
   return (
     <>
-      <svg viewBox="0 0 60 160" className="absolute bottom-0 left-[84%] h-[56%] w-auto overflow-visible" style={{ aspectRatio: "60 / 160" }} aria-hidden="true">
-        <motion.g style={{ opacity: rim }} fill="none" stroke={RIM} strokeWidth="2" strokeLinecap="round">
-          <path d="M8 26 H52" />
-          <path d="M14 158 H46" strokeOpacity="0.6" />
-        </motion.g>
-        <path d="M6 26 H54 V40 H6 Z M27 40 H33 V150 H27 Z M12 150 H48 V160 H12 Z" fill="#070605" />
-        <path d="M18 26 Q18 12 30 12 Q42 12 42 26 Z" fill="#070605" />
-        {/* the buzzer lights up red */}
+      <svg viewBox="0 0 280 130" preserveAspectRatio="none" className="absolute bottom-0 overflow-visible" style={{ width: dw, height: dh, left }} aria-hidden="true">
         <defs>
           <radialGradient id="buzz-glow">
-            <stop offset="0" stopColor="rgb(var(--accent-strong-rgb))" stopOpacity="0.7" />
+            <stop offset="0" stopColor="rgb(var(--accent-strong-rgb))" stopOpacity="0.75" />
             <stop offset="1" stopColor="rgb(var(--accent-strong-rgb))" stopOpacity="0" />
           </radialGradient>
         </defs>
+        {/* the buzzer: a base and a big dome */}
+        <path d="M58 20 h44 v6 h-44 Z" fill={INK} />
+        <path d="M64 20 Q64 4 80 4 Q96 4 96 20 Z" fill={INK} />
+        {/* his forearm reaching across the desk, palm down on the buzzer */}
+        <path d="M168 -6 Q134 -10 104 -2 L92 2 Q84 4 80 0 Q74 -2 72 3 L74 6 Q86 10 104 8 Q136 6 170 10 Z" fill={INK} />
+        {/* desk top and front */}
+        <path d="M0 24 H280 V34 H0 Z" fill={INK} />
+        <path d="M8 34 H272 V130 H8 Z" fill={INK} />
+        <motion.g style={{ opacity: rim }} fill="none" stroke={RIM} strokeLinecap="round">
+          <path d="M2 24 H278" strokeWidth="2.2" />
+          <path d="M8 46 H272" strokeWidth="1" strokeOpacity="0.16" />
+          <path d="M168 -6 Q134 -10 104 -2 L92 2" strokeWidth="1.4" strokeOpacity="0.7" />
+        </motion.g>
+        {/* lit: the buzzer, its rings, and the contestant's number */}
         <motion.g style={{ opacity: glow }}>
-          <circle cx="30" cy="20" r="24" fill="url(#buzz-glow)" />
-          <path d="M18 26 Q18 12 30 12 Q42 12 42 26 Z" fill="rgb(var(--accent-strong-rgb))" />
-          <path d="M22 18 Q26 14 31 14" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.6" strokeLinecap="round" />
+          <circle cx="80" cy="12" r="34" fill="url(#buzz-glow)" />
+          <path d="M64 20 Q64 4 80 4 Q96 4 96 20 Z" fill="rgb(var(--accent-strong-rgb))" />
+          <path d="M66 15 Q68 9 72 7" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.8" strokeLinecap="round" />
+          <circle className="buzz-ring" cx="80" cy="12" r="16" fill="none" stroke="rgb(var(--accent-strong-rgb))" strokeWidth="2" />
+          <circle className="buzz-ring" style={{ animationDelay: "0.45s" }} cx="80" cy="12" r="16" fill="none" stroke="rgb(var(--accent-strong-rgb))" strokeWidth="2" />
+          {/* the hand pressing it, drawn over the light */}
+          <path d="M104 8 Q90 9 82 6 Q76 4 74 6 L72 3 Q74 -2 80 0 Q84 4 92 2 L104 -2 Z" fill={INK} />
+          <rect x="112" y="64" width="56" height="34" rx="4" fill="none" stroke={RIM} strokeOpacity="0.45" />
+          <text x="140" y="88" textAnchor="middle" fill={RIM} className="font-mono font-semibold" fontSize="20">
+            03
+          </text>
         </motion.g>
       </svg>
       <motion.span
         aria-hidden="true"
-        className="absolute -top-[13%] left-1/2 -translate-x-1/2 text-[clamp(1.4rem,2.4vw,2.2rem)] font-semibold"
-        style={{ opacity: glow, y: q, color: RIM, textShadow: "0 0 18px rgba(255,214,150,0.8)" }}
+        className="absolute left-1/2 -translate-x-1/2 text-[clamp(1.5rem,2.6vw,2.4rem)] font-semibold"
+        style={{ bottom: h * 1.02, opacity: glow, y: q, color: RIM, textShadow: "0 0 18px rgba(255,214,150,0.8)" }}
       >
         ?
       </motion.span>
@@ -241,21 +280,24 @@ function BuzzerStand({ lit }) {
   );
 }
 
-function Figure({ fig, lit, show }) {
+function Figure({ fig, lit, show, h, w }) {
   const rim = useTransform(lit, [0, 1], [0.12, 1]);
   const glow = useTransform(lit, [0, 1], [0, 0.9]);
   const y = useTransform(show, [0, 1], [24, 0]);
+  const imgH = h * fig.size;
   return (
     <motion.div className="relative h-full w-full" style={{ opacity: show, y }}>
       {/* the light behind the figure, which makes it read as a silhouette */}
       <motion.div
-        className="absolute -inset-x-[115%] bottom-[-4%] top-[2%] rounded-[50%]"
-        style={{ opacity: glow, background: "radial-gradient(closest-side, rgba(255,232,196,0.36), rgba(255,220,170,0.09) 60%, transparent)" }}
+        className="absolute bottom-[-4%] top-[2%] rounded-[50%]"
+        style={{ left: -h * 0.42, right: -h * 0.42, opacity: glow, background: "radial-gradient(closest-side, rgba(255,232,196,0.36), rgba(255,220,170,0.09) 60%, transparent)" }}
       />
-      {fig.prop === "desk" && <DebateDesk lit={lit} />}
-      <motion.img src={fig.rim} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain object-bottom" style={{ opacity: rim }} />
-      <img src={fig.body} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain object-bottom" />
-      {fig.prop === "buzzer" && <BuzzerStand lit={lit} />}
+      <div className="absolute inset-x-0" style={{ bottom: h * fig.raise, height: imgH }}>
+        <motion.img src={fig.rim} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain object-bottom" style={{ opacity: rim }} />
+        <img src={fig.body} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain object-bottom" />
+      </div>
+      {fig.prop === "debate" && <DebateDesk lit={lit} h={h} w={w} />}
+      {fig.prop === "quiz" && <QuizDesk lit={lit} h={h} w={w} />}
     </motion.div>
   );
 }
@@ -278,8 +320,8 @@ function Stage({ p, opacity, x = "70%" }) {
     return () => ro.disconnect();
   }, []);
   const narrow = box.w < 700;
-  const figH = Math.round(Math.min(box.h * (narrow ? 0.3 : 0.38), 340));
-  const gap = narrow ? Math.min(box.w * 0.27, 120) : Math.min(box.w * 0.13, 230);
+  const figH = Math.round(Math.min(box.h * (narrow ? 0.25 : 0.38), 340));
+  const gap = narrow ? Math.min(box.w * 0.29, 118) : Math.min(box.w * 0.145, 250);
   const spots = [-gap, 0, gap];
   const floor = box.h * (narrow ? 0.94 : 0.93);
   const angleTo = (dx) => (-Math.atan(dx / (floor - 34)) * 180) / Math.PI;
@@ -321,11 +363,14 @@ function Stage({ p, opacity, x = "70%" }) {
       </motion.div>
 
       {/* the three figures, standing on the stage */}
-      {FIGURES.map((fig, i) => (
-        <div key={i} className="absolute" style={{ left: `calc(${x} + ${spots[i]}px)`, top: floor - figH, height: figH, width: figH * fig.ratio, transform: "translateX(-50%)" }}>
-          <Figure fig={fig} lit={lit[i]} show={show[i]} />
-        </div>
-      ))}
+      {FIGURES.map((fig, i) => {
+        const w = figH * fig.size * fig.ratio;
+        return (
+          <div key={i} className="absolute" style={{ left: `calc(${x} + ${spots[i]}px)`, top: floor - figH, height: figH, width: w, transform: "translateX(-50%)" }}>
+            <Figure fig={fig} lit={lit[i]} show={show[i]} h={figH} w={w} />
+          </div>
+        );
+      })}
 
       {/* the beam, pivoting at the lamp */}
       <motion.div className="absolute top-[34px] w-[min(40vw,34rem)] origin-top" style={{ left: x, x: "-50%", height: floor - 34, rotate: aim, opacity: power }}>
