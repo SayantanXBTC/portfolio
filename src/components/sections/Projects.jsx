@@ -424,7 +424,7 @@ export default function Projects() {
 
   return (
     <section id="projects" aria-labelledby="projects-title" className="relative z-10 bg-ink">
-      <div className="container-x overflow-x-clip pb-20 pt-36 md:pb-28 md:pt-52">
+      <div className="container-x overflow-x-clip pb-20 pt-28 md:pb-28 md:pt-36">
         <SectionHeader id="projects" label="Work" note="Five builds · one through-line">
           <Reveal from="none" delay={0.3} duration={1.6} className="mt-10 max-w-xl body-copy">
             Five projects chosen from the many I&rsquo;ve built. Together they run from automated testing, to AI that

@@ -1,187 +1,103 @@
-import { Component, Suspense, lazy, useRef, useState } from "react";
-import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import {
-  siApachemaven,
-  siClaude,
-  siDocker,
-  siExpress,
-  siFlask,
-  siGithubactions,
-  siJavascript,
-  siJenkins,
-  siJunit5,
-  siMongodb,
-  siMysql,
-  siNextdotjs,
-  siNodedotjs,
-  siPostgresql,
-  siPostman,
-  siPython,
-  siReact,
-  siSelenium,
-  siSocketdotio,
-  siThreedotjs,
-  siTypescript,
-  siVite,
-} from "simple-icons";
-import {
-  BrainCircuit,
-  Coffee,
-  Drama,
-  Glasses,
-  ListChecks,
-  Network,
-  ScanFace,
-  ScrollText,
-  ShieldCheck,
-  Trophy,
-  Workflow,
-} from "lucide-react";
-import { foundations } from "../../data/portfolio";
-import { useAccent } from "../../context/AccentContext";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useInView, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
+import { foundations, projects } from "../../data/portfolio";
 import { useFinePointer } from "../../hooks/useMedia";
 import { EASE } from "../../lib/asset";
+import { focusSkill, jumpToProject, scrollToId } from "../../lib/scroll";
 import { SectionHeader } from "../kit/SectionHeader";
+import { Icon3D, tintFor } from "../kit/SkillIcon";
+import SkillSphere from "../skills/SkillSphere";
 
-const NetworkScene = lazy(() => import("../effects/NetworkScene"));
-
-// Brand logos (Simple Icons, CC0) and drawn concept icons (Lucide) for the rest.
-const BRAND = {
-  siApachemaven,
-  siClaude,
-  siDocker,
-  siExpress,
-  siFlask,
-  siGithubactions,
-  siJavascript,
-  siJenkins,
-  siJunit5,
-  siMongodb,
-  siMysql,
-  siNextdotjs,
-  siNodedotjs,
-  siPostgresql,
-  siPostman,
-  siPython,
-  siReact,
-  siSelenium,
-  siSocketdotio,
-  siThreedotjs,
-  siTypescript,
-  siVite,
+// What a skill is called inside the projects' stacks, when that differs from its name here.
+const ALIAS = {
+  "REST APIs": ["rest api"],
+  "Socket.io": ["socket.io"],
+  "Claude API": ["claude"],
+  "Generative AI": ["claude"],
+  "Computer vision": ["insightface"],
 };
-const DRAWN = { BrainCircuit, Coffee, Drama, Glasses, ListChecks, Network, ScanFace, ScrollText, ShieldCheck, Trophy, Workflow };
-
-// Near-black brand colours would vanish on the page; fall back to paper.
-const lum = (hex) => {
-  const v = parseInt(hex.slice(1), 16);
-  return 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
+const usedIn = (name) => {
+  const keys = ALIAS[name] ?? [name.toLowerCase()];
+  return projects.filter((p) => p.tech.some((t) => keys.some((k) => t.toLowerCase().startsWith(k))));
 };
-const plateFor = (item) => {
-  const hex = item.tint ?? (BRAND[item.icon] ? `#${BRAND[item.icon].hex}` : "#2a2a2a");
-  return lum(hex) < 40 ? "#262626" : hex;
-};
-const tintFor = (item) => {
-  const hex = plateFor(item);
-  return lum(hex) < 60 ? "#efede9" : hex;
-};
+const USED = Object.fromEntries(foundations.flatMap((g) => g.items.map((it) => [it.name, usedIn(it.name)])));
 
-function Glyph({ item, className }) {
-  const brand = BRAND[item.icon];
-  if (brand)
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-        <path d={brand.path} />
-      </svg>
-    );
-  const Drawn = DRAWN[item.icon];
-  return Drawn ? <Drawn className={className} strokeWidth={2.2} aria-hidden="true" /> : null;
-}
-
-// a stable pseudo-random number per skill, so every icon moves on its own rhythm
-const seed = (str) => {
-  let h = 0;
-  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) % 9973;
-  return h / 9973;
-};
-
-/**
- * A logo as a solid object: a glossy, rounded plate with real thickness (stacked
- * slabs), the logo raised off its face (stacked glyph layers), a light sweep and
- * a soft shadow. It floats and turns on its own, so its depth is always visible.
- */
-function Icon3D({ item }) {
-  const plate = plateFor(item);
-  const glyph = lum(plate) > 175 ? "#161616" : "#ffffff";
-  const r = seed(item.name);
-  const style = {
-    "--c": plate,
-    "--dur": `${5 + r * 3}s`,
-    "--delay": `${-r * 8}s`,
-  };
+/** The projects a skill was used in; each one jumps to its scene in Work. */
+function UsedIn({ item, align, onClose }) {
+  const list = USED[item.name];
+  const side = align === "left" ? "left-0" : align === "right" ? "right-0" : "left-1/2 -translate-x-1/2";
   return (
-    <span className="icon3d block" style={style} aria-hidden="true">
-      <span className="icon3d-shadow" />
-      <span className="icon3d-bob">
-        {/* thickness of the plate */}
-        {[4, 3, 2, 1].map((d) => (
-          <span
-            key={d}
-            className="icon3d-slab"
-            style={{
-              transform: `translateZ(${-d * 2.8}px)`,
-              background: `color-mix(in srgb, var(--c) ${62 - d * 7}%, black)`,
-            }}
-          />
-        ))}
-        <span className="icon3d-face">
-          <span className="icon3d-gloss" />
-        </span>
-        {/* the logo, embossed: darker layers underneath, bright layer on top */}
-        {[1, 2].map((d) => (
-          <span
-            key={d}
-            className="icon3d-glyph"
-            style={{ transform: `translateZ(${d * 2.1}px)`, color: `color-mix(in srgb, ${glyph} 45%, black)` }}
-          >
-            <Glyph item={item} />
-          </span>
-        ))}
-        <span
-          className="icon3d-glyph"
-          style={{ transform: "translateZ(6.4px)", color: glyph, filter: "drop-shadow(0 1px 0 rgba(255,255,255,0.35))" }}
-        >
-          <Glyph item={item} />
-        </span>
-      </span>
-    </span>
+    <motion.div
+      role="dialog"
+      aria-label={`${item.name} is used in`}
+      className={`absolute bottom-[calc(100%+0.6rem)] z-30 w-max min-w-[11rem] max-w-[15rem] ${side}`}
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 6, scale: 0.97, transition: { duration: 0.18 } }}
+      transition={{ duration: 0.35, ease: EASE }}
+    >
+      <div className="rounded-xl border border-white/10 bg-[#121212] p-2 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.95)]">
+        <p className="label px-2 pb-2 pt-1 text-[0.58rem] text-dim">Used in</p>
+        <ul>
+          {list.map((p) => (
+            <li key={p.slug}>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  jumpToProject(p.slug);
+                }}
+                className="group/p flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[0.82rem] text-paper/85 transition-colors hover:bg-white/[0.06] hover:text-paper"
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: p.color }} />
+                <span className="flex-1">{p.title}</span>
+                <span className="text-dim transition-transform duration-300 group-hover/p:translate-x-0.5">→</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </motion.div>
   );
-}
-
-class SceneBoundary extends Component {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
 }
 
 /**
  * One skill as a small stage: the tile flips up into place, tilts toward the
  * pointer and catches a sheen; the 3D icon on it floats on its own rhythm and
- * lifts and turns once when you look at it.
+ * lifts and turns once when you look at it. Skills used in projects say where.
  */
-function Tile({ item }) {
+function Tile({ item, open, setOpen }) {
   const ref = useRef(null);
+  const li = useRef(null);
   const fine = useFinePointer();
   const reduce = useReducedMotion();
   const [hot, setHot] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const [align, setAlign] = useState("center");
   const rx = useSpring(useMotionValue(0), { stiffness: 220, damping: 18 });
   const ry = useSpring(useMotionValue(0), { stiffness: 220, damping: 18 });
   const tint = tintFor(item);
   const tilt = fine && !reduce;
+  const n = USED[item.name].length;
+  const lit = hot || flash;
+
+  // asked for from elsewhere (About, the globe): turn once and glow
+  useEffect(() => {
+    const on = (e) => {
+      if (e.detail !== item.name) return;
+      setFlash(true);
+      setTimeout(() => setFlash(false), 1900);
+    };
+    window.addEventListener("skill:focus", on);
+    return () => window.removeEventListener("skill:focus", on);
+  }, [item.name]);
+
+  // keep the card on screen at the edges of the grid
+  useLayoutEffect(() => {
+    if (!open || !li.current) return;
+    const r = li.current.getBoundingClientRect();
+    setAlign(r.left < 110 ? "left" : window.innerWidth - r.right < 110 ? "right" : "center");
+  }, [open]);
 
   const move = (e) => {
     const r = ref.current.getBoundingClientRect();
@@ -197,31 +113,42 @@ function Tile({ item }) {
     setHot(false);
     rx.set(0);
     ry.set(0);
+    if (fine) setOpen(null);
   };
 
   return (
     <motion.li
-      className="[perspective:700px]"
+      ref={li}
+      className="relative [perspective:700px]"
+      style={{ zIndex: open ? 30 : undefined }}
       variants={{
         hidden: { opacity: 0, rotateX: -80, rotateY: -40, y: 50, scale: 0.6 },
         show: { opacity: 1, rotateX: 0, rotateY: 0, y: 0, scale: 1, transition: { duration: 1.3, ease: [0.34, 1.3, 0.64, 1] } },
       }}
+      onPointerEnter={() => fine && n && setOpen(item.name)}
+      onPointerLeave={leave}
     >
+      <AnimatePresence>{open && n > 0 && <UsedIn item={item} align={align} onClose={() => setOpen(null)} />}</AnimatePresence>
       <motion.div
         ref={ref}
         onPointerMove={move}
         onPointerEnter={() => setHot(true)}
-        onPointerLeave={leave}
+        onClick={() => !fine && n && setOpen(open ? null : item.name)}
         whileTap={{ scale: 0.94 }}
+        role={n ? "button" : undefined}
+        tabIndex={n ? 0 : undefined}
+        aria-expanded={n ? open : undefined}
+        aria-label={n ? `${item.name}, used in ${n} project${n > 1 ? "s" : ""}` : undefined}
+        onKeyDown={(e) => n && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen(open ? null : item.name))}
         style={{
           rotateX: rx,
           rotateY: ry,
           transformStyle: "preserve-3d",
           transformPerspective: 600,
-          borderColor: hot ? `${tint}66` : undefined,
-          boxShadow: hot ? `0 30px 60px -30px ${tint}` : undefined,
+          borderColor: lit ? `${tint}66` : undefined,
+          boxShadow: flash ? `0 0 0 2px ${tint}, 0 30px 70px -20px ${tint}` : hot ? `0 30px 60px -30px ${tint}` : undefined,
         }}
-        className="group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500"
+        className={`group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500 ${n ? "cursor-pointer" : ""}`}
       >
         {/* sheen that follows the pointer */}
         <span
@@ -233,12 +160,19 @@ function Tile({ item }) {
         <span
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-[40%] h-28 w-28 transition-opacity duration-500"
-          style={{ background: `radial-gradient(closest-side, ${tint}, transparent)`, opacity: hot ? 0.5 : 0.12, transform: "translate(-50%,-50%) translateZ(4px)" }}
+          style={{ background: `radial-gradient(closest-side, ${tint}, transparent)`, opacity: lit ? 0.5 : 0.12, transform: "translate(-50%,-50%) translateZ(4px)" }}
         />
+        {/* how many projects it was used in */}
+        {n > 0 && (
+          <span aria-hidden="true" className="label absolute right-2.5 top-2.5 flex items-center gap-1 text-[0.55rem] text-dim" style={{ transform: "translateZ(14px)" }}>
+            <span className="h-1 w-1 rounded-full" style={{ background: tint }} />
+            {n}
+          </span>
+        )}
         {/* the icon: lifts toward you and does one full turn on hover */}
         <span
           className="relative block transition-transform duration-[1300ms] ease-cine"
-          style={{ transform: hot ? "translateZ(60px) rotateY(360deg) scale(1.08)" : "translateZ(36px)" }}
+          style={{ transform: lit ? "translateZ(60px) rotateY(360deg) scale(1.08)" : "translateZ(36px)" }}
         >
           <Icon3D item={item} />
         </span>
@@ -253,46 +187,102 @@ function Tile({ item }) {
   );
 }
 
+/** The groups as a slim bar that stays in view while you read them; it follows along and jumps on click. */
+function GroupBar({ active }) {
+  const rail = useRef(null);
+  const reduce = useReducedMotion();
+
+  // keep the current group's chip in view on narrow screens (scroll the bar only, never the page)
+  useEffect(() => {
+    const el = rail.current?.querySelector(`[data-key="${active}"]`);
+    if (!el || !rail.current) return;
+    const r = rail.current;
+    const left = el.offsetLeft - r.clientWidth / 2 + el.offsetWidth / 2;
+    r.scrollTo({ left, behavior: reduce ? "auto" : "smooth" });
+  }, [active, reduce]);
+
+  return (
+    <div className="sticky top-[3.6rem] z-20 -mx-[max(1.25rem,4vw)] mb-12 border-y border-white/[0.06] bg-ink/95 px-[max(1.25rem,4vw)] md:mb-16">
+      <nav ref={rail} aria-label="Skill groups" className="no-scrollbar flex gap-1 overflow-x-auto py-2.5">
+        {foundations.map((g, i) => {
+          const on = g.key === active;
+          return (
+            <button
+              key={g.key}
+              data-key={g.key}
+              type="button"
+              onClick={() => scrollToId(`skills-${g.key}`, { offset: -130 })}
+              aria-current={on ? "true" : undefined}
+              className={`label relative shrink-0 rounded-full px-3.5 py-2 transition-colors duration-500 ${on ? "text-paper" : "text-dim hover:text-mute"}`}
+            >
+              {on && <motion.span layoutId="skill-group" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.05]" transition={{ duration: 0.5, ease: EASE }} />}
+              <span className="relative">
+                <span className={on ? "text-accent-strong" : ""}>{String(i + 1).padStart(2, "0")}</span> {g.title}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
 /**
- * Skills, grouped by what they are for (languages, frontend, backend, data,
- * testing, delivery, AI, and the rest), each skill a tile. The network
- * visualization stays behind, turning toward the group in focus.
+ * Skills, grouped by what they are for. Up top, every skill on one globe you
+ * can spin; then a bar of the groups that stays in view, and the groups
+ * themselves as tiles. A skill used in the projects says which, and jumps there.
  */
 export default function Skills() {
-  const [focus, setFocus] = useState(null);
-  const sceneRef = useRef(null);
-  const visible = useInView(sceneRef, { margin: "200px 0px 200px 0px" });
   const sectionRef = useRef(null);
   const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const reduce = useReducedMotion();
-  const { accent } = useAccent();
-  // four groups to a row: turn toward the column the pointer is in
-  const turn = focus === null ? 0 : ((focus % 4) - 1.5) * 0.66;
+  const [active, setActive] = useState(foundations[0].key);
+  const [open, setOpen] = useState(null);
+
+  // which group is in the middle of the screen
+  useEffect(() => {
+    const els = foundations.map((g) => document.getElementById(`skills-${g.key}`)).filter(Boolean);
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id.replace("skills-", ""))),
+      { rootMargin: "-40% 0px -55% 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  // a tap anywhere else closes an open "used in" card
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => !e.target.closest?.("li") && setOpen(null);
+    window.addEventListener("pointerdown", close);
+    return () => window.removeEventListener("pointerdown", close);
+  }, [open]);
 
   return (
     <section ref={sectionRef} data-live={live} id="skills" aria-labelledby="skills-title" className="section-y relative z-10 overflow-x-clip bg-ink">
-      <div
-        ref={sceneRef}
-        aria-hidden="true"
-        className="pointer-events-none absolute right-[-12%] top-[6%] hidden h-[70%] w-[60%] opacity-40 lg:block"
-      >
-        {!reduce && visible && (
-          <SceneBoundary>
-            <Suspense fallback={null}>
-              <NetworkScene color={accent.bright} active={visible} turn={turn} />
-            </Suspense>
-          </SceneBoundary>
-        )}
-      </div>
-
       <div className="container-x relative">
-        <SectionHeader id="skills" label="Skills" note={`${foundations.length} groups · from code to shipping`} />
+        <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-7">
+            <SectionHeader id="skills" label="Skills" note={`${foundations.length} groups · from code to shipping`} />
+          </div>
+          <motion.div
+            className="mb-14 lg:col-span-5 lg:mb-20"
+            initial={reduce ? false : { opacity: 0, scale: 0.86 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: EASE }}
+          >
+            <SkillSphere onPick={focusSkill} />
+          </motion.div>
+        </div>
 
-        <div className="grid gap-x-10 gap-y-16 sm:grid-cols-2 xl:grid-cols-4" onPointerLeave={() => setFocus(null)}>
+        <GroupBar active={active} />
+
+        <div className="grid gap-x-10 gap-y-16 sm:grid-cols-2 xl:grid-cols-4">
           {foundations.map((col, i) => (
-            <div key={col.key} onPointerEnter={() => setFocus(i)} className="border-t border-white/[0.08] pt-8">
+            <div key={col.key} id={`skills-${col.key}`} className="scroll-mt-32 border-t border-white/[0.08] pt-8">
               <p className="label flex items-center justify-between">
-                <span className={focus === i ? "text-accent-strong" : "text-paper"}>{String(i + 1).padStart(2, "0")}</span>
+                <span className={active === col.key ? "text-accent-strong" : "text-paper"}>{String(i + 1).padStart(2, "0")}</span>
                 <span className="text-dim">{col.items.length} entries</span>
               </p>
               <h3 className="display mt-6 text-[clamp(1.9rem,2.6vw,2.6rem)]">{col.title}</h3>
@@ -306,12 +296,13 @@ export default function Skills() {
                 variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: (i % 4) * 0.12 } } }}
               >
                 {col.items.map((item) => (
-                  <Tile key={item.name} item={item} />
+                  <Tile key={item.name} item={item} open={open === item.name} setOpen={setOpen} />
                 ))}
               </motion.ul>
             </div>
           ))}
         </div>
+        <p className="label mt-14 text-center text-dim">A number on a skill: how many of the five projects use it · point at or tap one to see which</p>
       </div>
     </section>
   );

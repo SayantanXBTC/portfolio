@@ -860,7 +860,7 @@ export default function Achievements() {
 
   return (
     <section ref={sectionRef} data-live={live} id="achievements" aria-labelledby="achievements-title" className="relative z-10 bg-ink">
-      <div className="container-x overflow-x-clip pb-10 pt-36 md:pt-52">
+      <div className="container-x overflow-x-clip pb-10 pt-28 md:pt-36">
         <SectionHeader id="achievements" label="Recognition" note={`An archive — ${slides} photographs`} />
       </div>
       {reduce ? <ArchiveList /> : <Carousel />}

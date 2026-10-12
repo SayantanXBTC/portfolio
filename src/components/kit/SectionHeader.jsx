@@ -18,7 +18,7 @@ export function SectionHeader({ id, label, note, children }) {
   const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
 
   return (
-    <header ref={ref} className="relative mb-20 md:mb-28">
+    <header ref={ref} className="relative mb-12 md:mb-16">
       <div className="mb-8 flex items-center gap-5 md:mb-10">
         <p className="label flex shrink-0 items-center gap-3">
           <span className="text-paper">{chapterIndex(id)}</span>
@@ -40,9 +40,9 @@ export function SectionHeader({ id, label, note, children }) {
       </div>
 
       {/* masked at the content edge: the name slides out of frame, never over the rail */}
-      <div className="-mb-[0.26em] overflow-hidden pb-[0.26em] text-[clamp(3.2rem,10vw,10rem)]">
+      <div className="-mb-[0.26em] overflow-hidden pb-[0.26em] text-[clamp(3rem,8.4vw,8.4rem)]">
         <motion.div style={reduce ? undefined : { x, opacity }}>
-          <MaskLines id={`${id}-title`} lines={[label]} className="display text-[clamp(3.2rem,10vw,10rem)] leading-[0.9]" />
+          <MaskLines id={`${id}-title`} lines={[label]} className="display text-[clamp(3rem,8.4vw,8.4rem)] leading-[0.9]" />
         </motion.div>
       </div>
       {children}

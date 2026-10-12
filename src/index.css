@@ -157,13 +157,13 @@ html {
     }
   }
   .section-y {
-    padding-top: 9rem;
-    padding-bottom: 9rem;
+    padding-top: 7rem;
+    padding-bottom: 7rem;
   }
   @media (min-width: 768px) {
     .section-y {
-      padding-top: 13rem;
-      padding-bottom: 13rem;
+      padding-top: 9.5rem;
+      padding-bottom: 9.5rem;
     }
   }
 
@@ -316,6 +316,80 @@ html {
 @keyframes icon-gloss {
   0%, 62% { transform: translateX(-45%); }
   100% { transform: translateX(45%); }
+}
+
+/* A flat skill plate: the same glossy face as .icon3d, without the layers */
+.mini-icon {
+  position: relative;
+  display: inline-block;
+  border-radius: 27%;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--c) 62%, white) 0%,
+    var(--c) 46%,
+    color-mix(in srgb, var(--c) 62%, black) 100%
+  );
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), inset 0 -5px 9px rgba(0, 0, 0, 0.25), 0 8px 16px -8px rgba(0, 0, 0, 0.85);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Experience: the connection-pool illustration */
+.pool-packet {
+  opacity: 0;
+  animation: pool-packet 2.2s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
+}
+@keyframes pool-packet {
+  0% { opacity: 0; translate: 0 0; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; translate: var(--px) var(--py); }
+}
+.pool-slot {
+  opacity: 0.12;
+  animation: pool-slot 1.6s ease-in-out infinite;
+}
+@keyframes pool-slot {
+  0%, 100% { opacity: 0.12; }
+  45% { opacity: 0.85; }
+}
+.suite-bar {
+  transform: scaleX(0);
+  animation: suite-bar 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes suite-bar {
+  0% { transform: scaleX(0); opacity: 1; }
+  35%, 88% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+.suite-tick {
+  opacity: 0;
+  animation: suite-tick 4.5s ease-out infinite;
+}
+@keyframes suite-tick {
+  0%, 33% { opacity: 0; transform: scale(0.4); }
+  40%, 88% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* Education: paper fibre and gold foil */
+.paper-grain {
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.24  0 0 0 0.16 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+}
+.foil {
+  background-image: linear-gradient(115deg, #b98f4e 0%, #f7e6bd 30%, #c9a96e 48%, #fff3d2 62%, #a87f43 100%);
+  background-size: 220% 100%;
+  background-position: var(--sx, 30%) 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 0.6s var(--ease-cine);
 }
 
 /* Hero photo plate: a full-height portrait panel on the right of landscape

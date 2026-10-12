@@ -39,3 +39,18 @@ export const deepLink = {
   id: typeof window === "undefined" ? "" : window.location.hash.slice(1),
   done: false,
 };
+
+// Wide and tall enough that Work scenes are pinned (same query as usePinnedLayout).
+const pinnedQuery = "(min-width: 1024px) and (min-height: 720px)";
+
+/** Scroll to a project's scene in Work, landing where its story has already arrived. */
+export function jumpToProject(slug) {
+  const pinned = window.matchMedia(pinnedQuery).matches;
+  scrollToId(`work-${slug}`, { offset: pinned ? Math.round(window.innerHeight * 0.55) : -24 });
+}
+
+/** Scroll to a group in Skills and, once there, make one skill's tile call attention to itself. */
+export function focusSkill(group, name) {
+  scrollToId(`skills-${group}`, { offset: -130 });
+  if (name) setTimeout(() => window.dispatchEvent(new CustomEvent("skill:focus", { detail: name })), 1300);
+}

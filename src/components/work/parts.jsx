@@ -1,36 +1,11 @@
-import { useEffect, useRef } from "react";
-import { animate, useInView, useReducedMotion } from "framer-motion";
 import { Arrow } from "../kit/Button";
+import { Decode } from "../kit/Decode";
 
 export const hostOf = (url) => new URL(url).hostname;
 
-/** "329", "<200ms", "~50%" count up from zero the first time they are seen; words stay as they are. */
+/** A stat that decodes into place the first time it is seen (never shows a smaller, wrong figure). */
 export function CountUp({ value, start = true }) {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const seen = useInView(ref, { once: true });
-  const m = /^([<~≤+]?)(\d+)(.*)$/.exec(value);
-
-  useEffect(() => {
-    if (!m || reduce || !seen || !start || !ref.current) return undefined;
-    const [, pre, num, post] = m;
-    const el = ref.current;
-    const c = animate(0, Number(num), {
-      duration: 1.6,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => {
-        el.textContent = `${pre}${Math.round(v)}${post}`;
-      },
-    });
-    return () => c.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seen, start, reduce, value]);
-
-  return (
-    <span ref={ref} className="tabular-nums">
-      {value}
-    </span>
-  );
+  return <Decode value={value} start={start} />;
 }
 
 /** Live site / source links. */

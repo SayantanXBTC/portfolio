@@ -37,6 +37,16 @@ export const profile = {
   phones: ["+91 9366335595", "+91 8798144052"],
   resume: asset("docs/Sayantan-General%20CV.pdf"),
   portrait: asset("images/profile.webp"),
+  // the same photo in two layers for the depth effect: the subject lifted out,
+  // and the scene with the subject's place filled in from its surroundings
+  portraitLayers: { fg: asset("images/profile-fg.webp"), bg: asset("images/profile-bg.webp"), mono: asset("images/profile-bg-mono.webp") },
+  // facts under the opening buttons; each one jumps to where it is shown in full
+  proof: [
+    { value: "8.71", label: "CGPA · B.Tech CSE", to: "education" },
+    { value: "5", label: "live products, source on GitHub", to: "projects" },
+    { value: "Top 100", label: "of 65,000+ · National Space Day quiz", to: "achievements" },
+    { value: "Tripura", label: "state representative · National Youth Festival", to: "achievements" },
+  ],
   socials: [
     { label: "GitHub", href: "https://github.com/SayantanXBTC" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/sayantan-bhattacharje/" },
@@ -72,11 +82,78 @@ export const about = {
     "Outside engineering, quizzing is what I keep coming back to. I'm a regular on my college's quiz teams, and in 2025 I ranked in the top 100 of more than 65,000 participants in the National Space Day quiz, which earned an invitation to ISRO's Sriharikota facility.",
     "I also debate, lead the ConverseE+ Club as President, and represented Tripura at the National Youth Festival 2025 with a talk on Tech for Viksit Bharat 2047. Along the way I've won debate, quiz, vocabulary and aptitude events at college level. Thinking on my feet and explaining things clearly carry straight into how I test and build software.",
   ],
+  // `group` is the Skills group each tool jumps to; `skill` names its tile there, when it has one
   snapshot: [
-    { label: "Primary", value: "Java, Selenium, TestNG, REST API testing" },
-    { label: "Frontend", value: "React, TailwindCSS, Vite, Framer Motion" },
-    { label: "Data & DevOps", value: "Docker, Git, GitHub Actions" },
-    { label: "Tools", value: "Postman, Maven, Jenkins, Allure Reporting" },
+    {
+      label: "Primary",
+      items: [
+        { name: "Java", icon: "Coffee", tint: "#E76F00", group: "languages", skill: "Java" },
+        { name: "Selenium", icon: "siSelenium", group: "testing", skill: "Selenium" },
+        { name: "TestNG", icon: "ListChecks", tint: "#E0533D", group: "testing", skill: "TestNG" },
+        { name: "REST API testing", icon: "ShieldCheck", tint: "#5BB974", group: "testing", skill: "REST Assured" },
+      ],
+    },
+    {
+      label: "Frontend",
+      items: [
+        { name: "React", icon: "siReact", group: "frontend", skill: "React" },
+        { name: "TailwindCSS", icon: "siTailwindcss", group: "frontend" },
+        { name: "Vite", icon: "siVite", group: "frontend", skill: "Vite" },
+        { name: "Framer Motion", icon: "siFramer", group: "frontend" },
+      ],
+    },
+    {
+      label: "Data & DevOps",
+      items: [
+        { name: "Docker", icon: "siDocker", group: "devops", skill: "Docker" },
+        { name: "Git", icon: "siGit", group: "devops" },
+        { name: "GitHub Actions", icon: "siGithubactions", group: "devops", skill: "GitHub Actions" },
+      ],
+    },
+    {
+      label: "Tools",
+      items: [
+        { name: "Postman", icon: "siPostman", group: "testing", skill: "Postman" },
+        { name: "Maven", icon: "siApachemaven", group: "devops", skill: "Maven" },
+        { name: "Jenkins", icon: "siJenkins", group: "devops", skill: "Jenkins" },
+        { name: "Allure Reporting", icon: "FileBarChart", tint: "#F2A93B", group: "testing" },
+      ],
+    },
+  ],
+  // phrases in the paragraphs that open a small card with the proof behind them
+  proofs: [
+    {
+      phrase: "Lovely Professional University",
+      image: asset("images/lpu.webp"),
+      title: "Lovely Professional University",
+      meta: "B.Tech CSE · CGPA 8.71 · 2023 — 2027",
+      to: "education",
+      cta: "Open the yearbook",
+    },
+    {
+      phrase: "top 100 of more than 65,000 participants",
+      image: asset("images/SPACE.webp"),
+      title: "National Space Day Quiz 2025",
+      meta: "Top 100 · invited to ISRO Sriharikota",
+      to: "achievements",
+      cta: "See it in Recognition",
+    },
+    {
+      phrase: "ConverseE+ Club as President",
+      image: asset("images/PRES1.webp"),
+      title: "ConverseE+ Club",
+      meta: "President · 15+ workshops, hackathons and mentoring sessions",
+      to: "experience",
+      cta: "See it in Experience",
+    },
+    {
+      phrase: "National Youth Festival 2025",
+      image: asset("images/NYF4.webp"),
+      title: "National Youth Festival 2025",
+      meta: "State representative · Tech for Viksit Bharat 2047",
+      to: "achievements",
+      cta: "See it in Recognition",
+    },
   ],
 };
 
@@ -90,6 +167,10 @@ export const experience = [
       "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. I built partnerships with local startups, helped students ship 8 small projects, grew the club's membership and raised sponsorships for our events.",
     points: [],
     impact: "Increased club membership and raised sponsorships for events.",
+    stats: [
+      { value: "15+", label: "workshops, hackathons & mentoring sessions" },
+      { value: "8", label: "student projects shipped" },
+    ],
     tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
     photos: [
       photo("PRES1", "Sayantan at a ConverseE+ Club event", { caption: "ConverseE+ Club" }),
@@ -109,6 +190,10 @@ export const experience = [
       "Created automated test suites for core modules with JUnit and TestNG",
     ],
     impact: "Reduced average request processing time by ~25% and improved test coverage to 88%",
+    stats: [
+      { value: "~25%", label: "faster average request processing" },
+      { value: "88%", label: "test coverage" },
+    ],
     tech: ["Java", "JDBC", "Concurrency", "SQL", "JUnit", "TestNG"],
     document: {
       src: asset("images/certs/intern.webp"),

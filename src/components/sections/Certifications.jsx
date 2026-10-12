@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -35,14 +35,14 @@ const span = `${Math.min(...years)} — ${Math.max(...years)}`;
  * by z-index (no depth in space), so cards can never cut through each other;
  * the cards behind peek out above the one on top, each a little smaller and darker.
  */
-function pose(depth, peeked = false) {
+function pose(depth, peeked = false, n = N) {
   return {
     x: peeked ? 56 : 0,
     y: depth * -24 - (peeked ? 10 : 0),
     scale: 1 - depth * 0.055,
     rotate: peeked ? 2.5 : 0,
     opacity: depth <= 3 || peeked ? 1 : 0,
-    zIndex: N - depth,
+    zIndex: n - depth,
   };
 }
 
@@ -51,7 +51,8 @@ function pose(depth, peeked = false) {
  * When it leaves the top it slides down and fades, then settles in at the back;
  * when it comes back to the top it does the reverse.
  */
-function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) {
+function Sheet({ cert, items, depth, move, entered, peeked, onPick, onOpen, onFling }) {
+  const n = items.length;
   const reduce = useReducedMotion();
   const controls = useAnimationControls();
   const prev = useRef(depth);
@@ -72,9 +73,9 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
     if (!entered || landed.current) return;
     landed.current = true;
     prev.current = depth;
-    const t = pose(depth);
+    const t = pose(depth, false, n);
     if (reduce) controls.set(t);
-    else run({ ...t, transition: { duration: 1.1, ease: EASE, delay: 0.15 + (N - 1 - depth) * 0.09 } });
+    else run({ ...t, transition: { duration: 1.1, ease: EASE, delay: 0.15 + (n - 1 - depth) * 0.09 } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entered]);
 
@@ -84,7 +85,7 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
     const from = prev.current;
     prev.current = depth;
     if (from === depth) return;
-    const t = pose(depth);
+    const t = pose(depth, false, n);
     if (reduce) {
       controls.set(t);
       return;
@@ -95,17 +96,17 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
       run({ ...t, transition: { duration: 0.8, ease: EASE, delay: 0.1 } });
       return;
     }
-    const order = forward ? from : N - 1 - from;
+    const order = forward ? from : n - 1 - from;
     const timing = { duration: 0.9, times: [0, 0.4, 1], ease: EASE, delay: order * 0.07 };
     if (forward) {
       // leaves the top: drops away in front, then reappears at the back
       run({
-        x: [null, dir * 40, t.x],
-        y: [null, 120, t.y],
-        scale: [null, 0.96, t.scale],
-        rotate: [null, dir * 3, 0],
+        x: [null, dir * 560, t.x],
+        y: [null, -40, t.y],
+        scale: [null, 0.92, t.scale],
+        rotate: [null, dir * 16, 0],
         opacity: [null, 0, t.opacity],
-        zIndex: [N + 1, N + 1, t.zIndex],
+        zIndex: [n + 1, n + 1, t.zIndex],
         transition: timing,
       });
     } else {
@@ -116,7 +117,7 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
         scale: [null, 0.96, t.scale],
         rotate: [null, 0, 0],
         opacity: [null, 0, 1],
-        zIndex: [t.zIndex, N + 1, N + 1],
+        zIndex: [t.zIndex, n + 1, n + 1],
         transition: timing,
       });
     }
@@ -126,7 +127,7 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
   // a line in the index is pointing at this card
   useEffect(() => {
     if (!landed.current || busy.current) return;
-    controls.start({ ...pose(depth, peeked), transition: { duration: 0.6, ease: EASE } });
+    controls.start({ ...pose(depth, peeked, n), transition: { duration: 0.6, ease: EASE } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [peeked]);
 
@@ -134,7 +135,7 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
     <motion.div
       className="absolute inset-x-0 bottom-0"
       style={{ transformOrigin: "50% 0%" }}
-      initial={reduce ? pose(depth) : { ...pose(depth), y: 80, opacity: 0 }}
+      initial={reduce ? pose(depth, false, n) : { ...pose(depth, false, n), y: 80, opacity: 0 }}
       animate={controls}
       drag={top ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
@@ -156,8 +157,8 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
             dragged.current = false;
             return;
           }
-          if (top) onOpen(certificates.indexOf(cert));
-          else onPick(certificates.indexOf(cert));
+          if (top) onOpen(items.indexOf(cert));
+          else onPick(items.indexOf(cert));
         }}
         className={`group block w-full ${top ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
       >
@@ -177,6 +178,13 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
             decoding="async"
             className="pointer-events-none block aspect-[1.36] h-auto w-full object-cover"
           />
+          {/* a sweep of light across the top sheet when you point at it */}
+          {top && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.55)_50%,transparent_65%)] transition-transform duration-[1100ms] ease-cine group-hover:translate-x-full"
+            />
+          )}
           {/* cards further back sit in shadow */}
           <motion.span
             aria-hidden="true"
@@ -195,7 +203,8 @@ function Sheet({ cert, depth, move, entered, peeked, onPick, onOpen, onFling }) 
  * The stack, seen at a slight angle and leaning gently toward the pointer.
  * The top card can be thrown aside or clicked to read.
  */
-function Pile({ active, step, goTo, peek, onOpen }) {
+function Pile({ items, active, step, goTo, peek, onOpen }) {
+  const n = items.length;
   const reduce = useReducedMotion();
   const fine = useFinePointer();
   const ref = useRef(null);
@@ -206,8 +215,8 @@ function Pile({ active, step, goTo, peek, onOpen }) {
   const thrown = useRef(null);
   const move = useRef({ k: 1, forward: true, dir: 1 });
   if (last.current !== active) {
-    const k = (active - last.current + N) % N;
-    move.current = { k, forward: k <= N / 2, dir: thrown.current ?? 1 };
+    const k = (active - last.current + n) % n;
+    move.current = { k, forward: k <= n / 2, dir: thrown.current ?? 1 };
     thrown.current = null;
     last.current = active;
   }
@@ -237,7 +246,7 @@ function Pile({ active, step, goTo, peek, onOpen }) {
       tabIndex={0}
       role="group"
       aria-roledescription="certificate pile"
-      aria-label={`Certificate ${active + 1} of ${N}: ${certificates[active].title}. Use the arrow keys to go through the pile, Enter to open.`}
+      aria-label={`Certificate ${active + 1} of ${n}: ${items[active].title}. Use the arrow keys to go through the pile, Enter to open.`}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") (e.preventDefault(), step(1));
         if (e.key === "ArrowLeft" || e.key === "ArrowUp") (e.preventDefault(), step(-1));
@@ -259,11 +268,12 @@ function Pile({ active, step, goTo, peek, onOpen }) {
                 animate={{ opacity: entered ? 0.9 : 0 }}
                 transition={{ duration: 1.4, delay: 0.3 }}
               />
-              {certificates.map((c, i) => (
+              {items.map((c, i) => (
                 <Sheet
                   key={c.title}
                   cert={c}
-                  depth={(i - active + N) % N}
+                  items={items}
+                  depth={(i - active + n) % n}
                   move={move.current}
                   entered={entered || reduce}
                   peeked={peek === i && i !== active}
@@ -353,8 +363,92 @@ function Entry({ cert, index, active, compact, onSelect, onPeek, onOpen }) {
   );
 }
 
+const TOPICS = ["All", ...new Set(certificates.map((c) => c.topic))];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const monthOf = (date) => {
+  const [m, y] = date.split(" ");
+  return Number(y) * 12 + MONTHS.indexOf(m);
+};
+const FIRST = Math.min(...certificates.map((c) => monthOf(c.date)));
+const LAST = Math.max(...certificates.map((c) => monthOf(c.date)));
+
+/** Topic chips: they narrow both the index and the pile. */
+function Filters({ topic, setTopic, id }) {
+  return (
+    <div className="mb-5 flex flex-wrap gap-1.5 pl-4 md:pl-6" role="radiogroup" aria-label="Filter certificates by topic">
+      {TOPICS.map((t) => {
+        const on = t === topic;
+        const count = t === "All" ? certificates.length : certificates.filter((c) => c.topic === t).length;
+        return (
+          <button
+            key={t}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => setTopic(t)}
+            className={`label relative rounded-full px-3 py-2 transition-colors duration-500 ${on ? "text-paper" : "text-dim hover:text-mute"}`}
+          >
+            {on && <motion.span layoutId={`cert-topic-${id}`} className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.05]" transition={{ duration: 0.5, ease: EASE }} />}
+            <span className="relative">
+              {t} <span className={on ? "text-accent-strong" : "text-dim"}>{count}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** When each one was earned, on a line from the first month to the last. */
+function Timeline({ items, active, goTo, setTopic }) {
+  const spanM = Math.max(1, LAST - FIRST);
+  const label = (m) => `${MONTHS[m % 12].slice(0, 3)} ${Math.floor(m / 12)}`;
+  // certificates from the same month sit side by side, centred on their month
+  const seenAt = {};
+  const perMonth = {};
+  certificates.forEach((c) => {
+    const m = monthOf(c.date);
+    perMonth[m] = (perMonth[m] ?? 0) + 1;
+  });
+  return (
+    <div className="mx-auto mt-8 max-w-[40rem] px-2" aria-label="When each certificate was earned">
+      <div className="relative mx-4 h-10">
+        <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
+        {certificates.map((c) => {
+          const m = monthOf(c.date);
+          const k = (seenAt[m] = (seenAt[m] ?? -1) + 1);
+          const i = items.indexOf(c);
+          const on = i === active;
+          const inList = i >= 0;
+          return (
+            <button
+              key={c.title}
+              type="button"
+              onClick={() => (inList ? goTo(i) : setTopic("All"))}
+              aria-label={`${c.title}, ${c.date}`}
+              className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 p-1.5"
+              style={{ left: `calc(${((m - FIRST) / spanM) * 100}% + ${(k - (perMonth[m] - 1) / 2) * 14}px)` }}
+            >
+              <span
+                className={`block rounded-full transition-all duration-500 ease-cine ${
+                  on ? "h-3 w-3 bg-accent-strong shadow-[0_0_14px_rgb(var(--accent-strong-rgb))]" : inList ? "h-2 w-2 bg-paper/70 group-hover:bg-paper" : "h-1.5 w-1.5 bg-white/20"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+      <div className="label mx-1 flex justify-between text-[0.58rem] text-dim">
+        <span>{label(FIRST)}</span>
+        <span>{label(LAST)}</span>
+      </div>
+    </div>
+  );
+}
+
 /** The index and the pile, side by side. */
-function Desk({ active, step, goTo, onOpen, compact, pinned }) {
+function Desk({ items, topic, setTopic, active, step, goTo, onOpen, compact, pinned }) {
+  const n = items.length;
   const fine = useFinePointer();
   const [peek, setPeek] = useState(null);
   const nav =
@@ -362,27 +456,34 @@ function Desk({ active, step, goTo, onOpen, compact, pinned }) {
 
   return (
     <div className="grid w-full items-center gap-14 lg:grid-cols-12 lg:gap-16">
+      <div className="-mb-8 lg:hidden">
+        <Filters topic={topic} setTopic={setTopic} id="top" />
+      </div>
       <Reveal from="up" distance={0.5} className="lg:order-2 lg:col-span-7">
-        <Pile active={active} step={step} goTo={goTo} peek={fine ? peek : null} onOpen={onOpen} />
+        <Pile items={items} active={active} step={step} goTo={goTo} peek={fine ? peek : null} onOpen={onOpen} />
         <div className="mx-auto mt-8 flex max-w-[40rem] items-center gap-4 px-2">
           <button type="button" onClick={() => step(-1)} disabled={pinned && active === 0} aria-label="Previous certificate" className={nav}>
             <Arrow dir="left" />
           </button>
-          <button type="button" onClick={() => step(1)} disabled={pinned && active === N - 1} aria-label="Next certificate" className={nav}>
+          <button type="button" onClick={() => step(1)} disabled={pinned && active === n - 1} aria-label="Next certificate" className={nav}>
             <Arrow />
           </button>
           <p className="label tabular-nums text-paper">
-            {pad(active + 1)} <span className="text-dim">/ {pad(N)}</span>
+            {pad(active + 1)} <span className="text-dim">/ {pad(n)}</span>
           </p>
           <p className="label ml-auto hidden text-right text-dim sm:block">
             {pinned ? "Scroll or drag through the pile" : fine ? "Drag the top sheet · click to read" : "Swipe the top sheet · tap to read"}
           </p>
         </div>
+        <Timeline items={items} active={active} goTo={goTo} setTopic={setTopic} />
       </Reveal>
 
       <div className="lg:order-1 lg:col-span-5">
+        <div className="hidden lg:block">
+          <Filters topic={topic} setTopic={setTopic} id="side" />
+        </div>
         <ul className="border-t border-white/[0.08] pl-4 md:pl-6">
-          {certificates.map((c, i) => (
+          {items.map((c, i) => (
             <Entry key={c.title} cert={c} index={i} active={active} compact={compact} onSelect={goTo} onPeek={setPeek} onOpen={onOpen} />
           ))}
         </ul>
@@ -402,28 +503,37 @@ export default function Certifications() {
   const pinned = usePinnedLayout() && !reduce;
   const outer = useRef(null);
   const [active, setActive] = useState(0);
-  const onOpen = (i) => open(slides, i);
+  const [topic, setTopicRaw] = useState("All");
+  const items = useMemo(() => (topic === "All" ? certificates : certificates.filter((c) => c.topic === topic)), [topic]);
+  const n = items.length;
+  const onOpen = (i) => open(items.map((c) => slides[certificates.indexOf(c)]), i);
+  const setTopic = (t) => {
+    setTopicRaw(t);
+    const len = t === "All" ? N : certificates.filter((c) => c.topic === t).length;
+    // pinned, the scroll position decides which sheet is on top; otherwise start the narrower pile at its first sheet
+    setActive(pinned ? Math.min(len - 1, Math.max(0, Math.floor(scrollYProgress.get() * len))) : 0);
+  };
 
   const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    if (pinned) setActive(Math.min(N - 1, Math.max(0, Math.floor(p * N))));
+    if (pinned) setActive(Math.min(n - 1, Math.max(0, Math.floor(p * n))));
   });
 
   const goTo = (i) => {
     if (!pinned) {
-      setActive(((i % N) + N) % N);
+      setActive(((i % n) + n) % n);
       return;
     }
     const el = outer.current;
-    if (!el || i < 0 || i >= N) return;
+    if (!el || i < 0 || i >= n) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
-    scrollToY(top + ((i + 0.5) / N) * (el.offsetHeight - window.innerHeight));
+    scrollToY(top + ((i + 0.5) / n) * (el.offsetHeight - window.innerHeight));
   };
   const step = (d) => goTo(active + d);
 
   return (
     <section id="certifications" aria-labelledby="certifications-title" className="relative z-10 bg-ink">
-      <div className="container-x pt-36 md:pt-52">
+      <div className="container-x pt-28 md:pt-36">
         <SectionHeader id="certifications" label="Certificates" note={`${N} certificates · ${span}`} />
       </div>
 
@@ -431,13 +541,13 @@ export default function Certifications() {
         <div ref={outer} className="relative" style={{ height: `${100 + N * 60}vh` }}>
           <div className="sticky top-0 flex h-[100svh] items-center pb-6 pt-20">
             <div className="container-x">
-              <Desk active={active} step={step} goTo={goTo} onOpen={onOpen} compact pinned />
+              <Desk items={items} topic={topic} setTopic={setTopic} active={active} step={step} goTo={goTo} onOpen={onOpen} compact pinned />
             </div>
           </div>
         </div>
       ) : (
         <div className="container-x pb-36 md:pb-52">
-          <Desk active={active} step={step} goTo={goTo} onOpen={onOpen} />
+          <Desk items={items} topic={topic} setTopic={setTopic} active={active} step={step} goTo={goTo} onOpen={onOpen} />
         </div>
       )}
     </section>

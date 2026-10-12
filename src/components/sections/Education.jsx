@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { animate, motion, motionValue, useInView, useReducedMotion, useTransform } from "framer-motion";
+import { animate, motion, motionValue, useInView, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { education, profile } from "../../data/portfolio";
 import { useFinePointer, useMedia } from "../../hooks/useMedia";
 import { EASE } from "../../lib/asset";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Arrow } from "../kit/Button";
+import { Decode } from "../kit/Decode";
 
 const u = education.university;
 const [senior, matric] = education.schools;
@@ -23,28 +24,16 @@ const INK = "text-[#1c1a17]";
 const FADED = "text-[#6f695f]";
 const toward = { left: "to right", right: "to left", top: "to bottom", bottom: "to top" };
 
-/** A score that counts up when its page comes into view, keeping its decimals. */
+/** A score that decodes into place once its page has landed. */
 function Score({ value, run }) {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const decimals = (value.split(".")[1] || "").length;
-  useEffect(() => {
-    if (reduce || !run || !ref.current) return undefined;
-    const el = ref.current;
-    const c = animate(0, Number(value), { duration: 1.3, ease: EASE, onUpdate: (v) => (el.textContent = v.toFixed(decimals)) });
-    return () => c.stop();
-  }, [run, reduce, value, decimals]);
-  return (
-    <span ref={ref} className="tabular-nums">
-      {value}
-    </span>
-  );
+  return <Decode value={value} start={run} />;
 }
 
 /** Paper, darkening into the spine on the bound side. */
 function Paper({ spine, children }) {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#f2eee6]">
+      <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: `linear-gradient(${toward[spine]}, rgba(0,0,0,0.16), rgba(0,0,0,0.03) 9%, transparent 22%)` }} />
       <div className="relative h-full">{children}</div>
     </div>
@@ -59,19 +48,31 @@ function Cover({ spine, back }) {
         className="absolute inset-0"
         style={{ background: `linear-gradient(${toward[spine]}, rgb(var(--accent-soft-rgb) / 0.6), rgb(var(--accent-soft-rgb) / 0.28) 12%, rgb(var(--accent-rgb) / 0.12) 60%, transparent)` }}
       />
+      <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0 opacity-60 mix-blend-overlay" />
       <div aria-hidden="true" className="absolute inset-[6%] rounded-[2px] border border-[#c9a96e]/30" />
+      <div aria-hidden="true" className="absolute inset-[7.2%] rounded-[2px] border border-[#c9a96e]/15" />
+      {/* gold foil catching the light where the pointer is */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(circle at var(--sx, 30%) var(--sy, 20%), rgba(255, 226, 160, 0.16), transparent 42%)" }}
+      />
       {back ? (
-        <div className="relative flex h-full flex-col items-center justify-center gap-3 text-center">
-          <p className="label text-[#c9a96e]/70">To be continued</p>
-          <p className="display text-[clamp(1.6rem,3vw,2.6rem)] text-[#e9d9b4]">2027 →</p>
+        <div className="relative flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+          <p className="label text-[#c9a96e]/70">B.Tech CSE · {u.short}</p>
+          <p className="foil display text-[clamp(1.6rem,3vw,2.6rem)] leading-[1.05]">
+            Graduating
+            <br />
+            2027
+          </p>
         </div>
       ) : (
         <div className="relative flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
           <p className="label text-[#c9a96e]/80">Yearbook</p>
-          <p className="display text-[clamp(2rem,4.4vw,4rem)] leading-[0.95] text-[#efe0bd]">
+          <p className="foil display text-[clamp(2rem,4.4vw,4rem)] leading-[0.95]">
             2019
             <br />
-            <span className="text-[#c9a96e]/60">—</span>
+            <span className="opacity-60">—</span>
             <br />
             2027
           </p>
@@ -112,8 +113,52 @@ function PhotoPage({ c, spine, folio }) {
           {c.name}, {c.years}
         </p>
       </div>
+      {c.current && (
+        <div
+          className="absolute bottom-[14%] right-[5%] w-[40%] rotate-[3.5deg] bg-[#f6e7a6] px-[4%] pb-[4%] pt-[3.5%] shadow-[0_8px_18px_-8px_rgba(0,0,0,0.55)]"
+          style={{ backgroundImage: "linear-gradient(transparent 0 92%, rgba(0,0,0,0.06) 92%)" }}
+        >
+          <span aria-hidden="true" className="absolute -top-2 left-1/2 h-4 w-12 -translate-x-1/2 -rotate-3 bg-white/60 shadow-sm" />
+          <p className={`label mb-1 text-[0.5rem] md:text-[0.55rem] ${FADED}`}>Coursework</p>
+          <ul className={`font-serif text-[clamp(0.58rem,0.85vw,0.8rem)] italic leading-snug ${INK}`}>
+            {u.coursework.map((k) => (
+              <li key={k}>— {k}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className={`label absolute bottom-[1.8%] left-0 right-0 text-center text-[0.58rem] md:bottom-[3.5%] ${FADED}`}>{folio}</p>
     </Paper>
+  );
+}
+
+/** The university's seal, pressed onto the page once it lands. */
+function Stamp({ shown }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.svg
+      viewBox="0 0 120 120"
+      aria-hidden="true"
+      className="h-auto w-[clamp(4.2rem,7vw,6.6rem)] shrink-0 text-[rgb(var(--accent-rgb))]"
+      initial={reduce ? false : { opacity: 0, scale: 1.7, rotate: -28 }}
+      animate={shown || reduce ? { opacity: 0.88, scale: 1, rotate: -11 } : { opacity: 0, scale: 1.7, rotate: -28 }}
+      transition={{ type: "spring", stiffness: 260, damping: 16, delay: shown ? 0.55 : 0 }}
+    >
+      <defs>
+        <path id="stamp-ring" d="M60 60 m-43 0 a43 43 0 1 1 86 0 a43 43 0 1 1 -86 0" />
+      </defs>
+      <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 3" />
+      <text className="fill-current font-mono text-[8.5px] uppercase tracking-[0.2em]">
+        <textPath href="#stamp-ring">{u.short} · B.Tech CSE · {u.years} ·</textPath>
+      </text>
+      <text x="60" y="54" textAnchor="middle" className="fill-current font-mono text-[8px] uppercase tracking-[0.2em]">
+        CGPA
+      </text>
+      <text x="60" y="73" textAnchor="middle" className="fill-current text-[20px] font-semibold">
+        {u.cgpa}
+      </text>
+    </motion.svg>
   );
 }
 
@@ -133,12 +178,15 @@ function RecordPage({ c, index, spine, folio, shown }) {
             {c.years}
           </p>
         </div>
-        <div className="border-t border-black/10 pt-[4%] md:pt-[5%]">
-          <p className={`label mb-1 ${FADED}`}>{c.scoreLabel}</p>
-          <p className="display text-[clamp(2.2rem,4.4vw,4.4rem)] leading-none">
-            <Score value={c.score} run={shown} />
-            <span className={`editorial ml-1.5 text-[0.4em] ${FADED}`}>{c.unit}</span>
-          </p>
+        <div className="flex items-center justify-between gap-3 border-t border-black/10 pt-[4%] md:pt-[5%]">
+          <div>
+            <p className={`label mb-1 ${FADED}`}>{c.scoreLabel}</p>
+            <p className="display text-[clamp(2.2rem,4.4vw,4.4rem)] leading-none">
+              <Score value={c.score} run={shown} />
+              <span className={`editorial ml-1.5 text-[0.4em] ${FADED}`}>{c.unit}</span>
+            </p>
+          </div>
+          {c.current && <Stamp shown={shown} />}
         </div>
         {c.current && (
           <dl className="grid grid-cols-2 gap-x-5 gap-y-2 border-t border-black/10 pt-[4%] md:gap-y-3 md:pt-[5%] text-[clamp(0.74rem,0.95vw,0.92rem)] leading-snug">
@@ -177,6 +225,7 @@ function Leaf({ i, angle, vertical, front, back }) {
     return t >= 0.5 ? i + 1 : N - i;
   });
   const shade = useTransform(angle, (a) => Math.sin((Math.abs(a) * Math.PI) / 180) * 0.45);
+  const sheen = useTransform(angle, (a) => Math.sin((Math.abs(a) * Math.PI) / 180) * 0.55);
 
   return (
     <motion.div
@@ -186,6 +235,12 @@ function Leaf({ i, angle, vertical, front, back }) {
       <div className="absolute inset-0 [backface-visibility:hidden]">
         {front}
         <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black" style={{ opacity: shade }} />
+        {/* the curve of the lifting page catches the light */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{ opacity: sheen, background: `linear-gradient(${vertical ? "to bottom" : "to right"}, transparent 30%, rgba(255,255,255,0.5) 62%, transparent 85%)` }}
+        />
       </div>
       <div className="absolute inset-0 [backface-visibility:hidden]" style={{ transform: `${axis}(${rest}deg)` }}>
         {back}
@@ -212,6 +267,8 @@ export default function Education() {
   const bookRef = useRef(null);
   const seen = useInView(bookRef, { once: true, amount: 0.45 });
   const drag = useRef(null);
+  const tiltX = useSpring(0, { stiffness: 80, damping: 18 });
+  const tiltY = useSpring(0, { stiffness: 80, damping: 18 });
 
   const turnTo = (s, { quick = false } = {}) => {
     const target = Math.max(0, Math.min(N, s));
@@ -320,7 +377,25 @@ export default function Education() {
           ))}
         </div>
 
-        <div className="flex justify-center">
+        <div
+          className="flex justify-center"
+          onPointerMove={(e) => {
+            const el = bookRef.current;
+            if (!el || !fine || reduce) return;
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            el.style.setProperty("--sx", `${x * 100}%`);
+            el.style.setProperty("--sy", `${y * 100}%`);
+            tiltX.set((0.5 - y) * 5);
+            tiltY.set((x - 0.5) * 7);
+          }}
+          onPointerLeave={() => {
+            tiltX.set(0);
+            tiltY.set(0);
+          }}
+        >
+          <motion.div className="flex w-full justify-center" style={{ rotateX: tiltX, rotateY: tiltY, transformPerspective: 1800 }}>
           <motion.div
             ref={bookRef}
             className={`relative select-none ${
@@ -366,6 +441,7 @@ export default function Education() {
                 className="pointer-events-none absolute bottom-0 right-0 z-[60] h-7 w-7 bg-[linear-gradient(315deg,#16110f_48%,rgba(0,0,0,0.25)_50%,#e4ded2_56%)] md:h-9 md:w-9"
               />
             )}
+          </motion.div>
           </motion.div>
         </div>
 
