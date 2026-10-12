@@ -164,55 +164,179 @@ function Starfield({ p, opacity }) {
 
 const MOTES = Array.from({ length: 26 }, (_, i) => ({ left: 22 + rand(i, 21) * 56, top: 18 + rand(i, 22) * 78, size: 1 + rand(i, 23) * 2.2, dur: 7 + rand(i, 24) * 9, delay: -rand(i, 25) * 14, o: 0.2 + rand(i, 26) * 0.55 }));
 
+/*
+ * Three figures on the stage, drawn as silhouettes (200 x 300, feet on the
+ * floor at y = 300). Each is a list of shapes: filled paths and circles, and
+ * thick strokes for limbs. They are drawn twice: once a little larger in the
+ * warm rim colour, then in black on top, so only a lit edge shows.
+ */
+const FIGURES = [
+  // debating at a lectern, one hand raised to make the point
+  [
+    { circle: [100, 96, 16] },
+    { d: "M93 108 h14 v14 h-14 Z" },
+    { d: "M70 182 Q70 128 100 120 Q130 128 132 182 Z" },
+    { line: "M78 132 Q60 116 52 86", w: 13 },
+    { circle: [52, 86, 8] },
+    { line: "M124 136 Q138 150 136 170", w: 12 },
+    { d: "M62 172 H150 L146 184 H66 Z" },
+    { d: "M70 184 H142 L152 300 H60 Z" },
+    { line: "M132 174 Q138 150 120 140", w: 3 },
+    { circle: [117, 140, 5] },
+  ],
+  // on stage at a standing microphone
+  [
+    { circle: [98, 72, 15] },
+    { d: "M92 84 h13 v13 h-13 Z" },
+    { d: "M76 166 Q74 104 98 94 Q122 104 122 166 L118 206 H80 Z" },
+    { d: "M82 202 L78 296 H96 L99 222 L102 296 H120 L116 202 Z" },
+    { line: "M118 108 Q132 110 132 120", w: 11 },
+    { line: "M80 108 Q60 132 58 160", w: 11 },
+    { circle: [58, 164, 6] },
+    { line: "M146 296 V132 L136 122", w: 4 },
+    { ellipse: [133, 118, 6, 9, 30] },
+    { d: "M124 296 a22 4 0 1 1 44 0 a22 4 0 1 1 -44 0 Z" },
+  ],
+  // searching for the answer: a magnifying glass held up, a stack of books
+  [
+    { circle: [93, 90, 15] },
+    { d: "M87 101 h13 v13 h-13 Z" },
+    { d: "M70 170 Q66 118 92 108 Q116 112 122 150 L118 206 H76 Z" },
+    { d: "M78 202 L74 296 H92 L96 222 L100 296 H118 L114 202 Z" },
+    { line: "M114 120 Q130 112 138 96", w: 11 },
+    { line: "M140 94 L150 80", w: 6 },
+    { ring: [164, 60, 20], w: 6 },
+    { line: "M76 124 Q58 150 66 176", w: 11 },
+    { d: "M16 300 V284 H58 V300 Z M20 284 V270 H54 V284 Z M14 270 V258 H50 V270 Z" },
+  ],
+];
+const RIM = "rgb(255 226 184)";
+
+function Figure({ shapes, lit, show, id }) {
+  const rim = useTransform(lit, [0, 1], [0.12, 1]);
+  const glow = useTransform(lit, [0, 1], [0, 0.85]);
+  const y = useTransform(show, [0, 1], [26, 0]);
+  const draw = (mode) =>
+    shapes.map((sh, k) => {
+      const outer = mode === "rim";
+      if (sh.line)
+        return <path key={k} d={sh.line} fill="none" strokeWidth={sh.w + (outer ? 4 : 0)} strokeLinecap="round" strokeLinejoin="round" />;
+      if (sh.circle) return <circle key={k} cx={sh.circle[0]} cy={sh.circle[1]} r={sh.circle[2]} strokeWidth={outer ? 4 : 0} />;
+      if (sh.ellipse) {
+        const [cx, cy, rx, ry, rot] = sh.ellipse;
+        return <ellipse key={k} cx={cx} cy={cy} rx={rx} ry={ry} transform={`rotate(${rot} ${cx} ${cy})`} strokeWidth={outer ? 4 : 0} />;
+      }
+      if (sh.ring)
+        return <circle key={k} cx={sh.ring[0]} cy={sh.ring[1]} r={sh.ring[2]} fill="none" strokeWidth={sh.w + (outer ? 4 : 0)} />;
+      return <path key={k} d={sh.d} strokeWidth={outer ? 4 : 0} strokeLinejoin="round" />;
+    });
+  return (
+    <motion.div className="relative h-full w-full" style={{ opacity: show, y }}>
+      {/* the light behind the figure, which makes it read as a silhouette */}
+      <motion.div className="absolute -inset-x-[30%] bottom-0 top-[8%] rounded-[50%]" style={{ opacity: glow, background: "radial-gradient(closest-side, rgba(255,232,196,0.34), rgba(255,220,170,0.08) 60%, transparent)" }} />
+      <svg viewBox="0 0 200 300" className="relative h-full w-full overflow-visible">
+        <defs>
+          <linearGradient id={`rim-${id}`} x1="0" y1="0" x2="0" y2="300" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor={RIM} stopOpacity="0.95" />
+            <stop offset="0.55" stopColor={RIM} stopOpacity="0.45" />
+            <stop offset="1" stopColor={RIM} stopOpacity="0.08" />
+          </linearGradient>
+        </defs>
+        <motion.g fill={`url(#rim-${id})`} stroke={`url(#rim-${id})`} style={{ opacity: rim }}>
+          {draw("rim")}
+        </motion.g>
+        <g fill="#070605" stroke="#070605">{draw("body")}</g>
+        {/* the quizzer's glass catches the light, and a question floats up from it */}
+        {id === 2 && (
+          <motion.g style={{ opacity: glow }}>
+            <circle cx="164" cy="60" r="15" fill="rgba(255,236,206,0.22)" />
+            <text x="160" y="22" fill={RIM} className="font-semibold" fontSize="30" textAnchor="middle">?</text>
+          </motion.g>
+        )}
+      </svg>
+    </motion.div>
+  );
+}
+
 /**
  * A stage light rigged above the words. It starts dark and aimed off to the
- * side; as the scene arrives it swings onto the text, sputters to life and
- * settles into a full beam: a hazy cone with a brighter core, dust drifting
- * through it, and a hard-edged pool of light on the floor. All driven by the
- * scroll, so it plays forward and back.
+ * side; it warms up, then sweeps the stage and stops on three figures in
+ * turn (a debater at a lectern, a speaker at a standing microphone, a
+ * quizzer searching with a magnifying glass), each lit from behind as the
+ * beam finds it. All driven by the scroll, so it plays forward and back.
  */
 function Stage({ p, opacity, x = "70%" }) {
-  // aim: swings in from the side and settles on the text
-  const aimRaw = useTransform(p, [0, 0.34], [-30, 0], { clamp: true, ease: (t) => 1 - Math.pow(1 - t, 3) });
-  const aim = useSpring(aimRaw, { stiffness: 60, damping: 18, mass: 0.8 });
-  // power: one soft flutter as it warms up, then it holds
-  const powerRaw = useTransform(p, [0.03, 0.1, 0.13, 0.26], [0, 0.6, 0.45, 1], { clamp: true });
-  const power = useSpring(powerRaw, { stiffness: 70, damping: 20 });
-  const lamp = useTransform(power, [0, 1], [0.15, 1]);
-  const [h, setH] = useState(800);
   const ref = useRef(null);
+  const [box, setBox] = useState({ w: 1200, h: 800 });
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const ro = new ResizeObserver(([e]) => setH(e.contentRect.height));
+    const ro = new ResizeObserver(([e]) => setBox({ w: e.contentRect.width, h: e.contentRect.height }));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  // where the beam meets the floor follows the aim
-  const poolX = useTransform(aim, (a) => -Math.tan((a * Math.PI) / 180) * h * 0.86);
-  const beamRotate = aim;
+  const narrow = box.w < 700;
+  const figH = Math.round(Math.min(box.h * (narrow ? 0.26 : 0.34), 300));
+  const gap = narrow ? Math.min(box.w * 0.3, 130) : Math.min(box.w * 0.13, 230);
+  const spots = [-gap, 0, gap];
+  const floor = box.h * (narrow ? 0.94 : 0.93);
+  const angleTo = (dx) => (-Math.atan(dx / (floor - 34)) * 180) / Math.PI;
+
+  // where the beam points: swings in, then rests on each figure in turn
+  const T = [0, 0.16, 0.36, 0.46, 0.64, 0.74, 1];
+  const A = [-34, angleTo(spots[0]), angleTo(spots[0]), angleTo(spots[1]), angleTo(spots[1]), angleTo(spots[2]), angleTo(spots[2])];
+  const aimRaw = useTransform(p, T, A, { clamp: true });
+  const aim = useSpring(aimRaw, { stiffness: 55, damping: 17, mass: 0.9 });
+  // power: one soft flutter as it warms up, then it holds
+  const powerRaw = useTransform(p, [0.02, 0.07, 0.1, 0.18], [0, 0.6, 0.45, 1], { clamp: true });
+  const power = useSpring(powerRaw, { stiffness: 70, damping: 20 });
+  const lamp = useTransform(power, [0, 1], [0.15, 1]);
+  const poolX = useTransform(aim, (a) => -Math.tan((a * Math.PI) / 180) * (floor - 34));
+
+  // each figure: appears as the beam first reaches it, glows while it is lit
+  const show = [
+    useTransform(p, [0.1, 0.18], [0, 1], { clamp: true }),
+    useTransform(p, [0.38, 0.46], [0, 1], { clamp: true }),
+    useTransform(p, [0.66, 0.74], [0, 1], { clamp: true }),
+  ];
+  const near = (i) => (a) => Math.max(0, 1 - Math.abs(a - angleTo(spots[i])) / 7);
+  const lit = [useTransform(aim, near(0)), useTransform(aim, near(1)), useTransform(aim, near(2))];
 
   return (
     <motion.div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[#040303]" style={{ opacity }}>
       {/* haze in the room, lit faintly by the beam */}
       <motion.div className="absolute inset-0" style={{ opacity: power, background: "radial-gradient(60% 70% at 70% 45%, rgba(255,236,210,0.05), transparent 70%)" }} />
+      {/* the stage floor, catching a little stray light */}
+      <motion.div className="absolute inset-x-0 bottom-0 h-[16%]" style={{ opacity: power, background: "linear-gradient(to top, rgba(255,236,206,0.045), transparent)" }} />
+      <div className="absolute inset-x-0 bottom-[7%] h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
 
       {/* the floor pool: an ellipse lying flat, a hot centre and a crisp rim */}
-      <motion.div className="absolute bottom-[3%] h-[14%] w-[min(46vw,40rem)]" style={{ left: x, x: "-50%", opacity: power }}>
+      <motion.div className="absolute h-[12%] w-[min(34vw,30rem)]" style={{ left: x, x: "-50%", top: floor - box.h * 0.06, opacity: power }}>
         <motion.div className="absolute inset-0" style={{ x: poolX }}>
           <div className="absolute inset-0 rounded-[50%]" style={{ background: "radial-gradient(closest-side, rgba(255,240,214,0.42), rgba(255,226,186,0.16) 62%, rgba(255,226,186,0.04) 92%, transparent)" }} />
           <div className="absolute inset-[2%] rounded-[50%] border border-[rgba(255,236,206,0.16)]" />
         </motion.div>
       </motion.div>
 
+      {/* the three figures, standing on the stage */}
+      {FIGURES.map((shapes, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{ left: `calc(${x} + ${spots[i]}px)`, top: floor - figH, height: figH, width: (figH * 2) / 3, transform: "translateX(-50%)" }}
+        >
+          <Figure shapes={shapes} lit={lit[i]} show={show[i]} id={i} />
+        </div>
+      ))}
+
       {/* the beam, pivoting at the lamp */}
-      <motion.div className="absolute top-[34px] h-[calc(100%-34px)] w-[min(52vw,46rem)] origin-top" style={{ left: x, x: "-50%", rotate: beamRotate, opacity: power }}>
+      <motion.div className="absolute top-[34px] w-[min(40vw,34rem)] origin-top" style={{ left: x, x: "-50%", height: floor - 34, rotate: aim, opacity: power }}>
         {/* the soft outer cone */}
         <div
           className="absolute inset-0"
           style={{
             clipPath: "polygon(47% 0, 53% 0, 100% 100%, 0 100%)",
-            background: "linear-gradient(to bottom, rgba(255,242,220,0.24), rgba(255,236,206,0.09) 55%, rgba(255,236,206,0.03))",
+            background: "linear-gradient(to bottom, rgba(255,242,220,0.22), rgba(255,236,206,0.08) 55%, rgba(255,236,206,0.03))",
             WebkitMaskImage: "linear-gradient(90deg, transparent, black 22%, black 78%, transparent)",
             maskImage: "linear-gradient(90deg, transparent, black 22%, black 78%, transparent)",
           }}
@@ -222,7 +346,7 @@ function Stage({ p, opacity, x = "70%" }) {
           className="absolute inset-0"
           style={{
             clipPath: "polygon(48.5% 0, 51.5% 0, 74% 100%, 26% 100%)",
-            background: "linear-gradient(to bottom, rgba(255,250,236,0.3), rgba(255,244,222,0.07) 70%, transparent)",
+            background: "linear-gradient(to bottom, rgba(255,250,236,0.28), rgba(255,244,222,0.06) 70%, transparent)",
             WebkitMaskImage: "linear-gradient(90deg, transparent, black 30%, black 70%, transparent)",
             maskImage: "linear-gradient(90deg, transparent, black 30%, black 70%, transparent)",
           }}
@@ -236,7 +360,7 @@ function Stage({ p, opacity, x = "70%" }) {
       </motion.div>
 
       {/* the lamp itself, on its rig */}
-      <motion.div className="absolute top-0 h-[54px] w-[80px]" style={{ left: x, x: "-50%", rotate: beamRotate, transformOrigin: "50% 38px" }}>
+      <motion.div className="absolute top-0 h-[54px] w-[80px]" style={{ left: x, x: "-50%", rotate: aim, transformOrigin: "50% 38px" }}>
         <svg viewBox="0 0 80 54" className="h-full w-full">
           <defs>
             <linearGradient id="can" x1="0" x2="1">
@@ -564,21 +688,14 @@ function Rich({ text }) {
 
 const SCENES = [Blueprint, Starfield, Stage];
 const FRONT = [Workbench, Countdown, null];
-const BEFORE = [null, null, null];
 
 /** One paragraph's turn on the stage (pinned frame). */
 function Act({ index, opacity, p, text }) {
   const y = useTransform(opacity, [0, 1], [24, 0]);
   const pointerEvents = useTransform(opacity, (v) => (v > 0.5 ? "auto" : "none"));
   const Front = FRONT[index];
-  const Before = BEFORE[index];
   return (
     <motion.div className="[grid-area:1/1]" style={{ opacity, y, pointerEvents }} aria-hidden={undefined}>
-      {Before && (
-        <div className="mb-8 [@media(max-height:760px)]:mb-5">
-          <Before p={p} />
-        </div>
-      )}
       <p className="text-[clamp(1rem,1.2vw,1.2rem)] leading-[1.75] text-paper/90 [@media(max-height:760px)]:text-[0.95rem]">
         <Rich text={text} />
       </p>
@@ -593,12 +710,16 @@ function Act({ index, opacity, p, text }) {
 
 /** One paragraph as its own scene, in the flow of the page (small screens). */
 function FlowAct({ index, text }) {
+  if (index === 2) return <PinnedStage text={text} />;
+  return <ScrollAct index={index} text={text} />;
+}
+
+function ScrollAct({ index, text }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const p = useTransform(scrollYProgress, [0.18, 0.62], [0, 1], { clamp: true });
   const Scene = SCENES[index];
   const Front = FRONT[index];
-  const Before = BEFORE[index];
   return (
     <div ref={ref} className="relative isolate overflow-hidden">
       <Scene p={p} opacity={1} x="50%" />
@@ -606,11 +727,6 @@ function FlowAct({ index, text }) {
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
       <div className="container-x relative flex min-h-[92svh] flex-col justify-center py-24">
         <p className="label mb-6 text-paper/70">{String(index + 1).padStart(2, "0")}</p>
-        {Before && (
-          <div className="mb-8">
-            <Before p={p} />
-          </div>
-        )}
         <p className="text-[clamp(1.02rem,2.8vw,1.2rem)] leading-[1.75] text-paper/90">
           <Rich text={text} />
         </p>
@@ -619,6 +735,26 @@ function FlowAct({ index, text }) {
             <Front p={p} />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** The stage on small screens: it holds still while the light finds each figure in turn. */
+function PinnedStage({ text }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  return (
+    <div ref={ref} className="relative overflow-clip" style={{ height: "260svh" }}>
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <Stage p={scrollYProgress} opacity={1} x="50%" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ink to-transparent" />
+        <div className="container-x relative pt-24">
+          <p className="label mb-5 text-paper/70">03</p>
+          <p className="text-[clamp(0.98rem,2.7vw,1.15rem)] leading-[1.7] text-paper/90">
+            <Rich text={text} />
+          </p>
+        </div>
       </div>
     </div>
   );
