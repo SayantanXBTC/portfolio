@@ -7,7 +7,6 @@ import { Reveal } from "../kit/Reveal";
 import { MaskLines } from "../kit/Text";
 import { useLightbox } from "../kit/Lightbox";
 import { Stagger, Item } from "../kit/Stagger";
-import { Decode } from "../kit/Decode";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -176,23 +175,6 @@ function Certificate({ doc }) {
   );
 }
 
-/** The numbers behind a role, decoding into place. */
-function Stats({ stats }) {
-  return (
-    <Stagger className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.08]" gap={0.12}>
-      {stats.map((st) => (
-        <Item key={st.label} kind="pop" className="group relative bg-ink p-5 md:p-6">
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,rgb(var(--accent-rgb)/0.14),transparent_60%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
-          <p className="relative display text-[clamp(2rem,3.4vw,3rem)] leading-none text-paper">
-            <Decode value={st.value} />
-          </p>
-          <p className="relative mt-3 text-[0.8rem] leading-snug text-mute">{st.label}</p>
-        </Item>
-      ))}
-    </Stagger>
-  );
-}
-
 /**
  * What the internship work looks like in motion: requests from many threads
  * queue through a pool of reused JDBC connections into the database, while
@@ -211,17 +193,17 @@ function PoolDiagram() {
           </linearGradient>
         </defs>
         {/* threads */}
-        <text x="14" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">Threads</text>
+        <text x="14" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">Requests</text>
         {lanes.map((y, i) => (
           <g key={y}>
             <rect x="14" y={y - 9} width="92" height="18" rx="9" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-            <text x="26" y={y + 3} className="fill-[#a19e99] font-mono text-[8px]">worker-{i + 1}</text>
+            <text x="26" y={y + 3} className="fill-[#a19e99] text-[8px]">Request {i + 1}</text>
             <line x1="106" y1={y} x2="186" y2={80} stroke="url(#pool-wire)" />
             <circle cx="106" cy={y} r="3.2" className="pool-packet fill-[rgb(var(--accent-strong-rgb))]" style={{ "--px": "80px", "--py": `${80 - y}px`, animationDelay: `${i * 0.55}s` }} />
           </g>
         ))}
         {/* the pool */}
-        <text x="190" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">JDBC pool</text>
+        <text x="190" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">Connection pool</text>
         <rect x="186" y="32" width="104" height="96" rx="12" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
         {slots.map((y, i) => (
           <rect key={y} x="200" y={y - 6} width="76" height="12" rx="6" className="pool-slot fill-[rgb(var(--accent-strong-rgb))]" style={{ animationDelay: `${i * 0.4}s` }} />
@@ -230,7 +212,7 @@ function PoolDiagram() {
         <circle cx="290" cy="80" r="3.2" className="pool-packet fill-paper" style={{ "--px": "80px", "--py": "0px", animationDelay: "0.3s" }} />
         <circle cx="290" cy="80" r="3.2" className="pool-packet fill-paper" style={{ "--px": "80px", "--py": "0px", animationDelay: "1.2s" }} />
         {/* the database */}
-        <text x="374" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">SQL</text>
+        <text x="374" y="22" className="fill-[#7d7a75] font-mono text-[9px] uppercase tracking-[0.18em]">Database</text>
         <g transform="translate(374 40)">
           <path d="M0 10 v60 a46 10 0 0 0 92 0 v-60" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.14)" />
           <ellipse cx="46" cy="10" rx="46" ry="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.16)" />
@@ -238,8 +220,8 @@ function PoolDiagram() {
         </g>
       </svg>
       <ul className="mt-4 space-y-2.5 border-t border-white/[0.06] pt-4">
-        {["unit", "integration", "concurrency"].map((suite, i) => (
-          <li key={suite} className="grid grid-cols-[6.5rem_1fr_1rem] items-center gap-3 font-mono text-[0.68rem] text-mute">
+        {["Unit tests", "Integration tests", "Concurrency tests"].map((suite, i) => (
+          <li key={suite} className="grid grid-cols-[8.5rem_1fr_1rem] items-center gap-3 text-[0.74rem] text-mute">
             <span>{suite}</span>
             <span className="relative h-[3px] overflow-hidden rounded-full bg-white/10">
               <span className="suite-bar absolute inset-0 origin-left rounded-full bg-accent-strong" style={{ animationDelay: `${i * 0.5}s` }} />
@@ -248,7 +230,7 @@ function PoolDiagram() {
           </li>
         ))}
       </ul>
-      <figcaption className="label mt-4 text-[0.58rem] text-dim">Illustration · connection pooling and the JUnit / TestNG suites</figcaption>
+      <figcaption className="label mt-4 text-[0.58rem] text-dim">Illustration · connection pooling and automated testing</figcaption>
     </figure>
   );
 }
@@ -261,7 +243,6 @@ function Leadership({ item, index, total }) {
         <Reveal from="none" duration={1.4} className="mt-8 text-[clamp(1rem,1.3vw,1.18rem)] leading-[1.75] text-paper/85">
           {item.summary}
         </Reveal>
-        {item.stats && <Stats stats={item.stats} />}
         <div className="mt-8">
           <Tags tech={item.tech} />
         </div>
@@ -295,7 +276,6 @@ function Internship({ item, index, total }) {
             </Item>
           ))}
         </Stagger>
-        {item.stats && <Stats stats={item.stats} />}
         <div className="mt-8">
           <Tags tech={item.tech} />
         </div>

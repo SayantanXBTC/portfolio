@@ -18,44 +18,68 @@ const ALIAS = {
 };
 const usedIn = (name) => {
   const keys = ALIAS[name] ?? [name.toLowerCase()];
-  return projects.filter((p) => p.tech.some((t) => keys.some((k) => t.toLowerCase().startsWith(k))));
+  // a whole-word match: "Java" must not match "JavaScript", but "React" matches "React 18"
+  const hit = (t, k) => t.startsWith(k) && !/[a-z]/.test(t.charAt(k.length));
+  return projects.filter((p) => p.tech.some((t) => keys.some((k) => hit(t.toLowerCase(), k))));
 };
 const USED = Object.fromEntries(foundations.flatMap((g) => g.items.map((it) => [it.name, usedIn(it.name)])));
 
-/** The projects a skill was used in; each one jumps to its scene in Work. */
+/** Where a skill comes from: the projects it was used in, or (when none) where else it was learned or applied. */
 function UsedIn({ item, align, onClose }) {
   const list = USED[item.name];
+  const note = item.note;
   const side = align === "left" ? "left-0" : align === "right" ? "right-0" : "left-1/2 -translate-x-1/2";
   return (
     <motion.div
       role="dialog"
-      aria-label={`${item.name} is used in`}
-      className={`absolute bottom-[calc(100%+0.6rem)] z-30 w-max min-w-[11rem] max-w-[15rem] ${side}`}
+      aria-label={`Where ${item.name} comes from`}
+      className={`absolute bottom-[calc(100%+0.6rem)] z-30 w-max min-w-[11rem] max-w-[16rem] ${side}`}
       initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 6, scale: 0.97, transition: { duration: 0.18 } }}
       transition={{ duration: 0.35, ease: EASE }}
     >
       <div className="rounded-xl border border-white/10 bg-[#121212] p-2 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.95)]">
-        <p className="label px-2 pb-2 pt-1 text-[0.58rem] text-dim">Used in</p>
-        <ul>
-          {list.map((p) => (
-            <li key={p.slug}>
+        {list.length > 0 ? (
+          <>
+            <p className="label px-2 pb-2 pt-1 text-[0.58rem] text-dim">Used in</p>
+            <ul>
+              {list.map((p) => (
+                <li key={p.slug}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      jumpToProject(p.slug);
+                    }}
+                    className="group/p flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[0.82rem] text-paper/85 transition-colors hover:bg-white/[0.06] hover:text-paper"
+                  >
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: p.color }} />
+                    <span className="flex-1">{p.title}</span>
+                    <span className="text-dim transition-transform duration-300 group-hover/p:translate-x-0.5">→</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className="px-2 pb-1.5 pt-1">
+            <p className="label pb-2 text-[0.58rem] text-dim">Where it comes from</p>
+            <p className="text-[0.82rem] leading-snug text-paper/85">{note?.text}</p>
+            {note?.to && (
               <button
                 type="button"
                 onClick={() => {
                   onClose();
-                  jumpToProject(p.slug);
+                  scrollToId(note.to);
                 }}
-                className="group/p flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[0.82rem] text-paper/85 transition-colors hover:bg-white/[0.06] hover:text-paper"
+                className="label mt-2.5 text-[0.58rem] text-accent-strong"
               >
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: p.color }} />
-                <span className="flex-1">{p.title}</span>
-                <span className="text-dim transition-transform duration-300 group-hover/p:translate-x-0.5">→</span>
+                {note.cta} →
               </button>
-            </li>
-          ))}
-        </ul>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -79,6 +103,7 @@ function Tile({ item, open, setOpen }) {
   const tint = tintFor(item);
   const tilt = fine && !reduce;
   const n = USED[item.name].length;
+  const has = n > 0 || Boolean(item.note);
   const lit = hot || flash;
 
   // asked for from elsewhere (About, the globe): turn once and glow
@@ -125,21 +150,21 @@ function Tile({ item, open, setOpen }) {
         hidden: { opacity: 0, rotateX: -80, rotateY: -40, y: 50, scale: 0.6 },
         show: { opacity: 1, rotateX: 0, rotateY: 0, y: 0, scale: 1, transition: { duration: 1.3, ease: [0.34, 1.3, 0.64, 1] } },
       }}
-      onPointerEnter={() => fine && n && setOpen(item.name)}
+      onPointerEnter={() => fine && has && setOpen(item.name)}
       onPointerLeave={leave}
     >
-      <AnimatePresence>{open && n > 0 && <UsedIn item={item} align={align} onClose={() => setOpen(null)} />}</AnimatePresence>
+      <AnimatePresence>{open && has && <UsedIn item={item} align={align} onClose={() => setOpen(null)} />}</AnimatePresence>
       <motion.div
         ref={ref}
         onPointerMove={move}
         onPointerEnter={() => setHot(true)}
-        onClick={() => !fine && n && setOpen(open ? null : item.name)}
+        onClick={() => !fine && has && setOpen(open ? null : item.name)}
         whileTap={{ scale: 0.94 }}
-        role={n ? "button" : undefined}
-        tabIndex={n ? 0 : undefined}
-        aria-expanded={n ? open : undefined}
-        aria-label={n ? `${item.name}, used in ${n} project${n > 1 ? "s" : ""}` : undefined}
-        onKeyDown={(e) => n && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen(open ? null : item.name))}
+        role={has ? "button" : undefined}
+        tabIndex={has ? 0 : undefined}
+        aria-expanded={has ? open : undefined}
+        aria-label={n ? `${item.name}, used in ${n} project${n > 1 ? "s" : ""}` : has ? `${item.name}: where it comes from` : undefined}
+        onKeyDown={(e) => has && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen(open ? null : item.name))}
         style={{
           rotateX: rx,
           rotateY: ry,
@@ -148,7 +173,7 @@ function Tile({ item, open, setOpen }) {
           borderColor: lit ? `${tint}66` : undefined,
           boxShadow: flash ? `0 0 0 2px ${tint}, 0 30px 70px -20px ${tint}` : hot ? `0 30px 60px -30px ${tint}` : undefined,
         }}
-        className={`group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500 ${n ? "cursor-pointer" : ""}`}
+        className={`group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500 ${has ? "cursor-pointer" : ""}`}
       >
         {/* sheen that follows the pointer */}
         <span
@@ -302,7 +327,7 @@ export default function Skills() {
             </div>
           ))}
         </div>
-        <p className="label mt-14 text-center text-dim">A number on a skill: how many of the five projects use it · point at or tap one to see which</p>
+        <p className="label mt-14 text-center text-dim">Point at or tap any skill to see where I have used it</p>
       </div>
     </section>
   );

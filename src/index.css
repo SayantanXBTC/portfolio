@@ -339,6 +339,15 @@ html {
   display: none;
 }
 
+/* Skills globe: a ring that pulses out from a chosen skill */
+.sphere-ping {
+  animation: sphere-ping 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes sphere-ping {
+  from { transform: scale(0.9); opacity: 0.9; }
+  to { transform: scale(1.8); opacity: 0; }
+}
+
 /* Experience: the connection-pool illustration */
 .pool-packet {
   opacity: 0;

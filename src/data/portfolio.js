@@ -37,16 +37,6 @@ export const profile = {
   phones: ["+91 9366335595", "+91 8798144052"],
   resume: asset("docs/Sayantan-General%20CV.pdf"),
   portrait: asset("images/profile.webp"),
-  // the same photo in two layers for the depth effect: the subject lifted out,
-  // and the scene with the subject's place filled in from its surroundings
-  portraitLayers: { fg: asset("images/profile-fg.webp"), bg: asset("images/profile-bg.webp"), mono: asset("images/profile-bg-mono.webp") },
-  // facts under the opening buttons; each one jumps to where it is shown in full
-  proof: [
-    { value: "8.71", label: "CGPA · B.Tech CSE", to: "education" },
-    { value: "5", label: "live products, source on GitHub", to: "projects" },
-    { value: "Top 100", label: "of 65,000+ · National Space Day quiz", to: "achievements" },
-    { value: "Tripura", label: "state representative · National Youth Festival", to: "achievements" },
-  ],
   socials: [
     { label: "GitHub", href: "https://github.com/SayantanXBTC" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/sayantan-bhattacharje/" },
@@ -167,10 +157,6 @@ export const experience = [
       "Led a student-run engineering and entrepreneurship club where I organized 15+ workshops, hackathons and mentoring sessions. I built partnerships with local startups, helped students ship 8 small projects, grew the club's membership and raised sponsorships for our events.",
     points: [],
     impact: "Increased club membership and raised sponsorships for events.",
-    stats: [
-      { value: "15+", label: "workshops, hackathons & mentoring sessions" },
-      { value: "8", label: "student projects shipped" },
-    ],
     tech: ["Leadership", "Mentoring", "Hackathons", "Partnerships"],
     photos: [
       photo("PRES1", "Sayantan at a ConverseE+ Club event", { caption: "ConverseE+ Club" }),
@@ -190,10 +176,6 @@ export const experience = [
       "Created automated test suites for core modules with JUnit and TestNG",
     ],
     impact: "Reduced average request processing time by ~25% and improved test coverage to 88%",
-    stats: [
-      { value: "~25%", label: "faster average request processing" },
-      { value: "88%", label: "test coverage" },
-    ],
     tech: ["Java", "JDBC", "Concurrency", "SQL", "JUnit", "TestNG"],
     document: {
       src: asset("images/certs/intern.webp"),
@@ -463,7 +445,7 @@ export const foundations = [
     title: "Languages",
     line: "What I write in",
     items: [
-      { name: "Java", icon: "Coffee", tint: "#E76F00" },
+      { name: "Java", icon: "Coffee", tint: "#E76F00", note: { text: "My first language. Concurrency, collections and JDBC modules in my internship at Techvanto Academy.", to: "experience", cta: "See the internship" } },
       { name: "JavaScript", icon: "siJavascript" },
       { name: "TypeScript", icon: "siTypescript" },
       { name: "Python", icon: "siPython" },
@@ -477,7 +459,7 @@ export const foundations = [
       { name: "React", icon: "siReact" },
       { name: "Next.js", icon: "siNextdotjs", tint: "#EDEDED" },
       { name: "Vite", icon: "siVite" },
-      { name: "WebGL & 3D", icon: "siThreedotjs" },
+      { name: "WebGL & 3D", icon: "siThreedotjs", note: { text: "3D rendering pipelines from the Foundations of Virtual Reality course (IIT Madras), and the 3D scenes across this portfolio.", to: "certifications", cta: "See the certificate" } },
     ],
   },
   {
@@ -497,10 +479,10 @@ export const foundations = [
     title: "Databases",
     line: "Where the data lives",
     items: [
-      { name: "MySQL", icon: "siMysql" },
+      { name: "MySQL", icon: "siMysql", note: { text: "A strong foundation from my DBMS coursework, applied to SQL queries and tuning in my internship.", to: "education", cta: "See the coursework" } },
       { name: "PostgreSQL", icon: "siPostgresql" },
       { name: "MongoDB", icon: "siMongodb" },
-      { name: "JDBC & concurrency", icon: "Workflow", tint: "#E9A23B" },
+      { name: "JDBC & concurrency", icon: "Workflow", tint: "#E9A23B", note: { text: "Multithreaded components and JDBC connection pooling, built in my Java internship.", to: "experience", cta: "See the internship" } },
     ],
   },
   {
@@ -508,12 +490,12 @@ export const foundations = [
     title: "Testing & QA",
     line: "How I prove it works",
     items: [
-      { name: "Selenium", icon: "siSelenium" },
+      { name: "Selenium", icon: "siSelenium", note: { text: "The core of my test automation practice, alongside my minor in Software Testing & Quality Assurance.", to: "education", cta: "See the minor" } },
       { name: "Playwright", icon: "Drama", tint: "#2EAD33" },
-      { name: "TestNG", icon: "ListChecks", tint: "#E0533D" },
-      { name: "JUnit", icon: "siJunit5" },
-      { name: "REST Assured", icon: "ShieldCheck", tint: "#5BB974" },
-      { name: "Postman", icon: "siPostman" },
+      { name: "TestNG", icon: "ListChecks", tint: "#E0533D", note: { text: "Automated test suites for core modules in my internship, and paired with REST Assured in the Test Tribe course.", to: "experience", cta: "See the internship" } },
+      { name: "JUnit", icon: "siJunit5", note: { text: "Unit and integration tests for the Java modules I built in my internship.", to: "experience", cta: "See the internship" } },
+      { name: "REST Assured", icon: "ShieldCheck", tint: "#5BB974", note: { text: "REST API automation, certified through the Test Tribe REST Assured course.", to: "certifications", cta: "See the certificate" } },
+      { name: "Postman", icon: "siPostman", note: { text: "My everyday tool for exploring and testing APIs, alongside my API testing certificates.", to: "certifications", cta: "See the certificates" } },
     ],
   },
   {
@@ -522,9 +504,9 @@ export const foundations = [
     line: "How it gets built and shipped",
     items: [
       { name: "Docker", icon: "siDocker" },
-      { name: "Jenkins", icon: "siJenkins" },
-      { name: "Maven", icon: "siApachemaven" },
-      { name: "GitHub Actions", icon: "siGithubactions" },
+      { name: "Jenkins", icon: "siJenkins", note: { text: "CI pipelines for running test suites, studied as part of my Software Testing & Quality Assurance minor.", to: "education", cta: "See the minor" } },
+      { name: "Maven", icon: "siApachemaven", note: { text: "Builds Java test projects; used with TestNG for CI/CD in the Test Tribe REST Assured course.", to: "certifications", cta: "See the certificate" } },
+      { name: "GitHub Actions", icon: "siGithubactions", note: { text: "Builds and deploys this very portfolio on every push.", to: null, cta: null } },
     ],
   },
   {
@@ -542,9 +524,9 @@ export const foundations = [
     title: "Beyond code",
     line: "What I keep coming back to",
     items: [
-      { name: "Quizzing", icon: "Trophy", tint: "#F5C451" },
-      { name: "History", icon: "ScrollText", tint: "#D9B77E" },
-      { name: "Virtual reality", icon: "Glasses", tint: "#6EE7B7" },
+      { name: "Quizzing", icon: "Trophy", tint: "#F5C451", note: { text: "Top 100 of 65,000+ in the National Space Day quiz, and college quiz wins.", to: "achievements", cta: "See it in Recognition" } },
+      { name: "History", icon: "ScrollText", tint: "#D9B77E", note: { text: "My open minor at Lovely Professional University.", to: "education", cta: "See Education" } },
+      { name: "Virtual reality", icon: "Glasses", tint: "#6EE7B7", note: { text: "Foundations of Virtual Reality, IIT Madras (NPTEL), November 2025.", to: "certifications", cta: "See the certificate" } },
     ],
   },
 ];
