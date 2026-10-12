@@ -177,7 +177,7 @@ const SIL = (name) => ({ body: asset(`images/sil-${name}-body.webp`), rim: asset
 const FIGURES = [
   { ...SIL("debate"), ratio: 259 / 900, size: 1, raise: 0, prop: "debate" },
   { ...SIL("speak"), ratio: 505 / 900, size: 1, raise: 0 },
-  { ...SIL("seat"), ratio: 773 / 900, size: 0.7, raise: 0.33, prop: "quiz" },
+  { ...SIL("seat"), ratio: 773 / 900, size: 0.62, raise: 0.3, prop: "quiz" },
 ];
 const RIM = "rgb(255 226 184)";
 const INK = "#070605";
@@ -189,7 +189,7 @@ const INK = "#070605";
  */
 function DebateDesk({ lit, h, w }) {
   const rim = useTransform(lit, [0, 1], [0.12, 1]);
-  const dh = h * 0.46;
+  const dh = h * 0.56;
   const dw = Math.max(w * 2.4, h * 0.74);
   return (
     <svg viewBox="0 0 300 160" preserveAspectRatio="none" className="absolute bottom-0 overflow-visible" style={{ width: dw, height: dh, left: w / 2 - dw * 0.46 }} aria-hidden="true">
@@ -229,8 +229,8 @@ function QuizDesk({ lit, h, w }) {
   const glow = useTransform(lit, [0, 1], [0, 1]);
   const rim = useTransform(lit, [0, 1], [0.12, 1]);
   const q = useTransform(lit, [0.4, 1], [14, 0]);
-  const dh = h * 0.37;
-  const dw = Math.max(w * 1.55, h * 0.86);
+  const dh = h * 0.34;
+  const dw = Math.max(w * 1.5, h * 0.78);
   const left = w * 0.5 - dw * 0.6;
   return (
     <>
@@ -284,9 +284,12 @@ function Figure({ fig, lit, show, h, w }) {
   const rim = useTransform(lit, [0, 1], [0.12, 1]);
   const glow = useTransform(lit, [0, 1], [0, 0.9]);
   const y = useTransform(show, [0, 1], [24, 0]);
+  // in the light it comes forward; out of it, it steps back into the dark
+  const scale = useTransform(lit, [0, 1], [0.78, 1.06]);
+  const fade = useTransform([show, lit], ([a, b]) => a * (0.5 + 0.5 * b));
   const imgH = h * fig.size;
   return (
-    <motion.div className="relative h-full w-full" style={{ opacity: show, y }}>
+    <motion.div className="relative h-full w-full origin-bottom" style={{ opacity: fade, y, scale }}>
       {/* the light behind the figure, which makes it read as a silhouette */}
       <motion.div
         className="absolute bottom-[-4%] top-[2%] rounded-[50%]"
@@ -345,6 +348,7 @@ function Stage({ p, opacity, x = "70%" }) {
   ];
   const near = (i) => (a) => Math.max(0, 1 - Math.abs(a - angleTo(spots[i])) / 7);
   const lit = [useTransform(aim, near(0)), useTransform(aim, near(1)), useTransform(aim, near(2))];
+  const depth = lit.map((l) => useTransform(l, (v) => (v > 0.3 ? 3 : 1))); // eslint-disable-line react-hooks/rules-of-hooks
 
   return (
     <motion.div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[#040303]" style={{ opacity }}>
@@ -366,9 +370,9 @@ function Stage({ p, opacity, x = "70%" }) {
       {FIGURES.map((fig, i) => {
         const w = figH * fig.size * fig.ratio;
         return (
-          <div key={i} className="absolute" style={{ left: `calc(${x} + ${spots[i]}px)`, top: floor - figH, height: figH, width: w, transform: "translateX(-50%)" }}>
+          <motion.div key={i} className="absolute" style={{ left: `calc(${x} + ${spots[i]}px)`, top: floor - figH, height: figH, width: w, x: "-50%", zIndex: depth[i] }}>
             <Figure fig={fig} lit={lit[i]} show={show[i]} h={figH} w={w} />
-          </div>
+          </motion.div>
         );
       })}
 
