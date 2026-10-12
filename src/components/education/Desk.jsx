@@ -26,10 +26,7 @@ function IdCard() {
         </div>
         <div className="flex gap-3 p-3">
           {/* the student, cropped like an ID photo */}
-          <div
-            className="h-[76px] w-[60px] shrink-0 rounded-[3px] bg-[#ddd] shadow-inner"
-            style={{ backgroundImage: `url(${matric.photo})`, backgroundSize: "300%", backgroundPosition: "44% 6%" }}
-          />
+          <img src={matric.photo} alt="" className="h-[84px] w-[63px] shrink-0 rounded-[3px] bg-[#ddd] object-cover object-[40%_50%] shadow-inner" />
           <div className="min-w-0 text-[#1c1a17]">
             <p className="text-[8px] uppercase tracking-[0.2em] text-[#6f695f]">Student</p>
             <p className="mt-0.5 text-[12px] font-semibold leading-tight">Sayantan Bhattacharjee</p>
@@ -84,10 +81,10 @@ function Certificate() {
         </div>
       </div>
       {/* a print of the day, paper-clipped to the corner */}
-      <div className="absolute -left-6 -top-10 w-[92px] rotate-[-9deg] bg-white p-1.5 pb-5 shadow-[0_14px_22px_-10px_rgba(0,0,0,0.85)]">
+      <div className="absolute -right-5 -top-12 w-[88px] rotate-[8deg] bg-white p-1.5 pb-5 shadow-[0_14px_22px_-10px_rgba(0,0,0,0.85)]">
         <img src={senior.photo} alt="" className="aspect-[4/5] w-full object-cover object-[52%_30%]" />
         <p className="absolute inset-x-0 bottom-1 text-center font-serif text-[8px] italic text-[#4a463f]">HHSS, 2022</p>
-        <svg viewBox="0 0 14 40" className="absolute -top-3 left-4 h-9 w-3.5" aria-hidden="true">
+        <svg viewBox="0 0 14 40" className="absolute -top-3 right-4 h-9 w-3.5" aria-hidden="true">
           <path d="M4 38 V8 a3 3 0 0 1 6 0 V30 a2 2 0 0 1 -4 0 V12" fill="none" stroke="#b9bcc2" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       </div>
@@ -119,7 +116,7 @@ function Pen() {
 }
 
 const SLIDES = [
-  { src: u.photo, pos: "50% 22%", caption: "Sayantan · B.Tech CSE" },
+  { src: u.photo, pos: "50% 50%", fit: "contain", caption: "Sayantan · B.Tech CSE" },
   { src: u.image, pos: "50% 50%", caption: `${u.name}` },
 ];
 
@@ -146,12 +143,16 @@ function Slideshow() {
           exit={{ x: "-35%", opacity: 0.4 }}
           transition={{ duration: 0.9, ease: [0.65, 0, 0.35, 1] }}
         >
+          {s.fit === "contain" && (
+            // a dim, softened copy fills the sides, the way photo viewers show a tall picture
+            <img src={s.src} alt="" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-55 blur-[6px]" />
+          )}
           <motion.img
             src={s.src}
             alt=""
-            className="h-full w-full object-cover"
+            className={`relative h-full w-full ${s.fit === "contain" ? "object-contain" : "object-cover"}`}
             style={{ objectPosition: s.pos }}
-            initial={{ scale: 1.12 }}
+            initial={{ scale: s.fit === "contain" ? 1.04 : 1.12 }}
             animate={{ scale: 1 }}
             transition={{ duration: 4.2, ease: "linear" }}
           />

@@ -7,6 +7,7 @@ import {
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
+  useSpring,
   useTransform,
 } from "framer-motion";
 import { about } from "../../data/portfolio";
@@ -172,9 +173,11 @@ const MOTES = Array.from({ length: 26 }, (_, i) => ({ left: 22 + rand(i, 21) * 5
  */
 function Stage({ p, opacity, x = "70%" }) {
   // aim: swings in from the side and settles on the text
-  const aim = useTransform(p, [0, 0.22, 0.3], [-34, 3, 0], { clamp: true });
-  // power: a few flickers before it holds
-  const power = useTransform(p, [0.04, 0.07, 0.09, 0.11, 0.13, 0.16, 0.22], [0, 0.55, 0.08, 0.7, 0.25, 0.95, 1], { clamp: true });
+  const aimRaw = useTransform(p, [0, 0.34], [-30, 0], { clamp: true, ease: (t) => 1 - Math.pow(1 - t, 3) });
+  const aim = useSpring(aimRaw, { stiffness: 60, damping: 18, mass: 0.8 });
+  // power: one soft flutter as it warms up, then it holds
+  const powerRaw = useTransform(p, [0.03, 0.1, 0.13, 0.26], [0, 0.6, 0.45, 1], { clamp: true });
+  const power = useSpring(powerRaw, { stiffness: 70, damping: 20 });
   const lamp = useTransform(power, [0, 1], [0.15, 1]);
   const [h, setH] = useState(800);
   const ref = useRef(null);
@@ -334,26 +337,6 @@ function Workbench({ p }) {
         ))}
       </dl>
     </div>
-  );
-}
-
-/** The talk, on a screen that flickers on behind the speaker's words. */
-function TalkSlide({ p }) {
-  const on = useTransform(p, [0.12, 0.16, 0.18, 0.24], [0, 0.6, 0.2, 1], { clamp: true });
-  const rise = useTransform(p, [0.12, 0.3], [18, 0], { clamp: true });
-  return (
-    <motion.div aria-hidden="true" className="relative" style={{ opacity: on, y: rise }}>
-      <div className="projector relative aspect-[16/7] w-full max-w-[30rem] overflow-hidden rounded-[6px] border border-white/10 bg-[linear-gradient(135deg,#1a1714,#0d0c0b)] p-[4.5%] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.95),0_0_70px_-20px_rgba(255,236,206,0.18)]">
-        <div className="absolute inset-0 bg-[radial-gradient(80%_90%_at_30%_0%,rgba(255,240,214,0.12),transparent_70%)]" />
-        <p className="label relative text-[0.55rem] text-white/45">National Youth Festival 2025 · Representing Tripura</p>
-        <p className="display relative mt-3 text-[clamp(1.4rem,2.6vw,2.3rem)] leading-[0.98] text-white/85">
-          Tech for
-          <br />
-          Viksit Bharat 2047
-        </p>
-        <span className="absolute bottom-[8%] right-[5%] h-1.5 w-1.5 rounded-full bg-accent-strong shadow-[0_0_10px_rgb(var(--accent-strong-rgb))]" />
-      </div>
-    </motion.div>
   );
 }
 
@@ -581,7 +564,7 @@ function Rich({ text }) {
 
 const SCENES = [Blueprint, Starfield, Stage];
 const FRONT = [Workbench, Countdown, null];
-const BEFORE = [null, null, TalkSlide];
+const BEFORE = [null, null, null];
 
 /** One paragraph's turn on the stage (pinned frame). */
 function Act({ index, opacity, p, text }) {
