@@ -7,11 +7,10 @@ import {
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
-  useSpring,
   useTransform,
 } from "framer-motion";
 import { projects } from "../../data/portfolio";
-import { useFinePointer, usePinnedLayout } from "../../hooks/useMedia";
+import { usePinnedLayout } from "../../hooks/useMedia";
 import { EASE } from "../../lib/asset";
 import { scrollToId } from "../../lib/scroll";
 import { SectionHeader } from "../kit/SectionHeader";
@@ -20,6 +19,8 @@ import { Arrow } from "../kit/Button";
 import { PreviewVideo, useVideoClock } from "../work/PreviewVideo";
 import { CountUp, ProjectLinks, WindowBar, hostOf } from "../work/parts";
 import CaseStudy from "../work/CaseStudy";
+import { Phone } from "../work/Phone";
+import { useSwing } from "../work/swing";
 
 // Each scene is this many viewports tall: one to arrive, the rest held on screen.
 const LENGTH = 2.4;
@@ -139,20 +140,19 @@ function Hud({ project, index, videoRef, playing, setPlaying, onJump }) {
 }
 
 /**
- * The recording inside a browser window that has real depth: a back plate
- * and a coloured bloom behind the glass.
+ * The desktop recording inside a browser window that has real depth: a back
+ * plate behind the glass. It leans toward the pointer and swings when dragged.
  */
-function Device({ project, videoRef, playing, onOpen, beat, style }) {
+function BrowserWindow({ project, videoRef, playing, onOpen, beat, className = "" }) {
   const reduce = useReducedMotion();
+  const { rotateX, rotateY, bind } = useSwing();
 
   return (
-    <motion.div style={{ ...style, transformStyle: "preserve-3d" }} className="relative will-change-transform">
-      {/* bloom and back plate give the window a body */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-[12%] opacity-60"
-        style={{ background: `radial-gradient(closest-side, ${project.color}, transparent)`, transform: "translateZ(-120px)" }}
-      />
+    <motion.div
+      {...bind}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className={`relative cursor-grab touch-pan-y select-none active:cursor-grabbing ${className}`}
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-[14px] border border-white/[0.06] bg-[#0b0b0b]"
@@ -185,7 +185,38 @@ function Device({ project, videoRef, playing, onOpen, beat, style }) {
           )}
         </button>
       </div>
+    </motion.div>
+  );
+}
 
+/**
+ * The two screens side by side, the desktop window and the phone, playing at
+ * the same time. The scroll camera moves them together; each one can be
+ * swung and clicked on its own. The phone stands on the outer edge.
+ */
+function Devices({ project, videoRef, playing, onOpen, beat, side, style }) {
+  return (
+    <motion.div
+      style={{ ...style, transformStyle: "preserve-3d" }}
+      className="relative flex items-center gap-[4%] will-change-transform"
+    >
+      {/* a coloured bloom behind both screens */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-[12%] opacity-60"
+        style={{ background: `radial-gradient(closest-side, ${project.color}, transparent)`, transform: "translateZ(-120px)" }}
+      />
+      <BrowserWindow
+        project={project}
+        videoRef={videoRef}
+        playing={playing}
+        onOpen={onOpen}
+        beat={beat}
+        className="min-w-0 flex-1"
+      />
+      <div className={`relative w-[27%] shrink-0 lg:w-[24%] ${side > 0 ? "order-last" : "order-first"}`} style={{ transformStyle: "preserve-3d" }}>
+        <Phone project={project} playing={playing} onOpen={onOpen} beat={beat} />
+      </div>
     </motion.div>
   );
 }
@@ -273,7 +304,6 @@ function Copy({ project, index, beat, onOpen }) {
  */
 function Scene({ project, index, pinned, onOpen, onJump }) {
   const reduce = useReducedMotion();
-  const fine = useFinePointer();
   const cinematic = pinned && !reduce;
   const outer = useRef(null);
   const copyRef = useRef(null);
@@ -304,31 +334,16 @@ function Scene({ project, index, pinned, onOpen, onJump }) {
   const ghostY = useTransform(t, [0, 1], ["35%", "-35%"]);
   const glow = useTransform(t, [0, PIN, 0.9, 1], [0, 1, 1, 0.2]);
 
-  // pointer tilt, layered on top of the camera
-  const px = useSpring(0, { stiffness: 120, damping: 18 });
-  const py = useSpring(0, { stiffness: 120, damping: 18 });
-  const rotateX = useTransform([rx, py], ([a, b]) => a + b);
-  const rotateY = useTransform([ry, px], ([a, b]) => a + b);
-  const onMove = (e) => {
-    if (!fine || reduce) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    px.set(((e.clientX - r.left) / r.width - 0.5) * 12);
-    py.set(-((e.clientY - r.top) / r.height - 0.5) * 9);
-  };
-  const onLeave = () => {
-    px.set(0);
-    py.set(0);
-  };
-
   const device = (
-    <div onPointerMove={onMove} onPointerLeave={onLeave} className="[perspective:1800px]">
-      <Device
+    <div className="[perspective:1800px]">
+      <Devices
         project={project}
         videoRef={videoRef}
         playing={playing}
         onOpen={onOpen}
         beat={shown}
-        style={cinematic ? { rotateX, rotateY, scale, y: lift } : { rotateX: py, rotateY: px }}
+        side={side}
+        style={cinematic ? { rotateX: rx, rotateY: ry, scale, y: lift } : undefined}
       />
     </div>
   );

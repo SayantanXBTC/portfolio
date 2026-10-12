@@ -120,6 +120,7 @@ export const experience = [
 ];
 
 // Screen recordings, compressed from the raw captures (public/videos/raw is not published).
+// `mobile` is the same live site filmed at an iPhone 17 viewport (402 x 874 pt).
 const film = (slug) => ({
   slug,
   video: asset(`videos/${slug}.mp4`),
@@ -127,6 +128,12 @@ const film = (slug) => ({
   posterTiny: asset(`videos/${slug}-tiny.webp`),
   w: 1440,
   h: 788,
+  mobile: {
+    video: asset(`videos/${slug}-mobile.mp4`),
+    poster: asset(`videos/${slug}-mobile.webp`),
+    w: 604,
+    h: 1312,
+  },
 });
 
 // Order is deliberate: QA / Automation, AI Testing, Computer Vision, Scientific Computing, Real-Time Systems.
@@ -361,21 +368,63 @@ export const education = {
   ],
 };
 
-// What I know -> what I build with -> what I keep exploring.
-// Every item maps back to the existing skills, projects, certificates or About copy.
-// `icon` is either a brand logo (si*) or a drawn concept icon (lucide), see Skills.jsx.
+// Skills, grouped by what they are for. Every item maps back to the existing
+// skills, certificates or About copy, or to the stack of a project in `projects`.
+// `icon` is either a brand logo (si*) or a drawn concept icon (lucide), see Skills.jsx;
+// `tint` overrides the plate colour (brand colours that are near-black or missing).
 export const foundations = [
   {
-    key: "engineering",
-    title: "Engineering",
-    line: "What I work in every day",
+    key: "languages",
+    title: "Languages",
+    line: "What I write in",
     items: [
       { name: "Java", icon: "Coffee", tint: "#E76F00" },
       { name: "JavaScript", icon: "siJavascript" },
+      { name: "TypeScript", icon: "siTypescript" },
       { name: "Python", icon: "siPython" },
+    ],
+  },
+  {
+    key: "frontend",
+    title: "Frontend",
+    line: "What people see and touch",
+    items: [
       { name: "React", icon: "siReact" },
+      { name: "Next.js", icon: "siNextdotjs", tint: "#EDEDED" },
+      { name: "Vite", icon: "siVite" },
+      { name: "WebGL & 3D", icon: "siThreedotjs" },
+    ],
+  },
+  {
+    key: "backend",
+    title: "Backend",
+    line: "What runs on the server",
+    items: [
       { name: "Node.js", icon: "siNodedotjs" },
+      { name: "Express", icon: "siExpress", tint: "#B9B9B9" },
+      { name: "Flask", icon: "siFlask" },
+      { name: "REST APIs", icon: "Network", tint: "#7FA7FF" },
+      { name: "Socket.io", icon: "siSocketdotio", tint: "#F2F2F2" },
+    ],
+  },
+  {
+    key: "data",
+    title: "Databases",
+    line: "Where the data lives",
+    items: [
+      { name: "MySQL", icon: "siMysql" },
+      { name: "PostgreSQL", icon: "siPostgresql" },
+      { name: "MongoDB", icon: "siMongodb" },
+      { name: "JDBC & concurrency", icon: "Workflow", tint: "#E9A23B" },
+    ],
+  },
+  {
+    key: "testing",
+    title: "Testing & QA",
+    line: "How I prove it works",
+    items: [
       { name: "Selenium", icon: "siSelenium" },
+      { name: "Playwright", icon: "Drama", tint: "#2EAD33" },
       { name: "TestNG", icon: "ListChecks", tint: "#E0533D" },
       { name: "JUnit", icon: "siJunit5" },
       { name: "REST Assured", icon: "ShieldCheck", tint: "#5BB974" },
@@ -383,14 +432,10 @@ export const foundations = [
     ],
   },
   {
-    key: "systems",
-    title: "Systems",
-    line: "How the pieces hold together",
+    key: "devops",
+    title: "DevOps & tools",
+    line: "How it gets built and shipped",
     items: [
-      { name: "REST APIs", icon: "Network", tint: "#7FA7FF" },
-      { name: "MongoDB", icon: "siMongodb" },
-      { name: "MySQL", icon: "siMysql" },
-      { name: "JDBC & concurrency", icon: "Workflow", tint: "#E9A23B" },
       { name: "Docker", icon: "siDocker" },
       { name: "Jenkins", icon: "siJenkins" },
       { name: "Maven", icon: "siApachemaven" },
@@ -398,15 +443,23 @@ export const foundations = [
     ],
   },
   {
-    key: "exploration",
-    title: "Exploration",
+    key: "ai",
+    title: "AI",
+    line: "Models put to work",
+    items: [
+      { name: "Generative AI", icon: "BrainCircuit", tint: "#B794F6" },
+      { name: "Claude API", icon: "siClaude" },
+      { name: "Computer vision", icon: "ScanFace", tint: "#5EC8E5" },
+    ],
+  },
+  {
+    key: "beyond",
+    title: "Beyond code",
     line: "What I keep coming back to",
     items: [
       { name: "Quizzing", icon: "Trophy", tint: "#F5C451" },
       { name: "History", icon: "ScrollText", tint: "#D9B77E" },
-      { name: "Generative AI", icon: "BrainCircuit", tint: "#B794F6" },
       { name: "Virtual reality", icon: "Glasses", tint: "#6EE7B7" },
-      { name: "WebGL & 3D", icon: "siThreedotjs" },
     ],
   },
 ];

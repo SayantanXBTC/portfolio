@@ -2,21 +2,41 @@ import { Component, Suspense, lazy, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import {
   siApachemaven,
+  siClaude,
   siDocker,
+  siExpress,
+  siFlask,
   siGithubactions,
   siJavascript,
   siJenkins,
   siJunit5,
   siMongodb,
   siMysql,
+  siNextdotjs,
   siNodedotjs,
+  siPostgresql,
   siPostman,
   siPython,
   siReact,
   siSelenium,
+  siSocketdotio,
   siThreedotjs,
+  siTypescript,
+  siVite,
 } from "simple-icons";
-import { Atom, BrainCircuit, Coffee, Glasses, ListChecks, Network, ScrollText, ShieldCheck, Trophy, Workflow } from "lucide-react";
+import {
+  BrainCircuit,
+  Coffee,
+  Drama,
+  Glasses,
+  ListChecks,
+  Network,
+  ScanFace,
+  ScrollText,
+  ShieldCheck,
+  Trophy,
+  Workflow,
+} from "lucide-react";
 import { foundations } from "../../data/portfolio";
 import { useAccent } from "../../context/AccentContext";
 import { useFinePointer } from "../../hooks/useMedia";
@@ -28,21 +48,29 @@ const NetworkScene = lazy(() => import("../effects/NetworkScene"));
 // Brand logos (Simple Icons, CC0) and drawn concept icons (Lucide) for the rest.
 const BRAND = {
   siApachemaven,
+  siClaude,
   siDocker,
+  siExpress,
+  siFlask,
   siGithubactions,
   siJavascript,
   siJenkins,
   siJunit5,
   siMongodb,
   siMysql,
+  siNextdotjs,
   siNodedotjs,
+  siPostgresql,
   siPostman,
   siPython,
   siReact,
   siSelenium,
+  siSocketdotio,
   siThreedotjs,
+  siTypescript,
+  siVite,
 };
-const DRAWN = { Atom, BrainCircuit, Coffee, Glasses, ListChecks, Network, ScrollText, ShieldCheck, Trophy, Workflow };
+const DRAWN = { BrainCircuit, Coffee, Drama, Glasses, ListChecks, Network, ScanFace, ScrollText, ShieldCheck, Trophy, Workflow };
 
 // Near-black brand colours would vanish on the page; fall back to paper.
 const lum = (hex) => {
@@ -226,8 +254,9 @@ function Tile({ item }) {
 }
 
 /**
- * Skills: Engineering -> Systems -> Exploration, each skill a tile.
- * The network visualization stays behind, turning toward the column in focus.
+ * Skills, grouped by what they are for (languages, frontend, backend, data,
+ * testing, delivery, AI, and the rest), each skill a tile. The network
+ * visualization stays behind, turning toward the group in focus.
  */
 export default function Skills() {
   const [focus, setFocus] = useState(null);
@@ -237,7 +266,8 @@ export default function Skills() {
   const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const reduce = useReducedMotion();
   const { accent } = useAccent();
-  const turn = focus === null ? 0 : focus - 1;
+  // four groups to a row: turn toward the column the pointer is in
+  const turn = focus === null ? 0 : ((focus % 4) - 1.5) * 0.66;
 
   return (
     <section ref={sectionRef} data-live={live} id="skills" aria-labelledby="skills-title" className="section-y relative z-10 overflow-x-clip bg-ink">
@@ -256,24 +286,24 @@ export default function Skills() {
       </div>
 
       <div className="container-x relative">
-        <SectionHeader id="skills" label="Skills" note="Foundations — know · build · explore" />
+        <SectionHeader id="skills" label="Skills" note={`${foundations.length} groups · from code to shipping`} />
 
-        <div className="grid gap-16 lg:grid-cols-3 lg:gap-10" onPointerLeave={() => setFocus(null)}>
+        <div className="grid gap-x-10 gap-y-16 sm:grid-cols-2 xl:grid-cols-4" onPointerLeave={() => setFocus(null)}>
           {foundations.map((col, i) => (
             <div key={col.key} onPointerEnter={() => setFocus(i)} className="border-t border-white/[0.08] pt-8">
               <p className="label flex items-center justify-between">
                 <span className={focus === i ? "text-accent-strong" : "text-paper"}>{String(i + 1).padStart(2, "0")}</span>
                 <span className="text-dim">{col.items.length} entries</span>
               </p>
-              <h3 className="display mt-6 text-[clamp(2rem,3.4vw,3.2rem)]">{col.title}</h3>
+              <h3 className="display mt-6 text-[clamp(1.9rem,2.6vw,2.6rem)]">{col.title}</h3>
               <p className="label mt-3 text-dim">{col.line}</p>
 
               <motion.ul
-                className="mt-10 grid grid-cols-3 gap-3"
+                className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2"
                 initial={reduce ? false : "hidden"}
                 whileInView="show"
                 viewport={{ once: true, amount: 0.15 }}
-                variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: i * 0.15 } } }}
+                variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: (i % 4) * 0.12 } } }}
               >
                 {col.items.map((item) => (
                   <Tile key={item.name} item={item} />

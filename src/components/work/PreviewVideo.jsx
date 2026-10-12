@@ -4,8 +4,9 @@ import { useInView } from "framer-motion";
 /**
  * A muted, looping screen recording. The file is only requested once the player
  * comes near the viewport, and it only plays while it is actually on screen.
+ * `media` swaps in another cut of the same project (the phone recording).
  */
-export function PreviewVideo({ project, videoRef, playing = true, className = "" }) {
+export function PreviewVideo({ project, media = project, label = "screen recording of the live product", videoRef, playing = true, className = "" }) {
   const local = useRef(null);
   const ref = videoRef ?? local;
   const near = useInView(ref, { once: true, margin: "900px 0px 900px 0px" });
@@ -22,16 +23,16 @@ export function PreviewVideo({ project, videoRef, playing = true, className = ""
   return (
     <video
       ref={ref}
-      src={near ? project.video : undefined}
-      poster={project.poster}
-      width={project.w}
-      height={project.h}
+      src={near ? media.video : undefined}
+      poster={media.poster}
+      width={media.w}
+      height={media.h}
       muted
       loop
       playsInline
       disablePictureInPicture
       preload={near ? "auto" : "none"}
-      aria-label={`${project.title}: screen recording of the live product`}
+      aria-label={`${project.title}: ${label}`}
       className={`block h-auto w-full bg-ink-800 ${className}`}
     />
   );

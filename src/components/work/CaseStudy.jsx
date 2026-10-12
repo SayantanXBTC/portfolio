@@ -6,6 +6,7 @@ import { lockScroll, unlockScroll } from "../../lib/scroll";
 import { EASE } from "../../lib/asset";
 import { Arrow } from "../kit/Button";
 import { CountUp, ProjectLinks, WindowBar } from "./parts";
+import { Phone } from "./Phone";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -147,22 +148,28 @@ export default function CaseStudy({ index, setIndex, close }) {
                 className="pointer-events-none absolute -inset-[10%] opacity-50"
                 style={{ background: `radial-gradient(closest-side, ${p.color}, transparent)` }}
               />
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-ink-800 shadow-[0_80px_160px_-60px_rgba(0,0,0,0.95)]">
-                <WindowBar project={p} />
-                <video
-                  key={p.video}
-                  src={p.video}
-                  poster={p.poster}
-                  width={p.w}
-                  height={p.h}
-                  controls
-                  autoPlay={!reduce}
-                  muted
-                  loop
-                  playsInline
-                  aria-label={`${p.title}: screen recording of the live product`}
-                  className="block h-auto w-full"
-                />
+              <div className="relative flex flex-col items-center gap-12 lg:flex-row lg:gap-[4%]">
+                <div className="relative w-full overflow-hidden rounded-2xl lg:w-auto lg:min-w-0 lg:flex-1 border border-white/[0.12] bg-ink-800 shadow-[0_80px_160px_-60px_rgba(0,0,0,0.95)]">
+                  <WindowBar project={p} />
+                  <video
+                    key={p.video}
+                    src={p.video}
+                    poster={p.poster}
+                    width={p.w}
+                    height={p.h}
+                    controls
+                    autoPlay={!reduce}
+                    muted
+                    loop
+                    playsInline
+                    aria-label={`${p.title}: screen recording of the live product`}
+                    className="block h-auto w-full"
+                  />
+                </div>
+                {/* the same product on a phone, playing alongside */}
+                <div className="relative w-[56%] max-w-[300px] shrink-0 [perspective:1400px] sm:w-[36%] lg:w-[22%]">
+                  <Phone key={p.slug} project={p} playing={!reduce} />
+                </div>
               </div>
             </motion.figure>
 
