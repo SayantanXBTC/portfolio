@@ -1,25 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
-  useAnimationControls,
   useInView,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
 } from "framer-motion";
 import { certificates } from "../../data/portfolio";
-import { useFinePointer, usePinnedLayout } from "../../hooks/useMedia";
+import { usePinnedLayout } from "../../hooks/useMedia";
 import { scrollToY } from "../../lib/scroll";
 import { EASE } from "../../lib/asset";
+import { lightOf } from "../../lib/light";
 import { SectionHeader } from "../kit/SectionHeader";
-import { Reveal } from "../kit/Reveal";
 import { Arrow } from "../kit/Button";
 import { useLightbox } from "../kit/Lightbox";
 
 const pad = (n) => String(n).padStart(2, "0");
 const N = certificates.length;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 const slides = certificates.map((c) => ({
   src: c.image,
@@ -30,339 +31,6 @@ const slides = certificates.map((c) => ({
 const years = certificates.map((c) => Number(c.date.slice(-4)));
 const span = `${Math.min(...years)} — ${Math.max(...years)}`;
 
-/**
- * Where a card rests in the stack. Everything lives in one plane and is layered
- * by z-index (no depth in space), so cards can never cut through each other;
- * the cards behind peek out above the one on top, each a little smaller and darker.
- */
-function pose(depth, peeked = false, n = N) {
-  return {
-    x: peeked ? 56 : 0,
-    y: depth * -24 - (peeked ? 10 : 0),
-    scale: 1 - depth * 0.055,
-    rotate: peeked ? 2.5 : 0,
-    opacity: depth <= 3 || peeked ? 1 : 0,
-    zIndex: n - depth,
-  };
-}
-
-/**
- * One certificate card. It rises into place when the stack is first seen.
- * When it leaves the top it slides down and fades, then settles in at the back;
- * when it comes back to the top it does the reverse.
- */
-function Sheet({ cert, items, depth, move, entered, peeked, onPick, onOpen, onFling }) {
-  const n = items.length;
-  const reduce = useReducedMotion();
-  const controls = useAnimationControls();
-  const prev = useRef(depth);
-  const landed = useRef(false);
-  const busy = useRef(false);
-  const dragged = useRef(false);
-  const top = depth === 0;
-
-  const run = (target) => {
-    busy.current = true;
-    return controls.start(target).then(() => {
-      busy.current = false;
-    });
-  };
-
-  // rise in, back card first
-  useEffect(() => {
-    if (!entered || landed.current) return;
-    landed.current = true;
-    prev.current = depth;
-    const t = pose(depth, false, n);
-    if (reduce) controls.set(t);
-    else run({ ...t, transition: { duration: 1.1, ease: EASE, delay: 0.15 + (n - 1 - depth) * 0.09 } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entered]);
-
-  // the stack moved
-  useEffect(() => {
-    if (!landed.current) return;
-    const from = prev.current;
-    prev.current = depth;
-    if (from === depth) return;
-    const t = pose(depth, false, n);
-    if (reduce) {
-      controls.set(t);
-      return;
-    }
-    const { k, forward, dir } = move;
-    const wrapped = forward ? from < k : from >= k;
-    if (!wrapped) {
-      run({ ...t, transition: { duration: 0.8, ease: EASE, delay: 0.1 } });
-      return;
-    }
-    const order = forward ? from : n - 1 - from;
-    const timing = { duration: 0.9, times: [0, 0.4, 1], ease: EASE, delay: order * 0.07 };
-    if (forward) {
-      // leaves the top: drops away in front, then reappears at the back
-      run({
-        x: [null, dir * 560, t.x],
-        y: [null, -40, t.y],
-        scale: [null, 0.92, t.scale],
-        rotate: [null, dir * 16, 0],
-        opacity: [null, 0, t.opacity],
-        zIndex: [n + 1, n + 1, t.zIndex],
-        transition: timing,
-      });
-    } else {
-      // comes back to the top: fades from the back, rises in front
-      run({
-        x: [null, 0, t.x],
-        y: [null, 120, t.y],
-        scale: [null, 0.96, t.scale],
-        rotate: [null, 0, 0],
-        opacity: [null, 0, 1],
-        zIndex: [t.zIndex, n + 1, n + 1],
-        transition: timing,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depth]);
-
-  // a line in the index is pointing at this card
-  useEffect(() => {
-    if (!landed.current || busy.current) return;
-    controls.start({ ...pose(depth, peeked, n), transition: { duration: 0.6, ease: EASE } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [peeked]);
-
-  return (
-    <motion.div
-      className="absolute inset-x-0 bottom-0"
-      style={{ transformOrigin: "50% 0%" }}
-      initial={reduce ? pose(depth, false, n) : { ...pose(depth, false, n), y: 80, opacity: 0 }}
-      animate={controls}
-      drag={top ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.6}
-      onDragStart={() => {
-        dragged.current = true;
-      }}
-      onDragEnd={(_, info) => {
-        if (Math.abs(info.offset.x) > 90 || Math.abs(info.velocity.x) > 500) onFling(info.offset.x < 0 ? 1 : -1);
-      }}
-    >
-      {/* the hit area stays still; only the card inside lifts on hover, so it never jitters */}
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-hidden={!top}
-        onClick={() => {
-          if (dragged.current) {
-            dragged.current = false;
-            return;
-          }
-          if (top) onOpen(items.indexOf(cert));
-          else onPick(items.indexOf(cert));
-        }}
-        className={`group block w-full ${top ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
-      >
-        <span
-          className={`relative block overflow-hidden rounded-xl bg-white ring-1 ring-black/10 transition-[transform,box-shadow] duration-500 ease-cine ${
-            top
-              ? "shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.06)] group-hover:-translate-y-1.5 group-hover:shadow-[0_45px_80px_-25px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.1)] motion-reduce:group-hover:translate-y-0"
-              : "shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)]"
-          }`}
-        >
-          <img
-            src={cert.image}
-            alt=""
-            width={2000}
-            draggable={false}
-            loading="lazy"
-            decoding="async"
-            className="pointer-events-none block aspect-[1.36] h-auto w-full object-cover"
-          />
-          {/* a sweep of light across the top sheet when you point at it */}
-          {top && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.55)_50%,transparent_65%)] transition-transform duration-[1100ms] ease-cine group-hover:translate-x-full"
-            />
-          )}
-          {/* cards further back sit in shadow */}
-          <motion.span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-ink"
-            initial={false}
-            animate={{ opacity: top ? 0 : peeked ? 0.15 : 0.35 + depth * 0.12 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          />
-        </span>
-      </button>
-    </motion.div>
-  );
-}
-
-/**
- * The stack, seen at a slight angle and leaning gently toward the pointer.
- * The top card can be thrown aside or clicked to read.
- */
-function Pile({ items, active, step, goTo, peek, onOpen }) {
-  const n = items.length;
-  const reduce = useReducedMotion();
-  const fine = useFinePointer();
-  const ref = useRef(null);
-  const entered = useInView(ref, { once: true, amount: 0.35 });
-
-  // which way the stack last moved, and whether a card was thrown by hand
-  const last = useRef(active);
-  const thrown = useRef(null);
-  const move = useRef({ k: 1, forward: true, dir: 1 });
-  if (last.current !== active) {
-    const k = (active - last.current + n) % n;
-    move.current = { k, forward: k <= n / 2, dir: thrown.current ?? 1 };
-    thrown.current = null;
-    last.current = active;
-  }
-  const fling = (d) => {
-    thrown.current = d > 0 ? -1 : 1;
-    step(d);
-  };
-
-  const base = reduce ? { x: 0, y: 0 } : { x: 6, y: -7 };
-  const tx = useSpring(base.x, { stiffness: 60, damping: 20 });
-  const ty = useSpring(base.y, { stiffness: 60, damping: 20 });
-  const onMove = (e) => {
-    if (!fine || reduce) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    ty.set(base.y + ((e.clientX - r.left) / r.width - 0.5) * 6);
-    tx.set(base.x - ((e.clientY - r.top) / r.height - 0.5) * 5);
-  };
-  const onLeave = () => {
-    tx.set(base.x);
-    ty.set(base.y);
-  };
-
-  return (
-    <div
-      ref={ref}
-      className="relative mx-auto w-full max-w-[40rem] select-none px-2 pb-4 pt-6"
-      tabIndex={0}
-      role="group"
-      aria-roledescription="certificate pile"
-      aria-label={`Certificate ${active + 1} of ${n}: ${items[active].title}. Use the arrow keys to go through the pile, Enter to open.`}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowRight" || e.key === "ArrowDown") (e.preventDefault(), step(1));
-        if (e.key === "ArrowLeft" || e.key === "ArrowUp") (e.preventDefault(), step(-1));
-        if (e.key === "Enter" || e.key === " ") (e.preventDefault(), onOpen(active));
-      }}
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-    >
-      <div style={{ perspective: 1800 }}>
-        {/* the cards are flat inside this plane; only the plane itself is tilted */}
-        <motion.div className="relative" style={{ rotateX: tx, rotateY: ty }}>
-          {/* room above for the cards peeking out behind */}
-          <div className="relative pt-[4.5rem]">
-            <div className="relative aspect-[1.36]">
-              <motion.span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-[2%] -bottom-12 h-24 bg-[radial-gradient(closest-side,rgba(0,0,0,0.95),transparent)]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: entered ? 0.9 : 0 }}
-                transition={{ duration: 1.4, delay: 0.3 }}
-              />
-              {items.map((c, i) => (
-                <Sheet
-                  key={c.title}
-                  cert={c}
-                  items={items}
-                  depth={(i - active + n) % n}
-                  move={move.current}
-                  entered={entered || reduce}
-                  peeked={peek === i && i !== active}
-                  onPick={goTo}
-                  onOpen={onOpen}
-                  onFling={fling}
-                />
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-/** One line of the index. The selected line opens up to show what the course covered. */
-function Entry({ cert, index, active, compact, onSelect, onPeek, onOpen }) {
-  const reduce = useReducedMotion();
-  const on = index === active;
-  return (
-    <li className="border-b border-white/[0.08]">
-      <button
-        type="button"
-        onClick={() => onSelect(index)}
-        onPointerEnter={() => onPeek(index)}
-        onPointerLeave={() => onPeek(null)}
-        aria-expanded={on}
-        aria-controls={`cert-${index}`}
-        className={`group relative grid w-full grid-cols-[2.25rem_1fr_auto] items-baseline gap-x-3 text-left ${compact ? "py-4" : "py-5 md:py-6"}`}
-      >
-        <span
-          aria-hidden="true"
-          className="absolute -left-4 top-0 h-full w-px origin-top bg-accent-strong transition-transform duration-700 ease-cine md:-left-6"
-          style={{ transform: `scaleY(${on ? 1 : 0})` }}
-        />
-        <span className={`label transition-colors duration-500 ${on ? "text-accent-strong" : "text-dim"}`}>{pad(index + 1)}</span>
-        <span
-          className={`text-[clamp(1.02rem,1.5vw,1.3rem)] leading-snug tracking-tight transition-colors duration-500 ${
-            on ? "text-paper" : "text-paper/55 group-hover:text-paper/90"
-          }`}
-        >
-          {cert.title}
-        </span>
-        <span className="label hidden text-dim sm:block">{cert.date.slice(-4)}</span>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {on && (
-          <motion.div
-            id={`cert-${index}`}
-            key="detail"
-            initial={reduce ? false : { height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-            className="overflow-hidden"
-          >
-            <div className={`pl-[calc(2.25rem+0.75rem)] ${compact ? "pb-5" : "pb-7"}`}>
-              <p className="label flex flex-wrap items-center gap-x-3 gap-y-2 text-mute">
-                <span>{cert.org}</span>
-                <span className="text-dim">·</span>
-                <span>{cert.date}</span>
-                <span className="rounded-full border border-white/15 px-2.5 py-1 text-paper/70">{cert.topic}</span>
-              </p>
-              <ul className="mt-4 space-y-1.5 text-[0.92rem] leading-relaxed text-mute">
-                {cert.points.map((p) => (
-                  <li key={p} className="flex gap-3">
-                    <span aria-hidden="true" className="mt-[0.7em] h-px w-3 shrink-0 bg-white/30" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-sm">
-                <button type="button" onClick={() => onOpen(index)} className="link-underline pb-0.5 text-paper">
-                  View full size
-                </button>
-                <a href={cert.link} target="_blank" rel="noopener noreferrer" className="link-underline inline-flex items-center gap-1.5 pb-0.5 text-mute hover:text-paper">
-                  Open PDF <Arrow dir="up" />
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </li>
-  );
-}
-
 const TOPICS = ["All", ...new Set(certificates.map((c) => c.topic))];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const monthOf = (date) => {
@@ -372,13 +40,13 @@ const monthOf = (date) => {
 const FIRST = Math.min(...certificates.map((c) => monthOf(c.date)));
 const LAST = Math.max(...certificates.map((c) => monthOf(c.date)));
 
-/** Topic chips: they narrow both the index and the pile. */
-function Filters({ topic, setTopic, id }) {
+/** Topic chips: they narrow the gallery to one subject. */
+function Filters({ topic, setTopic }) {
   return (
-    <div className="mb-5 flex flex-wrap gap-1.5 pl-4 md:pl-6" role="radiogroup" aria-label="Filter certificates by topic">
+    <div className="flex flex-wrap justify-center gap-1 md:justify-start" role="radiogroup" aria-label="Filter certificates by topic">
       {TOPICS.map((t) => {
         const on = t === topic;
-        const count = t === "All" ? certificates.length : certificates.filter((c) => c.topic === t).length;
+        const count = t === "All" ? N : certificates.filter((c) => c.topic === t).length;
         return (
           <button
             key={t}
@@ -388,7 +56,7 @@ function Filters({ topic, setTopic, id }) {
             onClick={() => setTopic(t)}
             className={`label relative rounded-full px-3 py-2 transition-colors duration-500 ${on ? "text-paper" : "text-dim hover:text-mute"}`}
           >
-            {on && <motion.span layoutId={`cert-topic-${id}`} className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.05]" transition={{ duration: 0.5, ease: EASE }} />}
+            {on && <motion.span layoutId="cert-topic" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.05]" transition={{ duration: 0.5, ease: EASE }} />}
             <span className="relative">
               {t} <span className={on ? "text-accent-strong" : "text-dim"}>{count}</span>
             </span>
@@ -411,8 +79,8 @@ function Timeline({ items, active, goTo, setTopic }) {
     perMonth[m] = (perMonth[m] ?? 0) + 1;
   });
   return (
-    <div className="mx-auto mt-8 max-w-[40rem] px-2" aria-label="When each certificate was earned">
-      <div className="relative mx-4 h-10">
+    <div className="w-full" aria-label="When each certificate was earned">
+      <div className="relative mx-4 h-8">
         <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
         {certificates.map((c) => {
           const m = monthOf(c.date);
@@ -446,90 +114,376 @@ function Timeline({ items, active, goTo, setTopic }) {
   );
 }
 
-/** The index and the pile, side by side. */
-function Desk({ items, topic, setTopic, active, step, goTo, onOpen, compact, pinned }) {
-  const n = items.length;
-  const fine = useFinePointer();
-  const [peek, setPeek] = useState(null);
-  const nav =
-    "grid h-10 w-10 place-items-center rounded-full border border-white/15 text-paper transition-[color,background-color,border-color,opacity] duration-300 hover:border-paper hover:bg-paper hover:text-ink disabled:pointer-events-none disabled:opacity-30";
+/**
+ * The gallery: the certificates hang on a wire in one soft line. The one in
+ * the middle swings round to face you and lifts forward; the others stay
+ * turned toward it, dimmer. Moving the line makes the prints sway on their
+ * clips and settle, and a pool of light on the floor takes the colour of the
+ * one in front.
+ */
+function Gallery({ items, pos, center, onOpen, goTo, drag, tall }) {
+  const reduce = useReducedMotion();
+  const stage = useRef(null);
+  const cards = useRef([]);
+  const shades = useRef([]);
+  const [w, setW] = useState(900);
+  const [h, setH] = useState(400);
+  const seen = useInView(stage, { once: true, amount: 0.3 });
+  const live = useInView(stage, { margin: "120px 0px 120px 0px" });
+  const st = useRef({ last: null, v: 0, swing: {}, swingV: {}, colors: {}, glow: null, t0: 0 });
+
+  useLayoutEffect(() => {
+    const el = stage.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver(([e]) => {
+      setW(e.contentRect.width);
+      setH(e.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // each certificate's light, worked out once
+  useEffect(() => {
+    if (!seen) return undefined;
+    let alive = true;
+    st.current.t0 = performance.now();
+    Promise.all(certificates.map((c) => lightOf(c.preview ?? c.image))).then((list) => {
+      if (!alive) return;
+      certificates.forEach((c, i) => (st.current.colors[c.title] = list[i]));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [seen]);
+
+  // card size: as large as the stage allows, leaving room for the neighbours
+  const narrow = w < 640;
+  const cardW = Math.max(160, Math.round(Math.min(w * (narrow ? 0.7 : 0.4), (h - 40) * 1.36 * 0.92)));
+  const cardH = Math.round(cardW / 1.36);
+  const near = cardW * (narrow ? 0.9 : 0.92); // distance to the first neighbour
+  const far = cardW * (narrow ? 0.42 : 0.5); // and between the ones further out
+  const wireY = 16;
+
+  useEffect(() => {
+    if (!live) return undefined;
+    let raf;
+    let lastNow = performance.now();
+    const accentRgb = getComputedStyle(stage.current).getPropertyValue("--accent-rgb").trim().split(/\s+/).map(Number);
+    const tick = (now) => {
+      const dt = Math.max(0.001, Math.min(0.05, (now - lastNow) / 1000));
+      lastNow = now;
+      const s = st.current;
+      const p = pos.get();
+      // how fast the line is moving, in cards per second
+      const raw = s.last === null ? 0 : (p - s.last) / dt;
+      s.last = p;
+      s.v += (raw - s.v) * Math.min(1, dt * 8);
+      const since = seen ? (now - s.t0) / 1000 : 0;
+
+      items.forEach((c, i) => {
+        const el = cards.current[i];
+        if (!el) return;
+        const d = i - p;
+        const ad = Math.abs(d);
+        const side = Math.sign(d);
+        const x = side * (Math.min(ad, 1) * near + Math.max(ad - 1, 0) * far);
+        const rotY = reduce ? 0 : -clamp(d, -1.4, 1.4) * 38;
+        const z = ad < 1 ? (1 - ad) * 90 - ad * 60 : -60 - (ad - 1) * 110;
+        const scale = 1 - Math.min(ad, 2.5) * 0.07;
+
+        // each print sways on its clips: pushed by the motion, pulled back by its weight
+        const key = c.title;
+        if (s.swing[key] === undefined) {
+          s.swing[key] = 0;
+          s.swingV[key] = 0;
+        }
+        let swing = 0;
+        if (!reduce) {
+          const want = clamp(-s.v * 7, -16, 16) + Math.sin((now / 1000) * 0.9 + i * 1.7) * 0.5;
+          const k = 38 + (i % 3) * 7;
+          s.swingV[key] += ((want - s.swing[key]) * k - s.swingV[key] * 4.2) * dt;
+          s.swing[key] += s.swingV[key] * dt;
+          swing = s.swing[key];
+        }
+
+        // they arrive one by one, dropping onto the wire
+        const e = reduce ? 1 : clamp((since - 0.1 - i * 0.09) / 0.9, 0, 1);
+        const drop = Math.pow(1 - e, 3) * -140;
+
+        el.style.transform = `translate3d(${x}px, ${drop}px, ${z}px) rotateY(${rotY}deg) rotateZ(${swing}deg) scale(${scale})`;
+        el.style.opacity = String(ad > 3.6 ? 0 : e * (1 - clamp(ad - 2.6, 0, 1)));
+        el.style.zIndex = String(100 - Math.round(ad * 10));
+        const shade = shades.current[i];
+        if (shade) shade.style.opacity = String(clamp(ad * 0.5, 0, 0.75));
+      });
+
+      // the floor light drifts to the colour of the certificate in front
+      const front = items[clamp(Math.round(p), 0, items.length - 1)];
+      const want = (front && s.colors[front.title]) || accentRgb;
+      if (!s.glow) s.glow = [...want];
+      for (let k = 0; k < 3; k += 1) s.glow[k] += (want[k] - s.glow[k]) * Math.min(1, dt * 3);
+      stage.current?.style.setProperty("--glow", s.glow.map(Math.round).join(" "));
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [live, seen, items, near, far, pos, reduce]);
+
+  const glow = (a) => `rgb(var(--glow, var(--accent-rgb)) / ${a})`;
 
   return (
-    <div className="grid w-full items-center gap-14 lg:grid-cols-12 lg:gap-16">
-      <div className="-mb-8 lg:hidden">
-        <Filters topic={topic} setTopic={setTopic} id="top" />
+    <div
+      ref={stage}
+      className={`relative w-full touch-pan-y select-none ${tall ? "h-[min(46svh,30rem)] min-h-[17rem]" : "h-[min(66vw,24rem)]"}`}
+      style={{ perspective: 1500, perspectiveOrigin: "50% 30%" }}
+      {...drag}
+    >
+      {/* the room: a faint glow on the wall behind the print in front, and its pool of light on the floor */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-[6%] h-[84%] w-[64%] -translate-x-1/2" style={{ background: `radial-gradient(closest-side, ${glow(0.17)}, transparent)` }} />
+        <div className="absolute -bottom-[8%] left-1/2 h-[24%] w-[min(72%,42rem)] -translate-x-1/2" style={{ background: `radial-gradient(closest-side, ${glow(0.55)}, ${glow(0.12)} 55%, transparent)` }} />
       </div>
-      <Reveal from="up" distance={0.5} className="lg:order-2 lg:col-span-7">
-        <Pile items={items} active={active} step={step} goTo={goTo} peek={fine ? peek : null} onOpen={onOpen} />
-        <div className="mx-auto mt-8 flex max-w-[40rem] items-center gap-4 px-2">
-          <button type="button" onClick={() => step(-1)} disabled={pinned && active === 0} aria-label="Previous certificate" className={nav}>
-            <Arrow dir="left" />
-          </button>
-          <button type="button" onClick={() => step(1)} disabled={pinned && active === n - 1} aria-label="Next certificate" className={nav}>
-            <Arrow />
-          </button>
-          <p className="label tabular-nums text-paper">
-            {pad(active + 1)} <span className="text-dim">/ {pad(n)}</span>
-          </p>
-          <p className="label ml-auto hidden text-right text-dim sm:block">
-            {pinned ? "Scroll or drag through the pile" : fine ? "Drag the top sheet · click to read" : "Swipe the top sheet · tap to read"}
-          </p>
-        </div>
-        <Timeline items={items} active={active} goTo={goTo} setTopic={setTopic} />
-      </Reveal>
 
-      <div className="lg:order-1 lg:col-span-5">
-        <div className="hidden lg:block">
-          <Filters topic={topic} setTopic={setTopic} id="side" />
-        </div>
-        <ul className="border-t border-white/[0.08] pl-4 md:pl-6">
-          {items.map((c, i) => (
-            <Entry key={c.title} cert={c} index={i} active={active} compact={compact} onSelect={goTo} onPeek={setPeek} onOpen={onOpen} />
-          ))}
-        </ul>
+      {/* the wire, sagging a little between the walls */}
+      <svg aria-hidden="true" className="pointer-events-none absolute top-0 h-8" viewBox="0 0 100 10" preserveAspectRatio="none" style={{ left: "-50vw", width: "calc(100% + 100vw)" }}>
+        <path d="M0 3 Q50 7 100 3" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      </svg>
+
+      <div className="absolute left-1/2 top-0 h-0 w-0" style={{ transformStyle: "preserve-3d" }}>
+        {items.map((c, i) => (
+          <div
+            key={c.title}
+            ref={(el) => (cards.current[i] = el)}
+            className="absolute will-change-transform"
+            style={{ width: cardW, left: -cardW / 2, top: wireY + 6, transformOrigin: "50% 0%", opacity: 0 }}
+          >
+            {/* the clips that hold it to the wire */}
+            {[0.18, 0.82].map((f) => (
+              <span
+                key={f}
+                aria-hidden="true"
+                className="absolute -top-4 z-10 h-6 w-3.5 -translate-x-1/2 rounded-[3px] bg-gradient-to-b from-[#6a6a6e] to-[#2a2a2d] shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
+                style={{ left: `${f * 100}%` }}
+              >
+                <span className="absolute inset-x-[3px] top-1 h-px bg-white/35" />
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => (i === center ? onOpen(i) : goTo(i))}
+              aria-label={i === center ? `Open ${c.title} certificate` : `Show ${c.title}`}
+              tabIndex={i === center ? 0 : -1}
+              className="group relative block w-full rounded-[4px] bg-[#f4f2ee] p-[2.4%] text-left shadow-[0_40px_70px_-30px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.06)]"
+            >
+              <span className="relative block overflow-hidden rounded-[2px]" style={{ height: Math.round(cardH * 0.952) }}>
+                <img src={c.image} alt="" draggable={false} loading="lazy" decoding="async" className="pointer-events-none h-full w-full object-cover" />
+                {/* light catching the glass when it faces you */}
+                {i === center && !reduce && (
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.5)_50%,transparent_65%)] transition-transform duration-[1200ms] ease-cine group-hover:translate-x-full" />
+                )}
+              </span>
+              <span ref={(el) => (shades.current[i] = el)} aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[4px] bg-ink opacity-0" />
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
+/** The words for the certificate in front. */
+function Caption({ cert, index, total, onOpen }) {
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={cert.title}
+        className="mx-auto max-w-[46rem] text-center"
+        initial="hidden"
+        animate="show"
+        exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
+        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+      >
+        <motion.p
+          className="label flex items-center justify-center gap-3"
+          variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
+        >
+          <span className="tabular-nums text-paper">
+            {pad(index + 1)} <span className="text-dim">/ {pad(total)}</span>
+          </span>
+          <span className="rounded-full border border-white/15 px-2.5 py-1 text-paper/70">{cert.topic}</span>
+        </motion.p>
+        <span className="mt-3 block overflow-hidden pb-[0.1em]">
+          <motion.h3
+            className="display text-[clamp(1.35rem,2.4vw,2.2rem)] leading-[1.05]"
+            variants={{ hidden: { y: "110%" }, show: { y: 0, transition: { duration: 0.8, ease: EASE } } }}
+          >
+            {cert.title}
+          </motion.h3>
+        </span>
+        <motion.p
+          className="mt-2 text-[0.88rem] text-mute"
+          variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } }}
+        >
+          {cert.org} · {cert.date}
+        </motion.p>
+        <motion.ul
+          className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-1.5 text-[0.82rem] text-paper/70 [@media(max-height:780px)]:hidden"
+          variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } }}
+        >
+          {cert.points.map((p) => (
+            <li key={p} className="flex items-center gap-2">
+              <span aria-hidden="true" className="h-px w-3 bg-white/30" />
+              {p}
+            </li>
+          ))}
+        </motion.ul>
+        <motion.div
+          className="mt-4 flex justify-center gap-6 text-sm"
+          variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.6 } } }}
+        >
+          <button type="button" onClick={onOpen} className="link-underline pb-0.5 text-paper">
+            View full size
+          </button>
+          <a href={cert.link} target="_blank" rel="noopener noreferrer" className="link-underline inline-flex items-center gap-1.5 pb-0.5 text-mute hover:text-paper">
+            Open PDF <Arrow dir="up" />
+          </a>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 /**
- * Certificates. On large screens the section holds still while you scroll and
- * the scroll itself deals the pile, one sheet at a time, with the index
- * following along. Picking a line, the arrows or a drag scroll you to it.
+ * Certificates as a floating gallery. On large screens the section holds
+ * still and the scroll slides the line of prints along; elsewhere you swipe
+ * it. The certificate in front can be opened full size.
  */
 export default function Certifications() {
   const { open } = useLightbox();
   const reduce = useReducedMotion();
   const pinned = usePinnedLayout() && !reduce;
   const outer = useRef(null);
-  const [active, setActive] = useState(0);
-  const [topic, setTopicRaw] = useState("All");
+  const [topic, setTopic] = useState("All");
   const items = useMemo(() => (topic === "All" ? certificates : certificates.filter((c) => c.topic === topic)), [topic]);
   const n = items.length;
+  const target = useMotionValue(0);
+  const pos = useSpring(target, { stiffness: 110, damping: 24, mass: 0.9 });
+  const [center, setCenter] = useState(0);
   const onOpen = (i) => open(items.map((c) => slides[certificates.indexOf(c)]), i);
-  const setTopic = (t) => {
-    setTopicRaw(t);
-    const len = t === "All" ? N : certificates.filter((c) => c.topic === t).length;
-    // pinned, the scroll position decides which sheet is on top; otherwise start the narrower pile at its first sheet
-    setActive(pinned ? Math.min(len - 1, Math.max(0, Math.floor(scrollYProgress.get() * len))) : 0);
-  };
 
   const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    if (pinned) setActive(Math.min(n - 1, Math.max(0, Math.floor(p * n))));
+    if (pinned) target.set(clamp(p, 0, 1) * (n - 1));
   });
+  useMotionValueEvent(pos, "change", (p) => setCenter(clamp(Math.round(p), 0, n - 1)));
+
+  // a new filter: keep the place in the scroll (pinned) or start again at the first
+  useEffect(() => {
+    target.set(pinned ? clamp(scrollYProgress.get(), 0, 1) * (n - 1) : 0);
+    setCenter((c) => clamp(c, 0, n - 1));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n, topic, pinned]);
 
   const goTo = (i) => {
+    const k = clamp(i, 0, n - 1);
     if (!pinned) {
-      setActive(((i % n) + n) % n);
+      target.set(k);
       return;
     }
     const el = outer.current;
-    if (!el || i < 0 || i >= n) return;
+    if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
-    scrollToY(top + ((i + 0.5) / n) * (el.offsetHeight - window.innerHeight));
+    scrollToY(top + (n > 1 ? k / (n - 1) : 0) * (el.offsetHeight - window.innerHeight));
   };
-  const step = (d) => goTo(active + d);
+
+  // swipe or drag the line; a drag never counts as a click
+  const dragRef = useRef(null);
+  const swallow = useRef(false);
+  const drag = {
+    onPointerDown: (e) => {
+      swallow.current = false;
+      dragRef.current = { x: e.clientX, y: e.clientY, start: target.get(), t: performance.now(), moved: false, last: e.clientX, v: 0 };
+    },
+    onPointerMove: (e) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const dx = e.clientX - d.x;
+      if (!d.moved && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - d.y)) {
+        d.moved = true;
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      }
+      if (!d.moved) return;
+      const now = performance.now();
+      d.v = (e.clientX - d.last) / Math.max(1, now - d.t);
+      d.last = e.clientX;
+      d.t = now;
+      if (!pinned) target.set(clamp(d.start - dx / (e.currentTarget.clientWidth * 0.5), -0.35, n - 0.65));
+    },
+    onPointerUp: (e) => {
+      const d = dragRef.current;
+      dragRef.current = null;
+      if (!d?.moved) return;
+      swallow.current = true;
+      const dx = e.clientX - d.x;
+      if (pinned) {
+        if (Math.abs(dx) > 40) goTo(center + (dx < 0 ? 1 : -1));
+      } else {
+        target.set(clamp(Math.round(target.get() - d.v * 1.2), 0, n - 1));
+      }
+    },
+    onPointerCancel: () => {
+      dragRef.current = null;
+      if (!pinned) target.set(clamp(Math.round(target.get()), 0, n - 1));
+    },
+    onClickCapture: (e) => {
+      if (!swallow.current) return;
+      swallow.current = false;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+  };
+
+  const nav =
+    "grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-ink/70 text-paper transition-[color,background-color,border-color,opacity] duration-300 hover:border-paper hover:bg-paper hover:text-ink disabled:pointer-events-none disabled:opacity-25";
+  const safe = clamp(center, 0, n - 1);
+  const cert = items[safe];
+
+  const body = (
+    <div
+      className="flex w-full flex-col outline-none"
+      tabIndex={0}
+      role="group"
+      aria-roledescription="certificate gallery"
+      aria-label={`Certificate ${safe + 1} of ${n}: ${cert.title}. Use the arrow keys to move, Enter to open.`}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") (e.preventDefault(), goTo(safe + 1));
+        if (e.key === "ArrowLeft") (e.preventDefault(), goTo(safe - 1));
+        if (e.key === "Enter" && e.target === e.currentTarget) (e.preventDefault(), onOpen(safe));
+      }}
+    >
+      <div className="relative">
+        <Gallery items={items} pos={pos} center={safe} onOpen={onOpen} goTo={goTo} drag={drag} tall={pinned} />
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[120] flex -translate-y-1/2 justify-between">
+          <button type="button" onClick={() => goTo(safe - 1)} disabled={safe === 0} aria-label="Previous certificate" className={`pointer-events-auto ${nav}`}>
+            <Arrow dir="left" />
+          </button>
+          <button type="button" onClick={() => goTo(safe + 1)} disabled={safe === n - 1} aria-label="Next certificate" className={`pointer-events-auto ${nav}`}>
+            <Arrow />
+          </button>
+        </div>
+      </div>
+      <div className="mt-6 md:mt-8">
+        <Caption cert={cert} index={safe} total={n} onOpen={() => onOpen(safe)} />
+      </div>
+      {/* the quiet bar along the bottom: filters, and when each was earned */}
+      <div className="mt-6 grid items-center gap-4 border-t border-white/[0.06] pt-4 md:mt-7 md:grid-cols-[auto_minmax(0,24rem)] md:justify-between">
+        <Filters topic={topic} setTopic={setTopic} />
+        <Timeline items={items} active={safe} goTo={goTo} setTopic={setTopic} />
+      </div>
+    </div>
+  );
 
   return (
     <section id="certifications" aria-labelledby="certifications-title" className="relative z-10 bg-ink">
@@ -538,17 +492,13 @@ export default function Certifications() {
       </div>
 
       {pinned ? (
-        <div ref={outer} className="relative" style={{ height: `${100 + N * 60}vh` }}>
-          <div className="sticky top-0 flex h-[100svh] items-center pb-6 pt-20">
-            <div className="container-x">
-              <Desk items={items} topic={topic} setTopic={setTopic} active={active} step={step} goTo={goTo} onOpen={onOpen} compact pinned />
-            </div>
+        <div ref={outer} className="relative" style={{ height: `${100 + n * 55}vh` }}>
+          <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden pb-5 pt-20">
+            <div className="container-x">{body}</div>
           </div>
         </div>
       ) : (
-        <div className="container-x pb-36 md:pb-52">
-          <Desk items={items} topic={topic} setTopic={setTopic} active={active} step={step} goTo={goTo} onOpen={onOpen} />
-        </div>
+        <div className="container-x overflow-hidden pb-28 md:pb-40">{body}</div>
       )}
     </section>
   );

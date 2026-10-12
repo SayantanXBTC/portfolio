@@ -339,6 +339,24 @@ html {
   display: none;
 }
 
+/* About: stars that breathe, and a projector that flickers on */
+.twinkle {
+  opacity: 0.2;
+  box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.6);
+  animation: twinkle 3s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: 0.15; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+.projector::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
 /* Skills globe: a ring that pulses out from a chosen skill */
 .sphere-ping {
   animation: sphere-ping 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;

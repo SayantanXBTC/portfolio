@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { animate, motion, motionValue, useInView, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { animate, motion, motionValue, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { education, profile } from "../../data/portfolio";
-import { useFinePointer, useMedia } from "../../hooks/useMedia";
+import { useFinePointer, useMedia, usePinnedLayout } from "../../hooks/useMedia";
+import { scrollToY } from "../../lib/scroll";
+import { DayLight, DeskProps, DeskStrip, DeskSurface } from "../education/Desk";
 import { EASE } from "../../lib/asset";
 import { SectionHeader } from "../kit/SectionHeader";
 import { Arrow } from "../kit/Button";
@@ -40,7 +42,7 @@ function Paper({ spine, children }) {
   );
 }
 
-function Cover({ spine, back }) {
+function Cover({ spine, back, glow }) {
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[2px] bg-[#16110f]">
       <div
@@ -57,6 +59,13 @@ function Cover({ spine, back }) {
         className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(circle at var(--sx, 30%) var(--sy, 20%), rgba(255, 226, 160, 0.16), transparent 42%)" }}
       />
+      {back && (
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 transition-opacity duration-[1600ms] ${glow ? "opacity-100" : "opacity-0"}`}
+          style={{ background: "radial-gradient(48% 34% at 50% 50%, rgba(255,214,140,0.3), transparent 72%)", animation: "glow-breathe 4s ease-in-out infinite" }}
+        />
+      )}
       {back ? (
         <div className="relative flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
           <p className="label text-[#c9a96e]/70">B.Tech CSE · {u.short}</p>
@@ -85,7 +94,7 @@ function Cover({ spine, back }) {
 }
 
 /** The left page of a spread: the school's photo, taped in, whole. */
-function PhotoPage({ c, spine, folio }) {
+function PhotoPage({ c, spine, folio, notes = true }) {
   return (
     <Paper spine={spine}>
       <div className="flex h-full flex-col items-center justify-center gap-[5%] px-[9%] pb-[10%] pt-[9%]">
@@ -113,7 +122,7 @@ function PhotoPage({ c, spine, folio }) {
           {c.name}, {c.years}
         </p>
       </div>
-      {c.current && (
+      {c.current && notes && (
         <div
           className="absolute bottom-[14%] right-[5%] w-[40%] rotate-[3.5deg] bg-[#f6e7a6] px-[4%] pb-[4%] pt-[3.5%] shadow-[0_8px_18px_-8px_rgba(0,0,0,0.55)]"
           style={{ backgroundImage: "linear-gradient(transparent 0 92%, rgba(0,0,0,0.06) 92%)" }}
@@ -255,44 +264,107 @@ function Leaf({ i, angle, vertical, front, back }) {
  * clicking either page, the arrows, the arrow keys or the bookmarks above.
  * On narrow screens the book stands upright and its pages flip upward.
  */
+// Scroll budget of the pinned desk: a moment with the book closed, then one
+// stretch for each spread, ending on the closed back cover.
+const OPEN_AT = 0.1;
+const bandOf = (p) => (p < OPEN_AT ? 0 : Math.min(N, 1 + Math.floor(((p - OPEN_AT) / (1 - OPEN_AT)) * N)));
+const middleOf = (s) => (s === 0 ? OPEN_AT / 2 : OPEN_AT + ((s - 0.5) / N) * (1 - OPEN_AT));
+
+/**
+ * Education as a yearbook on a desk. On large screens the desk holds still
+ * while you scroll: the cover lifts, each chapter brings its things onto the
+ * desk beside the book (an ID card and a stamped report card, a certificate
+ * and a pen, a laptop and the coursework notes), the light moves from
+ * morning to evening, and at the end the book closes with "Graduating 2027"
+ * glowing on its cover. The pages still turn by hand: drag, click, the arrows,
+ * the keys or the bookmarks. Elsewhere the book sits in the page as before,
+ * with each chapter's things beneath it.
+ */
 export default function Education() {
   const reduce = useReducedMotion();
   const fine = useFinePointer();
   const vertical = useMedia("(max-width: 767px)");
+  const pinned = usePinnedLayout() && !reduce;
   const rest = vertical ? 180 : -180;
   const [spread, setSpread] = useState(0);
+  const spreadRef = useRef(0);
   const [settled, setSettled] = useState(0);
   const angles = useRef(null);
   if (!angles.current) angles.current = Array.from({ length: N }, () => motionValue(0));
   const bookRef = useRef(null);
+  const sizer = useRef(null);
+  const outer = useRef(null);
   const seen = useInView(bookRef, { once: true, amount: 0.45 });
   const drag = useRef(null);
   const tiltX = useSpring(0, { stiffness: 80, damping: 18 });
   const tiltY = useSpring(0, { stiffness: 80, damping: 18 });
+  const [side, setSide] = useState(0);
+
+  const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
+  // the light of the day: the scroll itself when pinned, otherwise the page you are on
+  const dayFree = useMotionValue(0);
+  const day = pinned ? scrollYProgress : dayFree;
 
   const turnTo = (s, { quick = false } = {}) => {
     const target = Math.max(0, Math.min(N, s));
+    const from = spreadRef.current;
     const moving = angles.current.map((a, i) => ({ a, to: i < target ? rest : 0 })).filter(({ a, to }) => a.get() !== to);
-    const order = target >= spread ? moving : [...moving].reverse();
+    const order = target >= from ? moving : [...moving].reverse();
     order.forEach(({ a, to }, k) =>
       animate(a, to, reduce ? { duration: 0 } : { duration: quick ? 0.55 : 0.95, ease: [0.45, 0.05, 0.25, 1], delay: k * 0.14 })
     );
+    spreadRef.current = target;
     setSpread(target);
+    if (!pinned) animate(dayFree, target / N, { duration: 1.2, ease: EASE });
   };
+
+  // pinned: the scroll decides the spread; anything else asks the scroll to get there
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    if (!pinned) return;
+    const s = bandOf(p);
+    if (s !== spreadRef.current) turnTo(s);
+  });
+  const go = (s) => {
+    const target = Math.max(0, Math.min(N, s));
+    if (!pinned) return turnTo(target);
+    const el = outer.current;
+    if (!el) return undefined;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    scrollToY(top + middleOf(target) * (el.offsetHeight - window.innerHeight), { duration: 1.2 });
+    return undefined;
+  };
+
+  // room on either side of the book for the things on the desk
+  useLayoutEffect(() => {
+    const el = sizer.current;
+    if (!el || !pinned) return undefined;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setSide(Math.min(230, Math.min(r.left, window.innerWidth - r.right) - 70));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [pinned]);
 
   // if the layout switches between wide and narrow, re-seat every leaf on its new axis
   useEffect(() => {
-    angles.current.forEach((a, i) => a.set(i < spread ? rest : 0));
+    angles.current.forEach((a, i) => a.set(i < spreadRef.current ? rest : 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vertical]);
 
-  // the first time the book is seen, it opens itself
+  // not pinned: the first time the book is seen, it opens itself
   useEffect(() => {
-    if (!seen || spread !== 0) return undefined;
+    if (pinned || !seen || spreadRef.current !== 0) return undefined;
     const t = setTimeout(() => turnTo(1), reduce ? 0 : 450);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seen]);
+  }, [seen, pinned]);
 
   // a page's score counts once the page has landed
   useEffect(() => {
@@ -324,11 +396,21 @@ export default function Education() {
   const onUp = () => {
     const d = drag.current;
     drag.current = null;
-    if (!d) return;
-    if (!d.moved) return turnTo(spread + (d.forward ? 1 : -1));
+    if (!d) return undefined;
+    if (!d.moved) return go(spread + (d.forward ? 1 : -1));
     const t = Math.abs(angles.current[d.leaf].get()) / 180;
-    if (d.forward ? t > 0.3 : t < 0.7) turnTo(spread + (d.forward ? 1 : -1), { quick: true });
-    else animate(angles.current[d.leaf], d.forward ? 0 : rest, { duration: 0.45, ease: EASE });
+    if (d.forward ? t > 0.3 : t < 0.7) {
+      if (pinned) {
+        // finish the turn now, and bring the scroll along to the same page
+        animate(angles.current[d.leaf], d.forward ? rest : 0, { duration: 0.45, ease: EASE });
+        spreadRef.current = spread + (d.forward ? 1 : -1);
+        setSpread(spreadRef.current);
+        return go(spreadRef.current);
+      }
+      return turnTo(spread + (d.forward ? 1 : -1), { quick: true });
+    }
+    animate(angles.current[d.leaf], d.forward ? 0 : rest, { duration: 0.45, ease: EASE });
+    return undefined;
   };
   const onCancel = () => {
     const d = drag.current;
@@ -342,121 +424,160 @@ export default function Education() {
   const backSide = vertical ? "bottom" : "right";
 
   const leaves = [
-    { front: <Cover spine={front} />, back: <PhotoPage c={CHAPTERS[0]} spine={backSide} folio="— 1 —" /> },
+    { front: <Cover spine={front} />, back: <PhotoPage c={CHAPTERS[0]} spine={backSide} folio="— 1 —" notes={!pinned} /> },
     ...CHAPTERS.map((c, i) => ({
       front: <RecordPage c={c} index={i} spine={front} folio={`— ${i * 2 + 2} —`} shown={settled === i + 1} />,
       back:
-        i + 1 < CHAPTERS.length ? <PhotoPage c={CHAPTERS[i + 1]} spine={backSide} folio={`— ${i * 2 + 3} —`} /> : <Cover spine={backSide} back />,
+        i + 1 < CHAPTERS.length ? (
+          <PhotoPage c={CHAPTERS[i + 1]} spine={backSide} folio={`— ${i * 2 + 3} —`} notes={!pinned} />
+        ) : (
+          <Cover spine={backSide} back glow={spread === N} />
+        ),
     })),
   ];
 
   const nav =
-    "grid h-10 w-10 place-items-center rounded-full border border-white/15 text-paper transition-[color,background-color,border-color,opacity] duration-300 hover:border-paper hover:bg-paper hover:text-ink disabled:pointer-events-none disabled:opacity-30";
+    "grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-ink/50 text-paper transition-[color,background-color,border-color,opacity] duration-300 hover:border-paper hover:bg-paper hover:text-ink disabled:pointer-events-none disabled:opacity-30";
+
+  const bookSize = vertical
+    ? "aspect-[1/1.66] w-full max-w-[25rem] max-[380px]:aspect-[1/1.82]"
+    : pinned
+      ? "aspect-[1.52] w-[min(100%,58rem,calc((100svh-17rem)*1.52))]"
+      : "aspect-[1.52] w-[min(100%,64rem,calc(min(70vh,660px)*1.52))]";
+
+  const desk = (
+    <>
+      {/* bookmarks */}
+      <div className="relative z-10 mb-6 flex flex-wrap justify-center gap-x-1 gap-y-2 md:mb-8" role="tablist" aria-label="Yearbook pages">
+        {SPREADS.map((label, s) => (
+          <button
+            key={label}
+            type="button"
+            role="tab"
+            aria-selected={spread === s}
+            onClick={() => go(s)}
+            className={`label relative rounded-full px-3 py-2 transition-colors duration-500 md:px-3.5 ${spread === s ? "text-paper" : "text-dim hover:text-mute"}`}
+          >
+            {spread === s && (
+              <motion.span layoutId="yearbook-tab" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.04]" transition={{ duration: 0.5, ease: EASE }} />
+            )}
+            <span className="relative">{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="relative z-10 flex justify-center"
+        onPointerMove={(e) => {
+          const el = bookRef.current;
+          if (!el || !fine || reduce) return;
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width;
+          const y = (e.clientY - r.top) / r.height;
+          el.style.setProperty("--sx", `${x * 100}%`);
+          el.style.setProperty("--sy", `${y * 100}%`);
+          tiltX.set((0.5 - y) * 5);
+          tiltY.set((x - 0.5) * 7);
+        }}
+        onPointerLeave={() => {
+          tiltX.set(0);
+          tiltY.set(0);
+        }}
+      >
+        <motion.div className="flex w-full justify-center" style={{ rotateX: tiltX, rotateY: tiltY, transformPerspective: 1800 }}>
+          <div ref={sizer} className={`relative ${bookSize}`}>
+            {pinned && <DeskProps spread={spread} size={side} />}
+            <motion.div
+              ref={bookRef}
+              className={`absolute inset-0 select-none ${fine ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
+              style={{ touchAction: "pan-y", perspective: 2400 }}
+              animate={vertical ? { y: shift } : { x: shift }}
+              transition={reduce ? { duration: 0 } : { duration: 0.9, ease: EASE }}
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerCancel={onCancel}
+              tabIndex={0}
+              role="group"
+              aria-roledescription="yearbook"
+              aria-label={`Yearbook, ${SPREADS[spread]}. Use the arrow keys to turn the pages.`}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowDown") (e.preventDefault(), go(spread + 1));
+                if (e.key === "ArrowLeft" || e.key === "ArrowUp") (e.preventDefault(), go(spread - 1));
+              }}
+            >
+              <div aria-hidden="true" className="pointer-events-none absolute -inset-x-[6%] -bottom-[9%] h-[22%] bg-[radial-gradient(closest-side,rgba(0,0,0,0.85),transparent)]" />
+              {/* the boards under the pages */}
+              <div
+                aria-hidden="true"
+                className={`absolute ${vertical ? "inset-x-0 top-0 h-1/2" : "inset-y-0 left-0 w-1/2"} rounded-[2px] bg-[#16110f] transition-opacity duration-500 ${spread === 0 ? "opacity-0" : "opacity-100"}`}
+              />
+              <div
+                aria-hidden="true"
+                className={`absolute ${vertical ? "inset-x-0 bottom-0 h-1/2" : "inset-y-0 right-0 w-1/2"} rounded-[2px] bg-[#16110f] transition-opacity duration-500 ${spread === N ? "opacity-0" : "opacity-100"}`}
+              />
+
+              {leaves.map((l, i) => (
+                <Leaf key={i} i={i} angle={angles.current[i]} vertical={vertical} front={l.front} back={l.back} />
+              ))}
+
+              {/* a lifted corner on the page that turns next */}
+              {spread > 0 && spread < N && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-0 right-0 z-[60] h-7 w-7 bg-[linear-gradient(315deg,#16110f_48%,rgba(0,0,0,0.25)_50%,#e4ded2_56%)] md:h-9 md:w-9"
+                />
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+
+      {!pinned && spread > 0 && <DeskStrip spread={spread} />}
+
+      <div className={`relative z-10 mx-auto flex max-w-[64rem] items-center justify-center gap-4 ${pinned ? "mt-8" : "mt-10"}`}>
+        <button type="button" onClick={() => go(spread - 1)} disabled={spread === 0} aria-label="Previous page" className={nav}>
+          <Arrow dir="left" />
+        </button>
+        <p className="label min-w-[11rem] text-center text-paper" aria-live="polite">
+          {SPREADS[spread]}
+        </p>
+        <button type="button" onClick={() => go(spread + 1)} disabled={spread === N} aria-label="Next page" className={nav}>
+          <Arrow />
+        </button>
+      </div>
+      <p className="label relative z-10 mt-4 text-center text-dim">
+        {pinned ? "Scroll to turn the pages · or drag, click or use the arrows" : fine ? "Drag a page across the spine · or click a page to turn it" : "Tap a page to turn it"}
+      </p>
+    </>
+  );
+
+  if (pinned) {
+    return (
+      <section id="education" aria-labelledby="education-title" className="relative z-10 bg-ink">
+        <div className="container-x pt-28 md:pt-36">
+          <SectionHeader id="education" label="Education" note="2019 — 2027" />
+        </div>
+        <div ref={outer} className="relative" style={{ height: `${100 + (N + 1) * 60}vh` }}>
+          <div className="sticky top-0 h-[100svh] overflow-hidden">
+            <DeskSurface />
+            <div className="container-x relative flex h-full flex-col justify-center pb-4 pt-20">{desk}</div>
+            <DayLight t={day} />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="education" aria-labelledby="education-title" className="section-y relative z-10 overflow-x-clip bg-ink">
       <div className="container-x">
         <SectionHeader id="education" label="Education" note="2019 — 2027" />
-
-        {/* bookmarks */}
-        <div className="mb-8 flex flex-wrap justify-center gap-x-1 gap-y-2 md:mb-12" role="tablist" aria-label="Yearbook pages">
-          {SPREADS.map((label, s) => (
-            <button
-              key={label}
-              type="button"
-              role="tab"
-              aria-selected={spread === s}
-              onClick={() => turnTo(s)}
-              className={`label relative rounded-full px-3 py-2 transition-colors duration-500 md:px-3.5 ${spread === s ? "text-paper" : "text-dim hover:text-mute"}`}
-            >
-              {spread === s && (
-                <motion.span layoutId="yearbook-tab" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.04]" transition={{ duration: 0.5, ease: EASE }} />
-              )}
-              <span className="relative">{label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div
-          className="flex justify-center"
-          onPointerMove={(e) => {
-            const el = bookRef.current;
-            if (!el || !fine || reduce) return;
-            const r = el.getBoundingClientRect();
-            const x = (e.clientX - r.left) / r.width;
-            const y = (e.clientY - r.top) / r.height;
-            el.style.setProperty("--sx", `${x * 100}%`);
-            el.style.setProperty("--sy", `${y * 100}%`);
-            tiltX.set((0.5 - y) * 5);
-            tiltY.set((x - 0.5) * 7);
-          }}
-          onPointerLeave={() => {
-            tiltX.set(0);
-            tiltY.set(0);
-          }}
-        >
-          <motion.div className="flex w-full justify-center" style={{ rotateX: tiltX, rotateY: tiltY, transformPerspective: 1800 }}>
-          <motion.div
-            ref={bookRef}
-            className={`relative select-none ${
-              vertical
-                ? "aspect-[1/1.66] w-full max-w-[25rem] max-[380px]:aspect-[1/1.82]"
-                : "aspect-[1.52] w-[min(100%,64rem,calc(min(70vh,660px)*1.52))]"
-            } ${fine ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
-            style={{ touchAction: "pan-y", perspective: 2400 }}
-            animate={vertical ? { y: shift } : { x: shift }}
-            transition={reduce ? { duration: 0 } : { duration: 0.9, ease: EASE }}
-            onPointerDown={onDown}
-            onPointerMove={onMove}
-            onPointerUp={onUp}
-            onPointerCancel={onCancel}
-            tabIndex={0}
-            role="group"
-            aria-roledescription="yearbook"
-            aria-label={`Yearbook, ${SPREADS[spread]}. Use the arrow keys to turn the pages.`}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowRight" || e.key === "ArrowDown") (e.preventDefault(), turnTo(spread + 1));
-              if (e.key === "ArrowLeft" || e.key === "ArrowUp") (e.preventDefault(), turnTo(spread - 1));
-            }}
-          >
-            <div aria-hidden="true" className="pointer-events-none absolute -inset-x-[6%] -bottom-[9%] h-[22%] bg-[radial-gradient(closest-side,rgba(0,0,0,0.85),transparent)]" />
-            {/* the boards under the pages */}
-            <div
-              aria-hidden="true"
-              className={`absolute ${vertical ? "inset-x-0 top-0 h-1/2" : "inset-y-0 left-0 w-1/2"} rounded-[2px] bg-[#16110f] transition-opacity duration-500 ${spread === 0 ? "opacity-0" : "opacity-100"}`}
-            />
-            <div
-              aria-hidden="true"
-              className={`absolute ${vertical ? "inset-x-0 bottom-0 h-1/2" : "inset-y-0 right-0 w-1/2"} rounded-[2px] bg-[#16110f] transition-opacity duration-500 ${spread === N ? "opacity-0" : "opacity-100"}`}
-            />
-
-            {leaves.map((l, i) => (
-              <Leaf key={i} i={i} angle={angles.current[i]} vertical={vertical} front={l.front} back={l.back} />
-            ))}
-
-            {/* a lifted corner on the page that turns next */}
-            {spread > 0 && spread < N && (
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute bottom-0 right-0 z-[60] h-7 w-7 bg-[linear-gradient(315deg,#16110f_48%,rgba(0,0,0,0.25)_50%,#e4ded2_56%)] md:h-9 md:w-9"
-              />
-            )}
-          </motion.div>
-          </motion.div>
-        </div>
-
-        <div className="mx-auto mt-12 flex max-w-[64rem] items-center justify-center gap-4">
-          <button type="button" onClick={() => turnTo(spread - 1)} disabled={spread === 0} aria-label="Previous page" className={nav}>
-            <Arrow dir="left" />
-          </button>
-          <p className="label min-w-[11rem] text-center text-paper" aria-live="polite">
-            {SPREADS[spread]}
-          </p>
-          <button type="button" onClick={() => turnTo(spread + 1)} disabled={spread === N} aria-label="Next page" className={nav}>
-            <Arrow />
-          </button>
-        </div>
-        <p className="label mt-5 text-center text-dim">{fine ? "Drag a page across the spine · or click a page to turn it" : "Tap a page to turn it"}</p>
+      </div>
+      <div className="relative py-10">
+        <DeskSurface />
+        <div className="container-x relative">{desk}</div>
+        <DayLight t={day} />
       </div>
     </section>
   );
