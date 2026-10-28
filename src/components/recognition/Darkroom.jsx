@@ -11,38 +11,12 @@ const pad = (n) => String(n).padStart(2, "0");
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const easeOut = (t) => 1 - (1 - t) ** 3;
 const r3 = (n) => Math.round(n * 1000) / 1000;
-const SAFE = "214,31,40"; // the safelight is red whatever the site accent is
+// The safelight: a soft amber, whatever the site accent is. Kept low, so the room is warm rather than red.
+const SAFE = "201,104,52";
 
 function bezier(p0, p1, p2, p3, t) {
   const v = 1 - t;
   return [0, 1, 2].map((k) => v * v * v * p0[k] + 3 * v * v * t * p1[k] + 3 * v * t * t * p2[k] + t * t * t * p3[k]);
-}
-
-// The safelight buzzing on as the reader steps into the room: [progress, level].
-const FLICKER = [
-  [0, 0],
-  [0.2, 0.75],
-  [0.32, 0.08],
-  [0.55, 0.9],
-  [0.7, 0.25],
-  [0.9, 1],
-];
-function flickerAt(s) {
-  if (s <= 0) return 0;
-  for (let i = 1; i < FLICKER.length; i++) {
-    if (s < FLICKER[i][0]) return FLICKER[i - 1][1];
-  }
-  return 1;
-}
-
-// The room light clicking on, driven by the scroll so it plays both ways.
-function roomLightAt(x) {
-  if (x <= 0) return 0;
-  if (x < 0.18) return 0.85;
-  if (x < 0.3) return 0.15;
-  if (x < 0.42) return 1;
-  if (x < 0.5) return 0.55;
-  return 1;
 }
 
 /** A flat panel placed in the world by its top-left corner. */
@@ -73,7 +47,6 @@ export default function Darkroom({ slides }) {
   const rippleRefs = useRef([]);
   const lightRefs = useRef({});
   const handRef = useRef(null);
-  const flashRef = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
   const { open } = useLightbox();
   const [size, setSize] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
@@ -131,17 +104,17 @@ export default function Darkroom({ slides }) {
       c.pitch += cam.pitch;
       set(world, "transform", worldTransform(room, c));
 
-      // light: the safelight (with a faint hum), then the room light at the end
+      // light: the safelight eases up as the reader steps in; at the end it eases down as the room light comes up.
+      // Both follow the scroll only, so nothing ever changes while the page is still.
       const rv = (t - revealStart) / T.reveal;
-      const safe = flickerAt(t / (T.intro * 0.8)) * (1 - smoother(clamp01((rv - 0.1) / 0.14))) * (0.97 + 0.03 * Math.sin(time * 9));
-      const white = roomLightAt((rv - 0.14) / 0.2);
+      const safe = smoother(clamp01(t / (T.intro * 0.85))) * (1 - smoother(clamp01((rv - 0.08) / 0.2)));
+      const white = smoother(clamp01((rv - 0.12) / 0.24));
       set(lights.safe, "opacity", String(r3(safe)));
       set(stageRef.current, "--safe", String(r3(safe)));
       set(lights.lens, "opacity", String(r3(0.25 + 0.75 * safe)));
       set(lights.white, "opacity", String(r3(white)));
       set(lights.bulb, "opacity", String(r3(0.15 + 0.85 * white)));
       set(lights.dark, "opacity", String(r3(0.9 - 0.75 * Math.max(safe * 0.7, white))));
-      set(flashRef.current, "opacity", String(r3(0.16 * white * clamp01(1 - (rv - 0.24) / 0.16) * clamp01((rv - 0.14) / 0.02))));
 
       let developing = -1;
       let count = 0;
@@ -169,11 +142,11 @@ export default function Darkroom({ slides }) {
         let s3 = 0;
         if (hang <= 0) {
           const e = easeOut(enter);
-          x = p.tray[0] + Math.sin(time * 1.1 + i) * u(0.0015) * e;
+          x = p.tray[0] + Math.sin(time * 0.9 + i) * u(0.001) * e;
           y = p.tray[1] - u(0.24) * (1 - e);
           z = p.tray[2] - u(0.03) * (1 - e);
           rx = 90 - 22 * (1 - e);
-          rz = (1 - e) * (p.k % 2 ? 9 : -9) + Math.sin(time * 0.8 + i * 2) * 0.6 * e;
+          rz = (1 - e) * (p.k % 2 ? 9 : -9) + Math.sin(time * 0.6 + i * 2) * 0.4 * e;
           if (enter >= 1 && !st.entered) st.splash = now;
           st.entered = enter >= 1;
         } else {
@@ -227,10 +200,10 @@ export default function Darkroom({ slides }) {
           set(L.a, "opacity", String(r3(smoother(clamp01(dev / 0.55)))));
           set(L.b, "opacity", String(r3(smoother(clamp01((dev - 0.38) / 0.62)))));
           set(L.c, "opacity", String(r3(smoother(color))));
-          set(L.tint, "opacity", String(r3(0.5 * safe * (1 - color))));
+          set(L.tint, "opacity", String(r3(0.16 * safe * (1 - color))));
           const sinceDry = (now - st.pegged) / 1000;
           const wet = hang <= 0 ? enter : st.was ? clamp01(1 - sinceDry / 4) : 1;
-          set(L.sheen, "opacity", String(r3(wet * 0.7)));
+          set(L.sheen, "opacity", String(r3(wet * 0.8)));
           set(L.drip, "opacity", String(r3(hang > 0 ? wet * hangs : 0)));
         }
 
@@ -306,10 +279,10 @@ export default function Darkroom({ slides }) {
 
   return (
     <div ref={outer} className="relative" data-live={live} style={{ height: `${(total + 1) * 100}vh` }}>
-      <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden bg-[#070404]" style={{ perspective: `${P}px`, "--safe": 0 }} onPointerMove={onPointer}>
+      <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden bg-[#080606]" style={{ perspective: `${P}px`, "--safe": 0 }} onPointerMove={onPointer}>
         <div ref={worldRef} className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transformStyle: "preserve-3d" }}>
           {/* ---------- the back wall ---------- */}
-          <div aria-hidden="true" style={{ ...at(wallX, wallY, WZ), width: wallW, height: wallH }} className="overflow-hidden bg-[#0d0807]">
+          <div aria-hidden="true" style={{ ...at(wallX, wallY, WZ), width: wallW, height: wallH }} className="overflow-hidden bg-[#0e0b0a]">
             <div
               className="absolute inset-0 opacity-60"
               style={{
@@ -327,7 +300,7 @@ export default function Darkroom({ slides }) {
                   top: lamp[1] - wallY - u(0.4),
                   width: u(2.2),
                   height: u(1.9),
-                  background: `radial-gradient(closest-side, rgba(${SAFE},0.42), rgba(${SAFE},0.12) 55%, transparent)`,
+                  background: `radial-gradient(closest-side, rgba(${SAFE},0.2), rgba(${SAFE},0.06) 55%, transparent)`,
                 }}
               />
               <div
@@ -338,7 +311,7 @@ export default function Darkroom({ slides }) {
                   width: u(1.4),
                   height: u(1.2),
                   clipPath: "polygon(44% 0, 56% 0, 100% 100%, 0 100%)",
-                  background: `linear-gradient(to bottom, rgba(${SAFE},0.28), rgba(${SAFE},0.06) 70%, transparent)`,
+                  background: `linear-gradient(to bottom, rgba(${SAFE},0.1), rgba(${SAFE},0.025) 70%, transparent)`,
                 }}
               />
             </div>
@@ -360,7 +333,7 @@ export default function Darkroom({ slides }) {
             <div
               ref={(el) => (lightRefs.current.lens = el)}
               className="absolute inset-[14%] rounded-[3px]"
-              style={{ opacity: 0.25, background: `radial-gradient(circle at 50% 40%, #ff8d7a, rgb(${SAFE}) 55%, #5a0909)`, boxShadow: `0 0 ${u(0.05)}px rgba(${SAFE},0.9)` }}
+              style={{ opacity: 0.25, background: `radial-gradient(circle at 50% 40%, #ffd2a8, rgb(${SAFE}) 60%, #4a2410)`, boxShadow: `0 0 ${u(0.04)}px rgba(${SAFE},0.6)` }}
             />
           </div>
 
@@ -373,7 +346,7 @@ export default function Darkroom({ slides }) {
                 className="absolute left-1/2 top-1/2 block w-px origin-bottom"
                 style={{ height: u(0.05), transform: `translate(-50%, -100%) rotate(${n * 30}deg)` }}
               >
-                <span className="block h-[22%] w-full" style={{ background: `rgba(${SAFE},0.8)` }} />
+                <span className="block h-[22%] w-full" style={{ background: `rgba(${SAFE},0.7)` }} />
               </span>
             ))}
             <span ref={handRef} className="absolute left-1/2 top-1/2 block w-[2px] origin-bottom rounded-full" style={{ height: u(0.048), background: "#ffb3a6", transform: "translate(-50%, -100%)" }} />
@@ -388,7 +361,7 @@ export default function Darkroom({ slides }) {
               <>
                 <div aria-hidden="true" style={{ ...at(ex - u(0.17), -3, ez - u(0.14), "rotateX(90deg)"), width: u(0.34), height: u(0.32) }} className="rounded-[3px] bg-[#1b1412]" />
                 <div aria-hidden="true" style={{ ...at(ex - u(0.11), -5, ez - u(0.02), "rotateX(90deg)"), width: u(0.22), height: u(0.16) }} className="overflow-hidden rounded-[2px] border-[3px] border-[#2a2321] bg-[#e6dfd4]">
-                  <div className="absolute inset-0" style={{ background: `rgb(${SAFE})`, mixBlendMode: "multiply", opacity: "calc(var(--safe) * 0.6)" }} />
+                  <div className="absolute inset-0" style={{ background: `rgb(${SAFE})`, opacity: "calc(var(--safe) * 0.16)" }} />
                 </div>
                 <div aria-hidden="true" style={{ ...at(ex - u(0.013), -u(0.8), ez - u(0.12)), width: u(0.026), height: u(0.8) }} className={`rounded-t-[3px] ${metal}`} />
                 <div aria-hidden="true" style={{ ...at(ex - u(0.02), -u(0.6), ez - u(0.12)), width: u(0.04), height: u(0.03) }} className="rounded-[2px] bg-[#2c2523]" />
@@ -402,7 +375,7 @@ export default function Darkroom({ slides }) {
                 </div>
                 <div aria-hidden="true" style={{ ...at(ex - u(0.06), -u(0.53), ez + u(0.04)), width: u(0.12), height: u(0.13), clipPath: "polygon(0 0, 100% 0, 85% 100%, 15% 100%)" }} className="bg-[repeating-linear-gradient(to_bottom,#151110_0_5px,#2a2220_5px_8px)]" />
                 <div aria-hidden="true" style={{ ...at(ex - u(0.035), -u(0.4), ez + u(0.04)), width: u(0.07), height: u(0.03) }} className="rounded-b-[8px] bg-gradient-to-b from-[#26201e] to-[#0b0909]">
-                  <span className="absolute inset-x-[30%] bottom-[18%] top-[30%] rounded-full" style={{ background: `radial-gradient(circle, rgba(${SAFE},0.5), transparent 70%)`, opacity: "var(--safe)" }} />
+                  <span className="absolute inset-x-[30%] bottom-[18%] top-[30%] rounded-full" style={{ background: `radial-gradient(circle, rgba(${SAFE},0.35), transparent 70%)`, opacity: "var(--safe)" }} />
                 </div>
               </>
             );
@@ -460,42 +433,42 @@ export default function Darkroom({ slides }) {
           })}
 
           {/* ---------- the bench and the trays ---------- */}
-          <div aria-hidden="true" style={{ ...at(benchX, 0, WZ, "rotateX(90deg)"), width: benchW, height: benchD }} className="overflow-hidden bg-[#140c0a]">
+          <div aria-hidden="true" style={{ ...at(benchX, 0, WZ, "rotateX(90deg)"), width: benchW, height: benchD }} className="overflow-hidden bg-[#15100e]">
             <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 23px)" }} />
             <div
               className="absolute inset-0"
-              style={{ opacity: "var(--safe)", background: `radial-gradient(45% 80% at ${((lamp[0] - benchX) / benchW) * 100}% 0%, rgba(${SAFE},0.22), transparent 70%)` }}
+              style={{ opacity: "var(--safe)", background: `radial-gradient(45% 80% at ${((lamp[0] - benchX) / benchW) * 100}% 0%, rgba(${SAFE},0.1), transparent 70%)` }}
             />
           </div>
-          <div aria-hidden="true" style={{ ...at(benchX, 0, -u(0.05)), width: benchW, height: u(0.08) }} className="bg-gradient-to-b from-[#1c120f] to-[#070404]" />
+          <div aria-hidden="true" style={{ ...at(benchX, 0, -u(0.05)), width: benchW, height: u(0.08) }} className="bg-gradient-to-b from-[#1c1512] to-[#080606]" />
 
           {trays.map((tr) => {
             const x0 = tr.x - tr.TW / 2;
             const z0 = tr.z - tr.TD / 2;
             const wall = (style, extra = null) => (
-              <div aria-hidden="true" style={style} className="overflow-hidden bg-gradient-to-b from-[#d6cfc6] to-[#9e968c]">
-                <div className="absolute inset-0" style={{ background: `rgb(${SAFE})`, mixBlendMode: "multiply", opacity: "calc(var(--safe) * 0.55)" }} />
+              <div aria-hidden="true" style={style} className="overflow-hidden bg-gradient-to-b from-[#a8a096] to-[#6c655d]">
+                <div className="absolute inset-0" style={{ background: `rgb(${SAFE})`, opacity: "calc(var(--safe) * 0.14)" }} />
                 {extra}
               </div>
             );
             const list = room.batches[tr.b];
             return (
               <div key={tr.b} className="contents">
-                <div aria-hidden="true" style={{ ...at(x0, -2, z0, "rotateX(90deg)"), width: tr.TW, height: tr.TD }} className="rounded-[4px] bg-[#8d867d]" />
+                <div aria-hidden="true" style={{ ...at(x0, -2, z0, "rotateX(90deg)"), width: tr.TW, height: tr.TD }} className="rounded-[4px] bg-[#6d675f]" />
                 {/* the developer, with the batch lying just under its surface */}
                 <div
                   aria-hidden="true"
                   style={{ ...at(x0 + 3, LIQ, z0 + 3, "rotateX(90deg)"), width: tr.TW - 6, height: tr.TD - 6 }}
                   className="overflow-hidden rounded-[3px]"
                 >
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, rgba(40,8,6,0.38), rgba(20,4,3,0.22))" }} />
-                  <div className="absolute inset-y-0 -left-1/2 w-1/2 animate-[tray-sheen_7s_ease-in-out_infinite]" style={{ background: "linear-gradient(100deg, transparent, rgba(255,170,150,0.14), transparent)" }} />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, rgba(30,18,12,0.34), rgba(14,9,6,0.2))" }} />
+                  <div className="absolute inset-y-0 -left-1/2 w-1/2 animate-[tray-sheen_11s_ease-in-out_infinite]" style={{ background: "linear-gradient(100deg, transparent, rgba(255,220,190,0.07), transparent)" }} />
                   <div ref={(el) => (lightRefs.current[`agitate${tr.b}`] = el)} className="absolute inset-0 transition-opacity duration-700" style={{ opacity: 0 }}>
                     {[0, 1].map((n) => (
                       <span
                         key={n}
-                        className="absolute left-1/2 top-1/2 block aspect-square w-1/2 rounded-full border animate-[tray-ring_3.2s_ease-out_infinite]"
-                        style={{ borderColor: "rgba(255,150,130,0.25)", animationDelay: `${n * 1.6}s` }}
+                        className="absolute left-1/2 top-1/2 block aspect-square w-1/2 rounded-full border animate-[tray-ring_4.4s_ease-out_infinite]"
+                        style={{ borderColor: "rgba(255,215,190,0.12)", animationDelay: `${n * 2.2}s` }}
                       />
                     ))}
                   </div>
@@ -508,7 +481,7 @@ export default function Darkroom({ slides }) {
                         left: p.tray[0] - (x0 + 3),
                         top: p.tray[2] + p.H / 2 - (z0 + 3),
                         width: p.W * 1.3,
-                        borderColor: "rgba(255,170,150,0.55)",
+                        borderColor: "rgba(255,220,195,0.4)",
                         opacity: 0,
                       }}
                     />
@@ -583,7 +556,10 @@ export default function Darkroom({ slides }) {
                       className="absolute inset-0 overflow-hidden"
                       style={{ opacity: 0 }}
                     >
-                      <span className="absolute inset-y-0 -left-full w-full animate-[print-sheen_2.6s_ease-in-out_infinite]" style={{ background: "linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.32) 50%, transparent 80%)" }} />
+                      <span
+                        className="absolute inset-y-0 -left-full w-full animate-[print-sheen_6s_ease-in-out_infinite]"
+                        style={{ background: "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.12) 50%, transparent 75%)", animationDelay: `${-p.i * 1.3}s` }}
+                      />
                     </span>
                   </span>
                   {/* the safelight colours everything in the room, paper included */}
@@ -592,7 +568,7 @@ export default function Darkroom({ slides }) {
                       layerRefs.current[p.i] = { ...layerRefs.current[p.i], tint: el };
                     }}
                     className="pointer-events-none absolute inset-0 rounded-[2px]"
-                    style={{ background: `rgb(${SAFE})`, mixBlendMode: "multiply", opacity: 0 }}
+                    style={{ background: `rgb(${SAFE})`, opacity: 0 }}
                   />
                   {/* drips off the bottom edge while it is still wet */}
                   <span
@@ -658,9 +634,8 @@ export default function Darkroom({ slides }) {
         </div>
 
         {/* darkness that lifts as the lights come up */}
-        <div ref={(el) => (lightRefs.current.dark = el)} aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: 0.9, background: "radial-gradient(75% 70% at 55% 45%, rgba(7,4,4,0.35), #070404 90%)" }} />
-        <div ref={flashRef} aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#fff3e2]" style={{ opacity: 0 }} />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[46%] bg-gradient-to-r from-[#070404]/90 via-[#070404]/55 to-transparent" />
+        <div ref={(el) => (lightRefs.current.dark = el)} aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: 0.9, background: "radial-gradient(75% 70% at 55% 45%, rgba(8,6,6,0.3), #080606 90%)" }} />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[46%] bg-gradient-to-r from-[#080606]/90 via-[#080606]/55 to-transparent" />
 
         {/* ---------- interface ---------- */}
         <div className="pointer-events-none absolute inset-0">
