@@ -13,6 +13,10 @@
  * DOM panels end up.
  */
 
+import { lookAt, smoother } from "../../lib/camera";
+
+export { project, smoother, toCamera, worldTransform } from "../../lib/camera";
+
 // Scene centres, in viewport widths. They zigzag away from the reader and rise
 // and fall a little, so every hop between them is a turn.
 const STATIONS = [
@@ -31,7 +35,6 @@ const INTRO = 1.05;
 const OUTRO = 1.15;
 const OUTRO_HOLD = 0.55;
 
-export const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
 const smooth = (t) => t * t * (3 - 2 * t);
 const clamp01 = (t) => (t < 0 ? 0 : t > 1 ? 1 : t);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -178,43 +181,5 @@ export function cameraAt(route, t) {
     if (ph.to < 0) overview = e;
     prog = lerp(ph.from >= 0 ? ph.from : -1, ph.to >= 0 ? ph.to : n, e);
   }
-  const dx = look[0] - pos[0];
-  const dy = look[1] - pos[1];
-  const dz = look[2] - pos[2];
-  const yaw = Math.atan2(dx, -dz);
-  const pitch = Math.atan2(-dy, Math.hypot(dx, dz));
-  return { pos, yaw, pitch, near, landed, overview, prog };
-}
-
-/** Camera-space position of a world point (x right, y down, depth > 0 in front). */
-export function toCamera(cam, p) {
-  let x = p[0] - cam.pos[0];
-  let y = p[1] - cam.pos[1];
-  let z = p[2] - cam.pos[2];
-  const cy = Math.cos(cam.yaw);
-  const sy = Math.sin(cam.yaw);
-  [x, z] = [x * cy + z * sy, -x * sy + z * cy];
-  const cp = Math.cos(cam.pitch);
-  const sp = Math.sin(cam.pitch);
-  [y, z] = [y * cp - z * sp, y * sp + z * cp];
-  const cr = Math.cos(cam.roll || 0);
-  const sr = Math.sin(cam.roll || 0);
-  [x, y] = [x * cr - y * sr, x * sr + y * cr];
-  return [x, y, -z];
-}
-
-/** Screen position (px from the viewport's top left) and scale of a world point, or null behind the camera. */
-export function project(route, cam, p) {
-  const [x, y, depth] = toCamera(cam, p);
-  if (depth < 1) return null;
-  const k = route.P / depth;
-  return { x: route.w / 2 + x * k, y: route.h / 2 + y * k, k, depth };
-}
-
-const r4 = (n) => Math.round(n * 1e4) / 1e4;
-
-/** The CSS transform for the world element, matching `toCamera`. */
-export function worldTransform(route, cam) {
-  const [x, y, z] = cam.pos;
-  return `translateZ(${route.P}px) rotateZ(${r4(cam.roll || 0)}rad) rotateX(${r4(cam.pitch)}rad) rotateY(${r4(cam.yaw)}rad) translate3d(${r4(-x)}px, ${r4(-y)}px, ${r4(-z)}px)`;
+  return { ...lookAt(pos, look), near, landed, overview, prog };
 }
