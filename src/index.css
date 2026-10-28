@@ -349,6 +349,11 @@ html {
   from { opacity: 0.15; transform: scale(0.7); }
   to { opacity: 1; transform: scale(1.2); }
 }
+/* the "scroll to fly" cue at the start of Work */
+@keyframes flightCue {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
 .projector::after {
   content: "";
   position: absolute;

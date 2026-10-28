@@ -14,3 +14,10 @@ projects.md
 
 # Raw screen recordings (compressed copies live in public/videos)
 public/videos/raw/
+
+# Markdown stays local; README.md is the only one published
+*.md
+!README.md
+
+# Screen recordings (never published)
+*.mov

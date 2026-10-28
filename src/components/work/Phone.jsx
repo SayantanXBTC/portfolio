@@ -103,7 +103,7 @@ function Back({ project }) {
  * The phone: the same live product, filmed on a phone, playing on its screen.
  * Click to explore the project; drag sideways to turn it round.
  */
-export function Phone({ project, playing = true, onOpen, beat = 3, className = "" }) {
+export function Phone({ project, playing = true, load = true, onOpen, beat = 3, className = "" }) {
   const reduce = useReducedMotion();
   const ref = useRef(null);
   const [unit, setUnit] = useState(null);
@@ -184,6 +184,7 @@ export function Phone({ project, playing = true, onOpen, beat = 3, className = "
                 media={project.mobile}
                 label="screen recording on a phone"
                 playing={playing}
+                load={load}
                 className="!h-full object-cover object-top"
               />
             </span>
