@@ -1,3 +1,5 @@
+import { PINNED_QUERY } from "../hooks/useMedia";
+
 // Tiny bridge so any component can scroll to a section through Lenis,
 // falling back to native smooth scrolling when Lenis is not running
 // (reduced motion, or before it has mounted).
@@ -40,12 +42,10 @@ export const deepLink = {
   done: false,
 };
 
-// Wide and tall enough that Work scenes are pinned (same query as usePinnedLayout).
-const pinnedQuery = "(min-width: 1024px) and (min-height: 720px)";
 
 /** Scroll to a project's scene in Work, landing where its story has already arrived. */
 export function jumpToProject(slug) {
-  const pinned = window.matchMedia(pinnedQuery).matches;
+  const pinned = window.matchMedia(PINNED_QUERY).matches;
   scrollToId(`work-${slug}`, { offset: pinned ? Math.round(window.innerHeight * 0.55) : -24 });
 }
 

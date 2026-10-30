@@ -10,7 +10,7 @@
 import { lookAt, smoother } from "../../lib/camera";
 
 // Scroll budget, in viewport heights.
-export const T = { intro: 0.34, move: 0.28, dev: 0.46, hang: 0.52, hold: 0.16, reveal: 0.72, end: 0.42 };
+export const T = { intro: 0.42, move: 0.28, dev: 0.46, hang: 0.52, hold: 0.16, reveal: 0.72, end: 0.42 };
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const lerp3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
@@ -18,6 +18,9 @@ const rand = (i, n) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 
 
 export function buildRoom(w, h, slides, batchCount) {
   const u = (n) => Math.round(n * w);
+  // On a screen taller than wide the prints are larger, hang on more (shorter) lines stacked up the
+  // wall, and every shot keeps its subject in the top half, above the notes.
+  const portrait = h > w;
   const P = u(0.9);
   const WZ = u(-0.95); // the back wall
   const TZ = u(-0.47); // tray centres
@@ -25,7 +28,7 @@ export function buildRoom(w, h, slides, batchCount) {
   const RIM = u(0.045); // tray wall height
   const LIQ = u(-0.03); // the liquid's surface
   const SOAK = u(-0.022); // a print lying in the tray, just under the surface
-  const ih = u(0.118); // image height of every print
+  const ih = u(portrait ? 0.21 : 0.118); // image height of every print
   const m = Math.round(ih * 0.075); // its white border
 
   const prints = slides.map((s, i) => {
@@ -38,7 +41,7 @@ export function buildRoom(w, h, slides, batchCount) {
   const GX = u(0.022);
   const GZ = u(0.026);
   const PAD = u(0.04);
-  const MAXW = u(0.5);
+  const MAXW = u(portrait ? 0.8 : 0.5);
   const trays = batches.map((list, b) => {
     const rows = [[]];
     let rw = 0;
@@ -79,11 +82,29 @@ export function buildRoom(w, h, slides, batchCount) {
   }
 
   // drying lines: the first batch on the upper line, the other two below it
+  // (upright: the prints in order, as many to a line as fit the screen)
   const HG = u(0.032);
   const BG = u(0.075);
-  const groups = [batches[0], batches.slice(1).flat()];
+  let groups = [batches[0], batches.slice(1).flat()];
+  if (portrait) {
+    groups = [[]];
+    let lw = 0;
+    for (const p of prints) {
+      const g = groups[groups.length - 1];
+      const add = p.W + (g.length ? (p.owner !== g[g.length - 1].owner ? BG : HG) : 0);
+      if (g.length && lw + add > u(0.88)) {
+        groups.push([p]);
+        lw = p.W;
+      } else {
+        g.push(p);
+        lw += add;
+      }
+    }
+  }
+  const pitch = Math.max(...prints.map((p) => p.H)) + u(0.08);
+  const lineY = (li) => (portrait ? u(-0.24) - prints[0].H - (groups.length - 1 - li) * pitch : li === 0 ? u(-0.9) : u(-0.62));
   const lines = groups.map((list, li) => {
-    const y = li === 0 ? u(-0.9) : u(-0.62);
+    const y = lineY(li);
     let total = 0;
     list.forEach((p, n) => {
       total += p.W + (n ? (p.owner !== list[n - 1].owner ? BG : HG) : 0);
@@ -113,15 +134,30 @@ export function buildRoom(w, h, slides, batchCount) {
       p.order = n;
     });
 
-  // camera shots
-  const introPose = { pos: [u(0.12), u(-0.6), WZ + u(2.75)], look: [u(0.1), u(-0.42), WZ + u(0.3)] };
-  const revealPose = { pos: [LX - u(0.06), u(-0.7), WZ + u(1.36)], look: [LX - u(0.08), u(-0.73), WZ] };
+  // camera shots. `tilt` is extra pitch: it moves the subject up the frame (upright screens)
+  const lift = (cy) => -Math.atan(((0.5 - cy) * h) / P);
+  // upright: frame some hung prints, centred, near the top of the screen
+  const fitWall = (list, cy) => {
+    const x0 = Math.min(...list.map((p) => p.hang[0] - p.W / 2));
+    const x1 = Math.max(...list.map((p) => p.hang[0] + p.W / 2));
+    const y0 = Math.min(...list.map((p) => p.hang[1]));
+    const y1 = Math.max(...list.map((p) => p.hang[1] + p.H));
+    const D = Math.max(u(0.95), ((x1 - x0) * P) / (0.88 * w), ((y1 - y0) * P) / (0.38 * h));
+    const c = [(x0 + x1) / 2, (y0 + y1) / 2];
+    return { pos: [c[0], c[1], WZ + D], look: [c[0], c[1], WZ], tilt: lift(cy) };
+  };
+  const roomTop = lineY(0) - u(0.25);
+  const introPose = portrait
+    ? { pos: [LX + u(0.25), u(-0.95), WZ + u(3.1)], look: [LX + u(0.25), (roomTop + 0) / 2, WZ + u(0.3)], tilt: lift(0.42) }
+    : { pos: [u(0.12), u(-0.6), WZ + u(2.75)], look: [u(0.1), u(-0.42), WZ + u(0.3)] };
+  const revealPose = portrait ? fitWall(prints, 0.42) : { pos: [LX - u(0.06), u(-0.7), WZ + u(1.36)], look: [LX - u(0.08), u(-0.73), WZ] };
   const devPose = (t, push) => {
-    const look = [t.x - u(0.1), u(-0.01), t.z + u(0.02)];
-    const pos = [t.x - u(0.07), u(-0.7), t.z + u(0.66)];
-    return { pos: lerp3(pos, look, push), look };
+    const look = portrait ? [t.x, 0, t.z] : [t.x - u(0.1), u(-0.01), t.z + u(0.02)];
+    const pos = portrait ? [t.x, u(-0.72), t.z + u(0.66)] : [t.x - u(0.07), u(-0.7), t.z + u(0.66)];
+    return { pos: lerp3(pos, look, push), look, tilt: portrait ? lift(0.4) : 0 };
   };
   const hangPose = (list) => {
+    if (portrait) return fitWall(list, 0.42);
     const sx = list.reduce((s, p) => s + p.hang[0], 0) / list.length;
     const ly = list[0].hang[1];
     // level with the line and to its left, so the prints sit up and to the right of the notes
@@ -130,7 +166,7 @@ export function buildRoom(w, h, slides, batchCount) {
 
   const keys = [];
   // `arc`: how far a move lifts and steps back at its middle, so the frame never empties
-  const key = (t, pose, arc = null) => keys.push({ t, pos: pose.pos, look: pose.look, arc });
+  const key = (t, pose, arc = null) => keys.push({ t, pos: pose.pos, look: pose.look, tilt: pose.tilt || 0, arc });
   let t = 0;
   key(t, introPose);
   t += T.intro;
@@ -156,15 +192,16 @@ export function buildRoom(w, h, slides, batchCount) {
   t += T.end;
   key(t, revealPose);
 
-  const lamp = [LX, u(-1.16), WZ + u(0.02)];
-  const bulb = [LX + u(0.55), u(-1.12), WZ + u(0.4)];
+  const lamp = [LX, Math.min(u(-1.16), roomTop - u(0.04)), WZ + u(0.02)];
+  const wallTop = Math.min(u(-1.6), lamp[1] - u(0.5));
+  const bulb = [LX + u(0.55), lamp[1] + u(0.04), WZ + u(0.4)];
   const timer = [LX + u(0.86), u(-0.8), WZ + u(0.012)];
   // set dressing: the enlarger at the left end of the bench, a shelf of chemistry on the right
   // (left of where the lines end, so it never stands in front of a print)
   const enlarger = [Math.min(trays[0].x - trays[0].TW / 2 - u(0.36), Math.min(...lines.map((l) => l.x0)) - u(0.3)), 0, WZ + u(0.22)];
   const shelf = [trays[trays.length - 1].x + u(0.05), u(-0.42), WZ];
 
-  return { w, h, P, WZ, TZ, LX, RIM, LIQ, prints, batches, trays, lines, keys, sched, revealStart, total: t, lamp, bulb, timer, enlarger, shelf, u };
+  return { w, h, P, portrait, wallTop, WZ, TZ, LX, RIM, LIQ, prints, batches, trays, lines, keys, sched, revealStart, total: t, lamp, bulb, timer, enlarger, shelf, u };
 }
 
 /** The camera at a point of the scroll (viewport heights from the start). */
@@ -183,5 +220,7 @@ export function cameraAt(room, t) {
     pos[1] -= b.arc[0] * k;
     pos[2] += b.arc[1] * k;
   }
-  return lookAt(pos, lerp3(a.look, b.look, e));
+  const cam = lookAt(pos, lerp3(a.look, b.look, e));
+  cam.pitch += lerp(a.tilt, b.tilt, e);
+  return cam;
 }

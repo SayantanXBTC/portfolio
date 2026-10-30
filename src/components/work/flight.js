@@ -50,10 +50,16 @@ function bezier(p0, p1, p2, p3, t) {
   return [0, 1, 2].map((k) => a * p0[k] + b * p1[k] + c * p2[k] + d * p3[k]);
 }
 
-/** Lays the route out for a viewport. Everything returned is in px. */
+/**
+ * Lays the route out for a viewport. Everything returned is in px.
+ * On a screen taller than wide the whole route is turned on its side: the
+ * scenes zigzag up and down instead of left and right, so the camera climbs
+ * and dives between them and the wide shots fill the tall frame.
+ */
 export function buildRoute(w, h, count = STATIONS.length) {
+  const portrait = h > w;
   const P = Math.round(w * 0.9); // perspective distance = landing distance
-  const px = (v) => v.map((n) => Math.round(n * w));
+  const px = (v) => (portrait ? [v[1], v[0], v[2]] : v).map((n) => Math.round(n * w));
   const stations = STATIONS.slice(0, count).map(px);
   const stops = stations.map((s) => [s[0], s[1], s[2] + P]);
   const last = stations.length - 1;
@@ -61,8 +67,9 @@ export function buildRoute(w, h, count = STATIONS.length) {
   // the overview shots that open and close the flight
   const openPos = px([-3, -4, 5.5]);
   const openLook = px([0.6, 0, -3]);
-  const endPos = px([3.5, -2.5, 5.5]);
-  const endLook = px([2, 0, -4.5]);
+  // (upright, the closing shot echoes the opening one from a little higher, with the route lifted clear of the caption)
+  const endPos = portrait ? [-4, -3.4, 5.5].map((n) => Math.round(n * w)) : px([3.5, -2.5, 5.5]);
+  const endLook = portrait ? [0, 1.5, -3].map((n) => Math.round(n * w)) : px([2, 0, -4.5]);
 
   const phases = [];
   const hold = (len, pos, look, scene) => phases.push({ len, hold: true, pos, look, scene });
@@ -79,7 +86,7 @@ export function buildRoute(w, h, count = STATIONS.length) {
     hold(HOLD, stops[i], stations[i], i);
     if (i < last) {
       // lift up and back off the scene, then dive into the next one
-      const dir = Math.sign(stations[i + 1][0] - stations[i][0]) || 1;
+      const dir = Math.sign(STATIONS[i + 1][0] - STATIONS[i][0]) || 1;
       fly(
         HOP,
         at(i),
@@ -103,10 +110,11 @@ export function buildRoute(w, h, count = STATIONS.length) {
   // where each scene's hold sits on the scroll, in viewport heights
   const landings = phases.filter((ph) => ph.hold && ph.scene >= 0).map((ph) => ph.start + ph.len / 2);
 
-  // a thread of light running just below the scenes, out ahead of the first and past the last
+  // a thread of light running just below the scenes (beside them, on its side), out ahead of the first and past the last
+  const under = portrait ? [-Math.round(w * 0.66), 0, 0] : [0, Math.round(h * 0.62), 0];
   const knots = [
     add(stations[0], px([-1.6, 0.75, 0.4])),
-    ...stations.map((s) => add(s, [0, Math.round(h * 0.62), 0])),
+    ...stations.map((s) => add(s, under)),
     add(stations[last], px([-0.8, 0.5, -2.4])),
   ];
   const thread = sampleThread(knots, 28);

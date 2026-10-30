@@ -10,7 +10,8 @@ import {
   useTransform,
 } from "framer-motion";
 import { projects } from "../../data/portfolio";
-import { usePinnedLayout } from "../../hooks/useMedia";
+import { usePinnedLayout, usePortrait } from "../../hooks/useMedia";
+import { useStageSize } from "../../hooks/useStageSize";
 import { EASE } from "../../lib/asset";
 import { scrollToId } from "../../lib/scroll";
 import { SectionHeader } from "../kit/SectionHeader";
@@ -223,8 +224,12 @@ function Devices({ project, videoRef, playing, load = true, onOpen, beat, side, 
   );
 }
 
-/** Title, descriptor, summary, numbers, stack and links, arriving in three beats. */
-function Copy({ project, index, beat, onOpen }) {
+/**
+ * Title, descriptor, summary, numbers, stack and links, arriving in three beats.
+ * `compact` is the phone-upright version: tighter, the summary held to three
+ * lines, the stack left to the case study.
+ */
+function Copy({ project, index, beat, onOpen, compact = false }) {
   const reduce = useReducedMotion();
   const anim = (b) => ({ initial: reduce ? false : "hidden", animate: beat >= b ? "show" : "hidden" });
   const extra = project.tech.length - 6;
@@ -238,7 +243,7 @@ function Copy({ project, index, beat, onOpen }) {
         <span>{project.chapter}</span>
       </motion.p>
 
-      <h3 id={`${sceneId(project)}-title`} className="display mt-6 text-[clamp(2.6rem,5.4vw,5.6rem)]">
+      <h3 id={`${sceneId(project)}-title`} className={`display ${compact ? "mt-3 text-[clamp(2rem,9vw,3rem)]" : "mt-6 text-[clamp(2.6rem,5.4vw,5.6rem)]"}`}>
         <span className="block overflow-hidden pb-[0.1em] -mb-[0.1em]">
           <motion.span
             className="block"
@@ -250,15 +255,15 @@ function Copy({ project, index, beat, onOpen }) {
           </motion.span>
         </span>
       </h3>
-      <motion.p variants={rise} custom={0.25} {...anim(1)} className="mt-4 text-[0.95rem] font-medium md:text-base" style={{ color: project.color }}>
+      <motion.p variants={rise} custom={0.25} {...anim(1)} className={compact ? "mt-2 text-[0.85rem] font-medium" : "mt-4 text-[0.95rem] font-medium md:text-base"} style={{ color: project.color }}>
         {project.descriptor}
       </motion.p>
 
-      <motion.p variants={rise} {...anim(2)} className="body-copy mt-6 max-w-[34rem]">
+      <motion.p variants={rise} {...anim(2)} className={compact ? "mt-3 line-clamp-3 text-[0.88rem] leading-[1.6] text-mute" : "body-copy mt-6 max-w-[34rem]"}>
         {project.summary}
       </motion.p>
 
-      <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-white/[0.08] pt-6">
+      <dl className={`grid grid-cols-3 gap-4 border-t border-white/[0.08] ${compact ? "mt-4 pt-4 [@media(max-height:700px)]:hidden" : "mt-8 pt-6"}`}>
         {project.stats.map((s, i) => (
           <motion.div key={s.label} variants={rise} custom={0.1 + i * 0.1} {...anim(2)}>
             <dt className="sr-only">{s.label}</dt>
@@ -272,7 +277,7 @@ function Copy({ project, index, beat, onOpen }) {
         ))}
       </dl>
 
-      <motion.ul variants={rise} {...anim(3)} className="mt-6 flex flex-wrap gap-1.5 [@media(max-height:820px)]:hidden" aria-label="Stack">
+      <motion.ul variants={rise} {...anim(3)} className={`mt-6 flex-wrap gap-1.5 [@media(max-height:820px)]:hidden ${compact ? "hidden" : "flex"}`} aria-label="Stack">
         {project.tech.slice(0, 6).map((t) => (
           <li key={t} className="rounded-full border border-white/15 px-2.5 py-0.5 text-[0.75rem] text-paper/75">
             {t}
@@ -281,7 +286,7 @@ function Copy({ project, index, beat, onOpen }) {
         {extra > 0 && <li className="px-1.5 py-0.5 text-[0.75rem] text-dim">+{extra}</li>}
       </motion.ul>
 
-      <motion.div variants={rise} custom={0.12} {...anim(3)} className="mt-8 flex flex-wrap items-center gap-2.5">
+      <motion.div variants={rise} custom={0.12} {...anim(3)} className={`${compact ? "mt-5" : "mt-8"} flex flex-wrap items-center gap-2.5`}>
         <button
           type="button"
           onClick={onOpen}
@@ -375,7 +380,7 @@ function Scene({ project, index, pinned, onOpen, onJump }) {
 
   if (!pinned) {
     return (
-      <article id={sceneId(project)} aria-labelledby={`${sceneId(project)}-title`} className="relative border-t border-white/[0.06] py-24 md:py-32">
+      <article id={sceneId(project)} ref={outer} aria-labelledby={`${sceneId(project)}-title`} className="relative border-t border-white/[0.06] py-24 md:py-32">
         {backdrop}
         <div className="container-x relative">
           <Reveal from="up" distance={0.6}>{device}</Reveal>
@@ -464,7 +469,8 @@ function Flight({ onOpen, onJump }) {
   const ghostRefs = useRef([]);
   const labelRefs = useRef([]);
   const [videoRefs] = useState(() => projects.map(() => ({ current: null })));
-  const [size, setSize] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  const size = useStageSize();
+  const portrait = usePortrait();
   const route = useMemo(() => buildRoute(size.w, size.h, projects.length), [size]);
   const dust = useMemo(() => makeDust(size.w), [size.w]);
   const [view, setView] = useState({ beats: projects.map(() => 0), focus: 0, active: -1 });
@@ -473,19 +479,6 @@ function Flight({ onOpen, onJump }) {
   const live = useInView(outer, { margin: "200px 0px 200px 0px" });
   const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
   const colors = useMemo(() => projects.map((p) => hexRgb(p.color)), []);
-
-  useEffect(() => {
-    let t;
-    const onResize = () => {
-      clearTimeout(t);
-      t = setTimeout(() => setSize({ w: window.innerWidth, h: window.innerHeight }), 120);
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
 
   useEffect(() => {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -778,12 +771,10 @@ function Flight({ onOpen, onJump }) {
                   if (viewRef.current.active !== i) onJump(i);
                 }}
               >
-                <article aria-labelledby={`${sceneId(p)}-title`} className="container-x relative flex h-full flex-col pb-6 pt-24">
-                  <div className="grid flex-1 grid-cols-12 items-center gap-12 xl:gap-16">
-                    <div className={`col-span-5 ${side > 0 ? "order-1" : "order-2"}`}>
-                      <Copy project={p} index={i} beat={view.beats[i]} onOpen={() => onOpen(i)} />
-                    </div>
-                    <div className={`col-span-7 ${side > 0 ? "order-2" : "order-1"}`}>
+                <article aria-labelledby={`${sceneId(p)}-title`} className={`container-x relative flex h-full flex-col ${portrait ? "pb-4 pt-20" : "pb-6 pt-24"}`}>
+                  {/* phone upright: the screens on top, the story under them */}
+                  {portrait ? (
+                    <div className="flex flex-1 flex-col justify-center gap-6">
                       <div className="[perspective:1800px]">
                         <Devices
                           project={p}
@@ -795,8 +786,28 @@ function Flight({ onOpen, onJump }) {
                           side={side}
                         />
                       </div>
+                      <Copy project={p} index={i} beat={view.beats[i]} onOpen={() => onOpen(i)} compact />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="grid flex-1 grid-cols-12 items-center gap-12 xl:gap-16">
+                      <div className={`col-span-5 ${side > 0 ? "order-1" : "order-2"}`}>
+                        <Copy project={p} index={i} beat={view.beats[i]} onOpen={() => onOpen(i)} />
+                      </div>
+                      <div className={`col-span-7 ${side > 0 ? "order-2" : "order-1"}`}>
+                        <div className="[perspective:1800px]">
+                          <Devices
+                            project={p}
+                            videoRef={videoRefs[i]}
+                            playing={playing && view.active === i}
+                            load={near}
+                            onOpen={() => onOpen(i)}
+                            beat={view.beats[i]}
+                            side={side}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {/* the HUD is drawn over the stage; this keeps the scene's layout where it was */}
                   <div className="h-9 shrink-0" aria-hidden="true" />
                 </article>
@@ -836,8 +847,12 @@ function Flight({ onOpen, onJump }) {
           </div>
         </div>
 
-        <div ref={endRef} className="absolute inset-y-0 right-0 flex w-[34%] items-center" style={{ opacity: 0, pointerEvents: "none" }}>
-          <div className="pr-[6vw]">
+        <div
+          ref={endRef}
+          className={portrait ? "absolute inset-x-0 bottom-0 pb-12" : "absolute inset-y-0 right-0 flex w-[34%] items-center"}
+          style={{ opacity: 0, pointerEvents: "none" }}
+        >
+          <div className={portrait ? "container-x" : "pr-[6vw]"}>
             <p className="label flex items-center gap-3">
               <span className="text-paper">05 / 05</span>
               <span className="h-px w-8 bg-white/25" />

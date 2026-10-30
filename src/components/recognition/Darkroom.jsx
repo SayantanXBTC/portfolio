@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useInView, useScroll } from "framer-motion";
 import { achievements } from "../../data/portfolio";
 import { EASE } from "../../lib/asset";
 import { smoother, worldTransform } from "../../lib/camera";
+import { useStageSize } from "../../hooks/useStageSize";
 import { scrollToY } from "../../lib/scroll";
 import { useLightbox } from "../kit/Lightbox";
 import { T, buildRoom, cameraAt } from "./room";
@@ -49,25 +50,12 @@ export default function Darkroom({ slides }) {
   const handRef = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
   const { open } = useLightbox();
-  const [size, setSize] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  const size = useStageSize();
   const room = useMemo(() => buildRoom(size.w, size.h, slides, achievements.length), [size, slides]);
   const [view, setView] = useState({ batch: 0, count: 0 });
   const viewRef = useRef(view);
   const live = useInView(outer, { margin: "200px 0px 200px 0px" });
   const { scrollYProgress } = useScroll({ target: outer, offset: ["start start", "end end"] });
-
-  useEffect(() => {
-    let t;
-    const onResize = () => {
-      clearTimeout(t);
-      t = setTimeout(() => setSize({ w: window.innerWidth, h: window.innerHeight }), 120);
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
 
   useEffect(() => {
     if (!live) return undefined;
@@ -89,12 +77,16 @@ export default function Darkroom({ slides }) {
     const cam = { yaw: 0, pitch: 0 };
     let raf;
     let prev = performance.now();
+    // the scroll, eased once more: the camera glides like a dolly on any device, touch included
+    let t = scrollYProgress.get() * room.total;
 
     const frame = (now) => {
       const dt = Math.min(0.05, Math.max(0.001, (now - prev) / 1000));
       prev = now;
       const time = now / 1000;
-      const t = scrollYProgress.get() * room.total;
+      const target = scrollYProgress.get() * room.total;
+      t += (target - t) * (1 - Math.exp(-dt * 7));
+      if (Math.abs(target - t) < 1e-4) t = target;
 
       // the camera, with a little of the pointer in it
       const c = cameraAt(room, t);
@@ -189,7 +181,7 @@ export default function Darkroom({ slides }) {
 
         const el = printRefs.current[i];
         set(el, "transform", `translate3d(${r3(x)}px, ${r3(y)}px, ${r3(z)}px) rotateX(${r3(rx + swingX)}deg) rotateZ(${r3(rz + swingZ)}deg)`);
-        set(el, "opacity", String(r3(clamp01(enter * 5))));
+        set(el, "opacity", String(r3(smoother(clamp01(enter * 1.6)))));
         set(el, "pointerEvents", dev > 0.5 ? "auto" : "none");
         const btn = el?.firstElementChild;
         if (btn && btn.tabIndex !== (dev > 0.5 ? 0 : -1)) btn.tabIndex = dev > 0.5 ? 0 : -1;
@@ -263,24 +255,28 @@ export default function Darkroom({ slides }) {
     scrollToY(top + (room.sched[b].devStart + T.dev * 0.9) * window.innerHeight, { duration: 1.6 });
   };
   const onPointer = (e) => {
+    if (e.pointerType !== "mouse") return;
     pointer.current = { x: e.clientX / window.innerWidth - 0.5, y: e.clientY / window.innerHeight - 0.5 };
   };
 
   // the room's planes
   const wallW = u(4.4);
-  const wallH = u(1.75);
+  const wallY = room.wallTop;
+  const wallH = u(0.15) - wallY;
   const wallX = LX - wallW / 2;
-  const wallY = u(-1.6);
   const benchW = u(3.6);
   const benchD = -u(0.05) - WZ;
   const benchX = LX - benchW / 2;
   const item = achievements[Math.max(0, Math.min(view.batch, achievements.length - 1))];
   const archive = view.batch >= achievements.length;
+  const portrait = room.portrait;
+  // where the camera is when this renders, so the very first frame is already the right shot
+  const firstShot = worldTransform(room, cameraAt(room, scrollYProgress.get() * total));
 
   return (
     <div ref={outer} className="relative" data-live={live} style={{ height: `${(total + 1) * 100}vh` }}>
-      <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden bg-[#080606]" style={{ perspective: `${P}px`, "--safe": 0 }} onPointerMove={onPointer}>
-        <div ref={worldRef} className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transformStyle: "preserve-3d" }}>
+      <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden bg-ink" style={{ perspective: `${P}px`, "--safe": 0 }} onPointerMove={onPointer}>
+        <div ref={worldRef} className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transformStyle: "preserve-3d", transform: firstShot }}>
           {/* ---------- the back wall ---------- */}
           <div aria-hidden="true" style={{ ...at(wallX, wallY, WZ), width: wallW, height: wallH }} className="overflow-hidden bg-[#0e0b0a]">
             <div
@@ -634,14 +630,22 @@ export default function Darkroom({ slides }) {
         </div>
 
         {/* darkness that lifts as the lights come up */}
-        <div ref={(el) => (lightRefs.current.dark = el)} aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: 0.9, background: "radial-gradient(75% 70% at 55% 45%, rgba(8,6,6,0.3), #080606 90%)" }} />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[46%] bg-gradient-to-r from-[#080606]/90 via-[#080606]/55 to-transparent" />
+        <div ref={(el) => (lightRefs.current.dark = el)} aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: 0.9, background: "radial-gradient(75% 70% at 55% 45%, rgba(5,5,5,0.3), #050505 90%)" }} />
+        {/* the notes keep a quiet patch of dark behind them: the left on wide screens, the foot on tall ones */}
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute ${
+            portrait ? "inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-ink via-ink/80 to-transparent" : "inset-y-0 left-0 w-[46%] bg-gradient-to-r from-ink/90 via-ink/55 to-transparent"
+          }`}
+        />
+        {/* the frame's edges fade into the page above and below, so the room never starts on a hard line */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ink to-transparent" />
 
         {/* ---------- interface ---------- */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="container-x flex h-full flex-col justify-between pb-8 pt-24 md:pt-28">
+          <div className={`container-x flex h-full flex-col justify-between pt-24 md:pt-28 ${portrait ? "pb-6" : "pb-8"}`}>
             <div className="pointer-events-auto flex items-start justify-between gap-6">
-              <ol className="flex flex-wrap gap-2">
+              <ol className={`flex flex-wrap ${portrait ? "gap-1.5" : "gap-2"}`}>
                 {achievements.map((a, b) => (
                   <li key={a.title}>
                     <button
@@ -657,15 +661,15 @@ export default function Darkroom({ slides }) {
                   </li>
                 ))}
               </ol>
-              <div className="label text-right text-dim">
-                <p className="text-paper">
+              <div className="label shrink-0 text-right text-dim">
+                <p className="whitespace-nowrap text-paper">
                   Prints {pad(view.count)} <span className="text-dim">/ {pad(slides.length)}</span>
                 </p>
-                <p className="mt-2">{archive ? "Click a print to see it" : "Scroll to develop"}</p>
+                <p className="mt-2 hidden whitespace-nowrap min-[380px]:block">{archive ? (portrait ? "Tap a print" : "Click a print to see it") : "Scroll to develop"}</p>
               </div>
             </div>
 
-            <div className="pointer-events-auto max-w-[min(30rem,34vw)]">
+            <div className={`pointer-events-auto ${portrait ? "w-full" : "max-w-[min(30rem,34vw)]"}`}>
               <AnimatePresence mode="wait">
                 {view.batch < 0 ? null : archive ? (
                   <motion.div key="archive" initial="hidden" animate="show" exit="exit" variants={notes}>
@@ -673,11 +677,11 @@ export default function Darkroom({ slides }) {
                       <span className="h-2 w-2 rounded-full bg-[#ffd9a6]" />
                       <span className="text-paper/80">Lights on</span>
                     </motion.p>
-                    <motion.h3 variants={developTitle} className="display mt-4 text-[clamp(1.8rem,3.2vw,3.2rem)]">
+                    <motion.h3 variants={developTitle} className="display mt-4 text-[clamp(1.6rem,3.2vw,3.2rem)]">
                       The whole archive.
                     </motion.h3>
                     <motion.p variants={develop} className="mt-4 text-[0.92rem] leading-[1.6] text-mute">
-                      {slides.length} prints from {achievements.length} recognitions, drying on the line. Click any of them to see the photograph in full.
+                      {slides.length} prints from {achievements.length} recognitions, drying on the line. {portrait ? "Tap" : "Click"} any of them to see the photograph in full.
                     </motion.p>
                   </motion.div>
                 ) : (
@@ -687,7 +691,7 @@ export default function Darkroom({ slides }) {
                       <span className="text-accent-strong">{item.badge}</span>
                     </motion.p>
                     <span className="mt-3 block overflow-hidden pb-[0.1em]">
-                      <motion.h3 variants={developTitle} className="display text-[clamp(1.6rem,2.9vw,2.9rem)]">
+                      <motion.h3 variants={developTitle} className={`display ${portrait ? "text-[clamp(1.45rem,6.4vw,2.2rem)]" : "text-[clamp(1.6rem,2.9vw,2.9rem)]"}`}>
                         {item.title}
                       </motion.h3>
                     </span>
@@ -703,10 +707,10 @@ export default function Darkroom({ slides }) {
                         </div>
                       ))}
                     </motion.dl>
-                    <motion.p variants={develop} className="mt-4 text-[0.9rem] leading-[1.6] text-mute [@media(max-height:820px)]:line-clamp-3">
+                    <motion.p variants={develop} className={`mt-4 leading-[1.6] text-mute ${portrait ? "line-clamp-3 text-[0.84rem] [@media(max-height:620px)]:hidden" : "text-[0.9rem] [@media(max-height:820px)]:line-clamp-3"}`}>
                       {item.detail}
                     </motion.p>
-                    <motion.p variants={develop} className="mt-3 border-l pl-4 text-[0.88rem] text-paper/85 [@media(max-height:780px)]:hidden" style={{ borderColor: `rgb(${SAFE})` }}>
+                    <motion.p variants={develop} className={`mt-3 border-l pl-4 text-[0.88rem] text-paper/85 [@media(max-height:780px)]:hidden ${portrait ? "hidden" : ""}`} style={{ borderColor: `rgb(${SAFE})` }}>
                       {item.impact}
                     </motion.p>
                   </motion.div>
@@ -723,7 +727,7 @@ export default function Darkroom({ slides }) {
 // The notes come up the way the prints do: out of the red, into focus.
 const notes = {
   show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
-  exit: { opacity: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, transition: { duration: 0.45, ease: EASE } },
 };
 const develop = {
   hidden: { opacity: 0, y: 10 },
