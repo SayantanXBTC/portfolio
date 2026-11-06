@@ -66,9 +66,9 @@ export const chapterIndex = (id) => {
 
 export const about = {
   statement:
-    "I'm a Computer Science engineer focused on software engineering, testing and automation, building reliable systems with experimental rigor.",
+    "I'm a Computer Science engineer focused on software engineering, testing and automation.",
   paragraphs: [
-    "I'm a B.Tech Computer Science student at Lovely Professional University, specializing in automation engineering and software quality assurance. My journey began with solving automation challenges, which evolved into a passion for designing robust testing frameworks and reliable software systems.",
+    "I'm a B.Tech Computer Science student at Lovely Professional University, specializing in automation engineering and software quality assurance. I started by solving automation problems, which led me to designing testing frameworks and reliable software systems.",
     "Outside engineering, quizzing is what I keep coming back to. I'm a regular on my college's quiz teams, and in 2025 I ranked in the top 100 of more than 65,000 participants in the National Space Day quiz, which earned an invitation to ISRO's Sriharikota facility.",
     "I also debate, lead the ConverseE+ Club as President, and represented Tripura at the National Youth Festival 2025 with a talk on Tech for Viksit Bharat 2047. Along the way I've won debate, quiz, vocabulary and aptitude events at college level. Thinking on my feet and explaining things clearly carry straight into how I test and build software.",
   ],
@@ -221,9 +221,9 @@ export const projects = [
     ],
     tech: ["TypeScript", "React", "Express", "Playwright", "Claude Sonnet 4.6", "PostgreSQL / Neon", "Google auth", "Vercel", "Render"],
     story: [
-      "AI Bug Hunter is an autonomous web testing and bug-intelligence platform designed to reduce the amount of repetitive manual work involved in discovering and organizing software defects. Instead of requiring a tester to manually explore an application and write individual test cases, the platform can discover a public web application, use Claude Sonnet 4.6 to generate Playwright-based tests, execute those tests against the application, and analyze the resulting failures. The goal is not simply to report every failed test, but to turn raw automated failures into useful, consolidated bug information.",
-      "A major part of the system is its bug intelligence layer. Multiple automated tests can fail for the same underlying reason, so the platform clusters failures into deduplicated bug reports rather than producing a noisy list of independent failures. This makes the output more useful to developers and QA engineers by transforming large volumes of test execution data into a smaller set of actionable issues.",
-      "The platform was also designed as a proper multi-user application rather than a standalone testing script. Multi-tenant isolation is enforced at both the database and API layers, ensuring that one customer's test runs and bug reports cannot be accessed by another customer. It includes Google authentication, role-based permissions, and a substantial automated test suite containing 329 automated tests. The application is deployed using Vercel, Render, and Neon Postgres, combining an interactive React frontend, an Express backend, AI-powered test generation, browser automation, and secure persistent data storage.",
+      "AI Bug Hunter is an autonomous web testing and bug-intelligence platform designed to reduce the repetitive manual work of finding and organizing software defects. A tester doesn't have to explore an application and write test cases by hand: the platform discovers a public web application, uses Claude Sonnet 4.6 to generate Playwright tests, runs them against the application, and analyzes the failures.",
+      "A major part of the system is its bug intelligence layer. Many automated tests can fail for the same underlying reason, so the platform clusters failures into deduplicated bug reports. Developers and QA engineers get a short set of actionable issues instead of a noisy list of independent failures.",
+      "It is also a multi-user application, not a standalone testing script. Multi-tenant isolation is enforced at both the database and API layers, so one customer can't see another customer's test runs or bug reports. It has Google authentication, role-based permissions, and 329 automated tests. It is deployed on Vercel, Render, and Neon Postgres, with a React frontend and an Express backend.",
     ],
     facts: [
       "Discover → generate Playwright tests with Claude Sonnet 4.6 → execute → analyze",
@@ -244,7 +244,7 @@ export const projects = [
     color: "#ff7a45",
     summary:
       "Catches unintended UI changes between releases: it screenshots each page, pixel-diffs it against an approved baseline, and Claude vision explains each change in plain English and rates its severity.",
-    core: "Automated visual QA that doesn't just show what changed — it explains why the change matters.",
+    core: "Automated visual QA that shows what changed and explains why it matters.",
     stats: [
       { value: "10", label: "pages crawled per run, at most" },
       { value: "Severity", label: "on every change, from Claude vision" },
@@ -252,9 +252,9 @@ export const projects = [
     ],
     tech: ["React", "Vite", "Node.js", "Express", "Playwright", "Resemble.js", "Claude API", "Supabase", "PostgreSQL", "PDFKit", "Docker", "Railway", "Vercel"],
     story: [
-      "VisuGuard is an automated visual regression testing platform built to detect and explain visual changes between different versions or deployments of a web application. The platform addresses a common problem in modern web development: an application can remain functionally correct while a deployment unintentionally changes its visual appearance. Instead of relying entirely on manual inspection, VisuGuard automates the process of capturing screenshots, comparing them against approved baselines, identifying visual differences, and presenting those differences in an understandable report.",
-      "The system uses Playwright for browser automation and Resemble.js for image comparison. A baseline version of a website can be captured first, after which a new deployment can be tested against that baseline. The platform can crawl up to ten pages, capture their rendered states, calculate visual differences, and preserve individual comparison reports. This creates a repeatable workflow for validating visual consistency across deployments rather than treating every release as a manual inspection exercise.",
-      "VisuGuard also extends traditional pixel-diffing with an AI interpretation layer. Claude vision can analyze detected changes and explain them in plain English while assigning a severity level, making the raw visual diff easier to understand. The platform also includes Edith, a streaming in-app AI assistant, and supports exporting detailed comparison reports as PDFs using PDFKit. Authentication and security are handled through Supabase JWT authentication, Google OAuth, PostgreSQL Row-Level Security, and per-route rate limiting. The system is containerized with Docker and deployed across Railway and Vercel.",
+      "VisuGuard detects and explains visual changes between versions or deployments of a web application. An application can still work correctly after a deployment that unintentionally changed how it looks. Instead of relying entirely on manual inspection, VisuGuard captures screenshots, compares them against approved baselines, finds the visual differences, and presents them in a readable report.",
+      "The system uses Playwright for browser automation and Resemble.js for image comparison. A baseline version of a website can be captured first, after which a new deployment can be tested against that baseline. The platform can crawl up to ten pages, capture their rendered states, calculate visual differences, and preserve individual comparison reports, so every deployment gets the same repeatable check.",
+      "On top of the pixel diff, Claude vision explains each detected change in plain English and assigns it a severity level. The platform also includes Edith, a streaming in-app AI assistant, and supports exporting detailed comparison reports as PDFs using PDFKit. Authentication and security are handled through Supabase JWT authentication, Google OAuth, PostgreSQL Row-Level Security, and per-route rate limiting. The system is containerized with Docker and deployed across Railway and Vercel.",
     ],
     facts: [
       "Capture a baseline, then test a new deployment against it",
@@ -285,9 +285,9 @@ export const projects = [
     ],
     tech: ["Next.js 15", "Python", "Flask", "InsightFace", "PostgreSQL", "pgvector", "HNSW", "REST APIs", "Claude", "Docker"],
     story: [
-      "RecallPal is an AI-powered assistance platform designed around the problem of helping people with dementia recognize and remember the people around them. The application combines real-time facial recognition with personalized memory information. When a person is recognized, RecallPal can retrieve the corresponding memory information and present it as a spoken memory card, creating a more natural and accessible way for the user to receive contextual information about someone they know.",
-      "The recognition system uses InsightFace together with a vector-based retrieval architecture. Face embeddings are stored and searched using PostgreSQL with pgvector and HNSW indexing, allowing the application to efficiently locate the closest matching identity. The architecture is designed around 512-dimensional face embeddings and the project reports sub-200ms recognition latency at scale. This makes the project more than a simple facial-recognition demonstration: it combines computer vision, vector search, backend APIs, and a user-facing application into a single real-time workflow.",
-      "RecallPal also includes EDITH, a Claude-powered voice assistant designed for caregivers. This gives the system a second interaction layer beyond recognition, allowing AI assistance to become part of the broader caregiving workflow. On the engineering side, the platform includes a GDPR-oriented consent and audit pipeline spanning 28 REST endpoints, while container optimization reduced Docker image size by 40% and RAM usage by 6×. The application combines a Next.js frontend with a Python/Flask backend and InsightFace-based recognition services.",
+      "RecallPal helps people with dementia recognize and remember the people around them. The application combines real-time facial recognition with personalized memory information. When it recognizes a person, RecallPal retrieves that person's memory information and reads it aloud as a spoken memory card.",
+      "The recognition system uses InsightFace together with a vector-based retrieval architecture. Face embeddings are stored and searched using PostgreSQL with pgvector and HNSW indexing, allowing the application to efficiently locate the closest matching identity. The architecture is designed around 512-dimensional face embeddings and the project reports sub-200ms recognition latency at scale. Computer vision, vector search, backend APIs, and the user-facing application run as one real-time workflow.",
+      "RecallPal also includes EDITH, a Claude-powered voice assistant designed for caregivers. On the engineering side, the platform includes a GDPR-oriented consent and audit pipeline spanning 28 REST endpoints, while container optimization reduced Docker image size by 40% and RAM usage by 6×. The application combines a Next.js frontend with a Python/Flask backend and InsightFace-based recognition services.",
     ],
     facts: [
       "Real-time face recognition answered with a spoken memory card",
@@ -317,9 +317,9 @@ export const projects = [
     ],
     tech: ["React", "TypeScript", "Node.js", "Express.js", "MongoDB", "REST APIs"],
     story: [
-      "PhysVerse is an interactive physics platform created for people who want to explore physics through visualization, experimentation, and simulation rather than only reading static explanations. The platform brings together educational content about physics, famous physicists, formulas, challenges, user profiles, and interactive simulations into a single experience. Its central idea is to make abstract physical concepts easier to understand by allowing users to actually interact with and experiment with them.",
-      "The project includes a simulation-driven architecture that allows different physics systems to be explored through interactive visual experiences. The simulation catalogue includes concepts such as solar systems, waves, pendulums, fluid systems, Lorenz attractors, quantum systems, black holes, and electromagnetic phenomena. Rather than presenting these as isolated animations, PhysVerse treats simulations as an interactive learning environment where users can experiment with parameters and observe how physical systems respond.",
-      "Beyond simulations, the platform incorporates the broader educational experience around them. Users can explore information about famous physicists, browse formulas, complete physics challenges, compare performance through a leaderboard, and maintain a physics-focused profile. The application is built around a modern React-based frontend with a backend/API layer and persistent data architecture, making PhysVerse both an educational product and a full-stack engineering project.",
+      "PhysVerse is an interactive physics platform created for people who want to explore physics through visualization, experimentation, and simulation rather than only reading static explanations. The platform brings together educational content about physics, famous physicists, formulas, challenges, user profiles, and interactive simulations into a single experience.",
+      "The project includes a simulation-driven architecture that allows different physics systems to be explored through interactive visual experiences. The simulation catalogue includes concepts such as solar systems, waves, pendulums, fluid systems, Lorenz attractors, quantum systems, black holes, and electromagnetic phenomena. In each one, users can change parameters and watch how the system responds.",
+      "Users can also explore information about famous physicists, browse formulas, complete physics challenges, compare performance through a leaderboard, and maintain a physics-focused profile. The application runs on a React frontend with a backend/API layer and persistent data.",
     ],
     facts: [
       "Simulations: solar systems, waves, pendulums, fluid systems, Lorenz attractors, quantum systems, black holes, electromagnetic phenomena",
@@ -347,9 +347,9 @@ export const projects = [
     ],
     tech: ["React 18", "Node.js", "Socket.io", "JavaScript", "Railway", "WebSockets"],
     story: [
-      "Tiki Topple is a real-time multiplayer digital board game built to explore networking, synchronization, game-state management, and secure client-server architecture. The game supports 2–4 players and uses a React frontend with a Node.js backend and Socket.io to maintain real-time communication between connected players. Rather than treating the browser as the authority over the game, the application uses an authoritative server architecture so that important game state remains controlled by the backend.",
-      "One of the interesting engineering challenges is information security between players. A multiplayer game cannot simply send every player's private information to every connected browser. Tiki Topple therefore keeps sensitive information, such as opponents' cards, hidden from unauthorized clients while synchronizing the public game state in real time. The server also incorporates request sanitization and rate limiting to protect the multiplayer API from abusive or malformed requests.",
-      "The project also focuses on reliability during real-world network conditions. Automatic player reconnection and disconnect handling allow players to recover from temporary connection problems instead of immediately losing the game state. From a deployment perspective, the frontend and backend were consolidated into a single Railway service, reducing infrastructure complexity and cutting hosting costs by approximately half. The project ultimately became an exploration of how real-time multiplayer systems can combine responsive user interfaces with authoritative backend state and resilient networking.",
+      "Tiki Topple is a real-time multiplayer digital board game built to explore networking, synchronization, game-state management, and secure client-server architecture. The game supports 2–4 players and uses a React frontend with a Node.js backend and Socket.io to maintain real-time communication between connected players. It uses an authoritative server, so the backend, not the browser, controls important game state.",
+      "A multiplayer game cannot simply send every player's private information to every connected browser. Tiki Topple therefore keeps sensitive information, such as opponents' cards, hidden from unauthorized clients while synchronizing the public game state in real time. The server also incorporates request sanitization and rate limiting to protect the multiplayer API from abusive or malformed requests.",
+      "The project also focuses on reliability during real-world network conditions. Automatic player reconnection and disconnect handling allow players to recover from temporary connection problems instead of immediately losing the game state. The frontend and backend were consolidated into a single Railway service, reducing infrastructure complexity and cutting hosting costs by approximately half.",
     ],
     facts: [
       "2–4 players over Socket.io",
@@ -382,7 +382,7 @@ export const achievements = [
     short: "National Space Day",
     year: "2025",
     where: "ISRO Sriharikota",
-    role: "Quiz Winner",
+    role: "Shortlisted Participant",
     badge: "Top 100",
     detail:
       "Ranked among the top 100 participants in a national-level space quiz (65,000+ participants). Shortlisted and invited to the ISRO Sriharikota facility for a special outreach program.",
@@ -397,8 +397,8 @@ export const achievements = [
     role: "College level",
     badge: "Multi-Talented",
     detail:
-      "Won multiple events across debates, quizzes, vocabulary & aptitude at the college level. Regular member of quiz teams and debate squads.",
-    impact: "Overall holistic development.",
+      "Won multiple events across debates, quizzes, vocabulary & aptitude at the college level.",
+    impact: "Regular member of quiz teams and debate squads.",
     images: [1, 2, 3, 4].map((n) => photo(`CPE${n}`, `CPE multi-event winner, photo ${n}`)),
   },
 ];
