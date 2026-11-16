@@ -33,7 +33,7 @@ const actOf = (p) => (p < ACTS[1][0] ? 0 : p < ACTS[2][0] ? 1 : 2);
 // frame when the picture is cropped to the panel; `dim` holds a busy one back.
 const EVIDENCE = [
   { src: asset("images/lpu.webp"), pos: "50% 50%", dim: 1 },
-  { src: asset("images/CPE2.webp"), pos: "0% 40%", dim: 1 },
+  { src: asset("images/CPE3.webp"), pos: "50% 30%", dim: 1 },
   { src: asset("images/NYF1.webp"), pos: "50% 45%", dim: 0.8 },
 ];
 
