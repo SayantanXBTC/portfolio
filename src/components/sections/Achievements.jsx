@@ -15,7 +15,7 @@ import { SectionHeader } from "../kit/SectionHeader";
 import { ClipReveal } from "../kit/Reveal";
 import { useLightbox } from "../kit/Lightbox";
 import { usePinnedLayout } from "../../hooks/useMedia";
-import Darkroom from "../recognition/Darkroom";
+import Wall from "../recognition/Wall";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -858,15 +858,15 @@ export default function Achievements() {
   const sectionRef = useRef(null);
   const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const reduce = useReducedMotion();
-  const darkroom = usePinnedLayout() && !reduce;
+  const wall = usePinnedLayout() && !reduce;
   const slides = useMemo(() => SLIDES.length, []);
 
   return (
     <section ref={sectionRef} data-live={live} id="achievements" aria-labelledby="achievements-title" className="relative z-10 bg-ink">
       <div className="container-x overflow-x-clip pb-10 pt-28 md:pt-36">
-        <SectionHeader id="achievements" label="Recognition" note={darkroom ? `A darkroom — ${slides} prints` : `An archive — ${slides} photographs`} />
+        <SectionHeader id="achievements" label="Recognition" note={wall ? `${slides} prints on the line` : `An archive — ${slides} photographs`} />
       </div>
-      {reduce ? <ArchiveList /> : darkroom ? <Darkroom slides={SLIDES} /> : <Carousel />}
+      {reduce ? <ArchiveList /> : wall ? <Wall slides={SLIDES} /> : <Carousel />}
     </section>
   );
 }
