@@ -59,7 +59,7 @@ export default function Hero() {
     >
       <motion.div
         style={reduce ? undefined : { y, opacity: fade }}
-        className="container-x flex flex-1 flex-col justify-end pb-10 pt-28 landscape:justify-center landscape:pb-28 md:landscape:pt-32"
+        className="container-x flex flex-1 flex-col justify-end pb-10 pt-28 landscape:[justify-content:safe_center] landscape:pb-28 md:landscape:pt-32"
       >
         <div className="max-w-[min(100%,44rem)] landscape:max-w-[min(46vw,44rem)]">
           <motion.p

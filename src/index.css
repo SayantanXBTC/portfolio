@@ -339,34 +339,6 @@ html {
   display: none;
 }
 
-/* About: stars that breathe, and a projector that flickers on */
-.twinkle {
-  opacity: 0.2;
-  box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.6);
-  animation: twinkle 3s ease-in-out infinite alternate;
-}
-@keyframes twinkle {
-  from { opacity: 0.15; transform: scale(0.7); }
-  to { opacity: 1; transform: scale(1.2); }
-}
-/* Recognition's darkroom: liquid catching the light, rings in the developer, a wet print drying */
-@keyframes tray-sheen {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(300%); }
-}
-@keyframes tray-ring {
-  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.9; }
-  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
-}
-@keyframes print-sheen {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(200%); }
-}
-@keyframes print-drip {
-  0% { transform: translateY(-2px) scaleY(0.6); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(60px) scaleY(1.3); opacity: 0; }
-}
 /* the "scroll to fly" cue at the start of Work */
 @keyframes flightCue {
   0% { transform: translateY(-100%); }
@@ -378,17 +350,6 @@ html {
   inset: 0;
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
   pointer-events: none;
-}
-
-/* About: rings pulsing out of the quiz buzzer */
-.buzz-ring {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: buzz-ring 0.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-@keyframes buzz-ring {
-  from { transform: scale(1); opacity: 0.9; }
-  to { transform: scale(2.6); opacity: 0; }
 }
 
 /* Skills globe: a ring that pulses out from a chosen skill */

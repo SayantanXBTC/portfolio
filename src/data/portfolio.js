@@ -36,7 +36,7 @@ export const profile = {
   email: "bhattacharjeesayantan86@gmail.com",
   phones: ["+91 9366335595", "+91 8798144052"],
   resume: asset("docs/Sayantan-General%20CV.pdf"),
-  portrait: asset("images/profile.webp"),
+  portrait: asset("images/college.webp"),
   socials: [
     { label: "GitHub", href: "https://github.com/SayantanXBTC" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/sayantan-bhattacharje/" },

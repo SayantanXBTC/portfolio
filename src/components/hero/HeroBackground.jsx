@@ -39,23 +39,24 @@ export default function HeroBackground() {
   return (
     <motion.div aria-hidden="true" style={{ opacity, visibility }} className="fixed inset-0 z-0 overflow-hidden bg-ink">
       <div className="hero-plate overflow-hidden">
-        {/* the photo as it is: no grade, no tint, no movement */}
+        {/* the photo, framed on the face: the bright daylight background falls off into the black at every edge */}
         <motion.img
           src={profile.portrait}
           alt=""
           decoding="async"
           fetchpriority="high"
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "45% 22%" }}
+          style={{ objectPosition: "50% 18%", filter: "saturate(0.9)" }}
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         />
 
-        {/* blend the panel into the page: left edge (landscape), bottom, top */}
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-ink via-ink/50 to-transparent portrait:hidden" />
-        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-ink/80 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-ink via-ink/50 to-transparent portrait:h-[45%]" />
+        {/* blend the panel into the page: left edge and right edge (landscape), top, bottom */}
+        <div className="absolute inset-y-0 left-0 w-[64%] bg-gradient-to-r from-ink via-ink/55 to-transparent portrait:hidden" />
+        <div className="absolute inset-y-0 right-0 w-[22%] bg-gradient-to-l from-ink/75 to-transparent portrait:hidden" />
+        <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-ink/85 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-ink via-ink/55 to-transparent portrait:h-[45%]" />
       </div>
     </motion.div>
   );
