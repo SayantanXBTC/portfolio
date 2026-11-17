@@ -472,7 +472,8 @@ function Flight({ onOpen, onJump }) {
   const size = useStageSize();
   const portrait = usePortrait();
   const route = useMemo(() => buildRoute(size.w, size.h, projects.length), [size]);
-  const dust = useMemo(() => makeDust(size.w), [size.w]);
+  // fewer motes on a small screen: the same density, not the same count
+  const dust = useMemo(() => makeDust(size.w, Math.round(clamp01((size.w * size.h) / 2.2e6) * 200 + 140)), [size.w, size.h]);
   const [view, setView] = useState({ beats: projects.map(() => 0), focus: 0, active: -1 });
   const viewRef = useRef(view);
   const [playing, setPlaying] = useState(true);
@@ -481,7 +482,8 @@ function Flight({ onOpen, onJump }) {
   const colors = useMemo(() => projects.map((p) => hexRgb(p.color)), []);
 
   useEffect(() => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // soft dots and lines: 1.5x is as sharp as they need, and half the pixels of 2x
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     sizeCanvas(backRef.current, size.w, size.h, dpr);
     sizeCanvas(frontRef.current, size.w, size.h, dpr);
     // the glow is soft anyway: a quarter-size canvas stretched up costs almost nothing
@@ -515,11 +517,20 @@ function Flight({ onOpen, onJump }) {
     let prevT = performance.now();
     let lastYaw = null;
     let roll = 0;
+    let lastT = null;
+    let idle = 0;
 
     const frame = (now) => {
+      const t = scrollYProgress.get() * route.total;
+      // at rest, only the dust is moving: draw it at a third of the rate and give the rest of the page the frames
+      idle = t === lastT && Math.abs(roll) < 2e-4 ? idle + 1 : 0;
+      lastT = t;
+      if (idle % 3 !== 0) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       const dt = Math.min(0.05, Math.max(0.001, (now - prevT) / 1000));
       prevT = now;
-      const t = scrollYProgress.get() * route.total;
       const cam = cameraAt(route, t);
       // the dark thins out on the wide shots, so the far end of the route still shows
       fogLen = (9 + 10 * cam.overview) * w;
@@ -558,6 +569,8 @@ function Flight({ onOpen, onJump }) {
         const o = Math.round(opac[i] * 1000) / 1000;
         if (o !== cache[i].o) {
           el.style.opacity = String(o);
+          // a scene lost in the dark is taken out of the compositor's hands entirely
+          if ((o === 0) !== (cache[i].o === 0)) el.style.visibility = o === 0 ? "hidden" : "visible";
           cache[i].o = o;
         }
         const pe = cam.near[i] > 0.6 ? "auto" : "none";

@@ -214,7 +214,9 @@ export default function SkillSphere({ onPick }) {
         const inBand = s.band !== null && ITEMS[i].gi === s.band;
         el.style.transform = `translate3d(${px - c}px, ${py - c}px, 0) scale(${(0.62 + 0.38 * near) * k * (on ? 1.4 : inBand ? 1.12 : 1)})`;
         el.style.opacity = String(s.band !== null && !inBand ? 0.12 + 0.35 * near * near : 0.16 + 0.84 * near * near);
-        el.style.zIndex = String(on ? 200 : Math.round(near * 100));
+        // ten depth bands, not a hundred: a stacking change makes the browser re-sort the whole globe
+        const zi = String(on ? 200 : Math.round(near * 10));
+        if (el.style.zIndex !== zi) el.style.zIndex = zi;
       });
       draw(ax, ay, s.t);
     };
