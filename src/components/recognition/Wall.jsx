@@ -6,13 +6,14 @@ import { smoother } from "../../lib/camera";
 import { useStageSize } from "../../hooks/useStageSize";
 import { scrollToY } from "../../lib/scroll";
 import { useLightbox } from "../kit/Lightbox";
+import { useAccent } from "../../context/AccentContext";
 
 const pad = (n) => String(n).padStart(2, "0");
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const r3 = (n) => Math.round(n * 1000) / 1000;
 const rand = (i, n) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
-// The safelight: a soft amber, whatever the site accent is. Kept low, so the room is warm rather than red.
-const SAFE = "201,104,52";
+// The safelight is the site accent: change the accent and the whole room changes colour.
+const SAFE = "var(--accent-rgb)";
 // Scroll budget, in viewport heights: the safelight is already on when the reader
 // arrives, each batch of prints gets its turn, then the room light comes on.
 const T = { intro: 0.15, batch: 0.8, end: 0.9 };
@@ -98,6 +99,8 @@ export default function Wall({ slides }) {
   const lightRefs = useRef({});
   const cache = useRef(new Map());
   const { open } = useLightbox();
+  const { accent } = useAccent();
+  const title = useMemo(() => developTitle(accent.bright), [accent.bright]);
   const size = useStageSize();
   const room = useMemo(() => layout(size.w, size.h, slides), [size, slides]);
   const [view, setView] = useState({ batch: 0, count: 0, archive: false });
@@ -200,7 +203,7 @@ export default function Wall({ slides }) {
           ref={(el) => (lightRefs.current.safe = el)}
           aria-hidden="true"
           className="absolute inset-0"
-          style={{ background: `radial-gradient(60% 70% at ${(lampX / w) * 100}% 0%, rgba(${SAFE},0.24), rgba(${SAFE},0.07) 55%, transparent 80%)` }}
+          style={{ background: `radial-gradient(60% 70% at ${(lampX / w) * 100}% 0%, rgb(${SAFE} /0.24), rgb(${SAFE} /0.07) 55%, transparent 80%)` }}
         />
         {/* the fixture it comes from */}
         <div aria-hidden="true" className="absolute top-0" style={{ left: lampX - 30, width: 60, height: 24 }}>
@@ -208,7 +211,7 @@ export default function Wall({ slides }) {
           <div
             ref={(el) => (lightRefs.current.lens = el)}
             className="absolute inset-x-[14%] bottom-[16%] top-[34%] rounded-[3px]"
-            style={{ background: `radial-gradient(circle at 50% 40%, #ffd2a8, rgb(${SAFE}) 60%, #4a2410)`, boxShadow: `0 0 18px rgba(${SAFE},0.6)` }}
+            style={{ background: `radial-gradient(circle at 50% 40%, #fff3e8, rgb(${SAFE}) 60%, rgb(var(--accent-soft-rgb)))`, boxShadow: `0 0 18px rgb(${SAFE} /0.6)` }}
           />
         </div>
         {/* the room light, warm and even, once every print is up */}
@@ -338,7 +341,7 @@ export default function Wall({ slides }) {
                       onClick={() => goTo(b)}
                       aria-current={b === view.batch && !archive ? "true" : undefined}
                       className={`label rounded-full border px-3.5 py-2 transition-colors duration-500 ${
-                        b === view.batch && !archive ? "border-paper/60 bg-paper/10 text-paper" : "border-white/10 text-dim hover:text-mute"
+                        b === view.batch && !archive ? "border-accent-strong/60 bg-accent-strong/10 text-paper" : "border-white/10 text-dim hover:text-mute"
                       }`}
                     >
                       {pad(b + 1)} <span className="ml-1 hidden md:inline">{a.short}</span>
@@ -362,7 +365,7 @@ export default function Wall({ slides }) {
                       <span className="h-2 w-2 rounded-full bg-[#ffd9a6]" />
                       <span className="text-paper/80">Lights on</span>
                     </motion.p>
-                    <motion.h3 variants={developTitle} className="display mt-4 text-[clamp(1.6rem,3.2vw,3.2rem)]">
+                    <motion.h3 variants={title} className="display mt-4 text-[clamp(1.6rem,3.2vw,3.2rem)]">
                       The whole archive.
                     </motion.h3>
                     <motion.p variants={develop} className="mt-4 text-[0.92rem] leading-[1.6] text-mute">
@@ -372,11 +375,11 @@ export default function Wall({ slides }) {
                 ) : (
                   <motion.div key={view.batch} initial="hidden" animate="show" exit="exit" variants={notes}>
                     <motion.p variants={develop} className="label flex items-center gap-3">
-                      <span className="h-2 w-2 rounded-full" style={{ background: `rgb(${SAFE})`, boxShadow: `0 0 12px rgba(${SAFE},0.9)` }} />
+                      <span className="h-2 w-2 rounded-full" style={{ background: `rgb(${SAFE})`, boxShadow: `0 0 12px rgb(${SAFE} /0.9)` }} />
                       <span className="text-accent-strong">{item.badge}</span>
                     </motion.p>
                     <span className="mt-3 block overflow-hidden pb-[0.1em]">
-                      <motion.h3 variants={developTitle} className={`display ${portrait ? "text-[clamp(1.45rem,6.4vw,2.2rem)]" : "text-[clamp(1.6rem,2.9vw,2.9rem)]"}`}>
+                      <motion.h3 variants={title} className={`display ${portrait ? "text-[clamp(1.45rem,6.4vw,2.2rem)]" : "text-[clamp(1.6rem,2.9vw,2.9rem)]"}`}>
                         {item.title}
                       </motion.h3>
                     </span>
@@ -418,7 +421,8 @@ const develop = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } },
 };
-const developTitle = {
-  hidden: { opacity: 0, y: 10, color: `rgb(${SAFE})` },
+// (the title starts in the safelight's colour, so it takes the accent as a plain value it can animate from)
+const developTitle = (from) => ({
+  hidden: { opacity: 0, y: 10, color: from },
   show: { opacity: 1, y: 0, color: "rgb(239,237,233)", transition: { duration: 1.4, ease: EASE } },
-};
+});

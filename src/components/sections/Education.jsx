@@ -295,6 +295,8 @@ export default function Education() {
   const sizer = useRef(null);
   const outer = useRef(null);
   const seen = useInView(bookRef, { once: true, amount: 0.45 });
+  const sectionRef = useRef(null);
+  const live = useInView(sectionRef, { margin: "150px 0px 150px 0px" });
   const drag = useRef(null);
   const tiltX = useSpring(0, { stiffness: 80, damping: 18 });
   const tiltY = useSpring(0, { stiffness: 80, damping: 18 });
@@ -459,7 +461,7 @@ export default function Education() {
             className={`label relative rounded-full px-3 py-2 transition-colors duration-500 md:px-3.5 ${spread === s ? "text-paper" : "text-dim hover:text-mute"}`}
           >
             {spread === s && (
-              <motion.span layoutId="yearbook-tab" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.04]" transition={{ duration: 0.5, ease: EASE }} />
+              <motion.span layoutId="yearbook-tab" className="absolute inset-0 rounded-full border border-accent-strong/50 bg-accent-strong/10" transition={{ duration: 0.5, ease: EASE }} />
             )}
             <span className="relative">{label}</span>
           </button>
@@ -554,7 +556,7 @@ export default function Education() {
 
   if (pinned) {
     return (
-      <section id="education" aria-labelledby="education-title" className="relative z-10 bg-ink">
+      <section ref={sectionRef} data-live={live} id="education" aria-labelledby="education-title" className="relative z-10 bg-ink">
         <div className="container-x pt-28 md:pt-36">
           <SectionHeader id="education" label="Education" note="2019 — 2027" />
         </div>
@@ -570,7 +572,7 @@ export default function Education() {
   }
 
   return (
-    <section id="education" aria-labelledby="education-title" className="section-y relative z-10 overflow-x-clip bg-ink">
+    <section ref={sectionRef} data-live={live} id="education" aria-labelledby="education-title" className="section-y relative z-10 overflow-x-clip bg-ink">
       <div className="container-x">
         <SectionHeader id="education" label="Education" note="2019 — 2027" />
       </div>

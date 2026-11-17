@@ -172,11 +172,11 @@ function MessageForm() {
             <button
               type="submit"
               disabled={state === "sending"}
-              className="group inline-flex items-center gap-3 rounded-full bg-paper px-5 py-2.5 text-sm font-medium text-ink transition-transform duration-500 ease-cine hover:-translate-y-0.5 disabled:opacity-70"
+              className="group inline-flex items-center gap-3 rounded-full bg-accent px-5 py-2.5 text-sm font-medium on-accent transition-[transform,background-color] duration-500 ease-cine hover:-translate-y-0.5 hover:bg-accent-strong disabled:opacity-70"
             >
               {state === "sending" ? (
                 <>
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80" />
                   Sending…
                 </>
               ) : (

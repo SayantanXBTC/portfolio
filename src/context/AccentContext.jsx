@@ -24,7 +24,15 @@ export function AccentProvider({ children }) {
   const [accentId, setAccentId] = useState(readStored);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accentId;
+    const root = document.documentElement;
+    const apply = () => {
+      root.dataset.accent = accentId;
+    };
+    // a change of accent crossfades the whole page, where the browser can do that
+    const changing = root.dataset.accent && root.dataset.accent !== accentId;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (changing && !still && typeof document.startViewTransition === "function") document.startViewTransition(apply);
+    else apply();
     try {
       localStorage.setItem(KEY, accentId);
     } catch {

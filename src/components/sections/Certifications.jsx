@@ -56,7 +56,7 @@ function Filters({ topic, setTopic }) {
             onClick={() => setTopic(t)}
             className={`label relative rounded-full px-3 py-2 transition-colors duration-500 ${on ? "text-paper" : "text-dim hover:text-mute"}`}
           >
-            {on && <motion.span layoutId="cert-topic" className="absolute inset-0 rounded-full border border-white/15 bg-white/[0.05]" transition={{ duration: 0.5, ease: EASE }} />}
+            {on && <motion.span layoutId="cert-topic" className="absolute inset-0 rounded-full border border-accent-strong/50 bg-accent-strong/10" transition={{ duration: 0.5, ease: EASE }} />}
             <span className="relative">
               {t} <span className={on ? "text-accent-strong" : "text-dim"}>{count}</span>
             </span>

@@ -679,7 +679,7 @@ function Carousel() {
                       onClick={() => goTo(o)}
                       aria-current={o === owner ? "true" : undefined}
                       className={`label rounded-full border px-3.5 py-2 transition-colors duration-500 ${
-                        o === owner ? "border-paper/60 bg-paper/10 text-paper" : "border-white/10 text-dim hover:text-mute"
+                        o === owner ? "border-accent-strong/60 bg-accent-strong/10 text-paper" : "border-white/10 text-dim hover:text-mute"
                       }`}
                     >
                       {pad(o + 1)} <span className="ml-1 hidden md:inline">{a.short}</span>

@@ -21,7 +21,7 @@ export function SectionHeader({ id, label, note, children }) {
     <header ref={ref} className="relative mb-12 md:mb-16">
       <div className="mb-8 flex items-center gap-5 md:mb-10">
         <p className="label flex shrink-0 items-center gap-3">
-          <span className="text-paper">{chapterIndex(id)}</span>
+          <span className="text-accent-strong">{chapterIndex(id)}</span>
           {note && (
             <span className="hidden items-center gap-3 sm:flex">
               <span className="text-dim">—</span>
@@ -31,7 +31,7 @@ export function SectionHeader({ id, label, note, children }) {
         </p>
         <motion.span
           aria-hidden="true"
-          className="h-px flex-1 origin-left bg-white/[0.08]"
+          className="h-px flex-1 origin-left bg-gradient-to-r from-accent-strong/70 via-white/[0.08] to-white/[0.08]"
           initial={reduce ? false : { scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true, amount: 1 }}

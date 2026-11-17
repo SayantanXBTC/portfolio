@@ -38,6 +38,8 @@ export default function HeroBackground() {
 
   return (
     <motion.div aria-hidden="true" style={{ opacity, visibility }} className="fixed inset-0 z-0 overflow-hidden bg-ink">
+      {/* the accent, as light: a low bloom behind the type and a glow rising under the photo */}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(42% 46% at 12% 88%, rgb(var(--accent-rgb) / 0.2), transparent 70%)" }} />
       <div className="hero-plate overflow-hidden">
         {/* the photo, framed on the face: the bright daylight background falls off into the black at every edge */}
         <motion.img
@@ -57,6 +59,7 @@ export default function HeroBackground() {
         <div className="absolute inset-y-0 right-0 w-[22%] bg-gradient-to-l from-ink/75 to-transparent portrait:hidden" />
         <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-ink/85 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-ink via-ink/55 to-transparent portrait:h-[45%]" />
+        <div className="absolute inset-x-0 bottom-0 h-[40%]" style={{ background: "radial-gradient(60% 70% at 50% 100%, rgb(var(--accent-rgb) / 0.28), transparent 70%)" }} />
       </div>
     </motion.div>
   );

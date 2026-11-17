@@ -78,7 +78,7 @@ export default function Hero() {
           </motion.p>
 
           <h1 className="text-paper">
-            <Rise delay={late(1.15)} className="editorial text-[clamp(1.35rem,2.3vw,2.1rem)] text-paper/75">
+            <Rise delay={late(1.15)} className="editorial text-[clamp(1.35rem,2.3vw,2.1rem)] text-accent-strong">
               {profile.greeting}
             </Rise>
             <span className="mt-2 block display text-[clamp(2.5rem,11vw,5rem)] landscape:text-[clamp(2.6rem,5.6vw,6.4rem)]">

@@ -56,9 +56,11 @@ function Evidence({ index, p, opacity, full = false }) {
         loading="lazy"
         decoding="async"
         draggable={false}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover will-change-transform"
         style={{ objectPosition: photo.pos, scale, y, filter: "saturate(0.8)" }}
       />
+      {/* the accent, as a wash of light over the picture */}
+      <div className="absolute inset-0 bg-accent/20" />
       {/* into the black: right edge (panel), top and bottom */}
       {!full && <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-ink via-ink/60 to-transparent" />}
       <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-ink to-transparent" />
@@ -80,7 +82,7 @@ function Chip({ item, i, t }) {
       onClick={() => focusSkill(item.group, item.skill)}
       aria-label={`${item.name}: see it in Skills`}
       style={{ y, opacity: e }}
-      className="group/chip inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#0b0f18]/90 py-[3px] pl-[3px] pr-2.5 text-[0.74rem] text-paper/85 shadow-[0_10px_20px_-10px_rgba(0,0,0,0.9)] transition-[border-color,color] duration-300 hover:border-white/30 hover:text-paper"
+      className="group/chip inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-ink-800/90 py-[3px] pl-[3px] pr-2.5 text-[0.74rem] text-paper/85 shadow-[0_10px_20px_-10px_rgba(0,0,0,0.9)] transition-[border-color,color] duration-300 hover:border-white/30 hover:text-paper"
     >
       <MiniIcon item={item} size={20} />
       {item.name}
@@ -98,25 +100,25 @@ function Workbench({ p }) {
     <div className="relative px-5 pb-5 pt-7">
       {/* the board: its edge draws in, then the dimension line and corner marks */}
       <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-        <motion.rect x="0.3" y="0.5" width="99.4" height="99" rx="1.2" fill="rgba(10,16,32,0.55)" stroke="rgba(160,190,255,0.35)" strokeWidth="1" vectorEffect="non-scaling-stroke" style={{ pathLength: frame }} />
+        <motion.rect x="0.3" y="0.5" width="99.4" height="99" rx="1.2" fill="rgb(5 5 5 / 0.55)" stroke="rgb(var(--accent-strong-rgb) / 0.5)" strokeWidth="1" vectorEffect="non-scaling-stroke" style={{ pathLength: frame }} />
       </svg>
       <motion.div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ opacity: ticks }}>
         {["left-0 top-0", "right-0 top-0 rotate-90", "right-0 bottom-0 rotate-180", "left-0 bottom-0 -rotate-90"].map((c) => (
-          <span key={c} className={`absolute h-3 w-3 border-l border-t border-[#9fb6e8] ${c}`} style={{ margin: -5 }} />
+          <span key={c} className={`absolute h-3 w-3 border-l border-t border-accent-strong ${c}`} style={{ margin: -5 }} />
         ))}
         <span className="absolute -top-4 left-0 right-0 flex items-center gap-2">
-          <span className="h-2 w-px bg-[#9fb6e8]/60" />
-          <span className="h-px flex-1 bg-[#9fb6e8]/35" />
-          <span className="label text-[0.52rem] text-[#9fb6e8]/80">Toolkit</span>
-          <span className="h-px flex-1 bg-[#9fb6e8]/35" />
-          <span className="h-2 w-px bg-[#9fb6e8]/60" />
+          <span className="h-2 w-px bg-accent-strong/60" />
+          <span className="h-px flex-1 bg-accent-strong/35" />
+          <span className="label text-[0.52rem] text-accent-strong/80">Toolkit</span>
+          <span className="h-px flex-1 bg-accent-strong/35" />
+          <span className="h-2 w-px bg-accent-strong/60" />
         </span>
       </motion.div>
 
       <dl className="relative grid grid-cols-2 gap-x-5 gap-y-3">
         {about.snapshot.map((row) => (
           <div key={row.label}>
-            <motion.dt className="label mb-2 text-[0.6rem] text-[#9fb6e8]" style={{ opacity: ticks }}>
+            <motion.dt className="label mb-2 text-[0.6rem] text-accent-strong" style={{ opacity: ticks }}>
               {row.label}
             </motion.dt>
             <dd className="flex flex-wrap gap-1.5">

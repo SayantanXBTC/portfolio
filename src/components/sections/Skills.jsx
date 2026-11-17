@@ -173,7 +173,7 @@ function Tile({ item, open, setOpen }) {
           borderColor: lit ? `${tint}66` : undefined,
           boxShadow: flash ? `0 0 0 2px ${tint}, 0 30px 70px -20px ${tint}` : hot ? `0 30px 60px -30px ${tint}` : undefined,
         }}
-        className={`group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500 ${has ? "cursor-pointer" : ""}`}
+        className={`group relative flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.01] p-3 transition-[border-color,box-shadow] duration-500 hover:border-accent-strong/40 ${has ? "cursor-pointer" : ""}`}
       >
         {/* sheen that follows the pointer */}
         <span

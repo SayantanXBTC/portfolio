@@ -99,7 +99,7 @@ body {
 /* thin, quiet scrollbar */
 html {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a2a #050505;
+  scrollbar-color: rgb(var(--accent-soft-rgb)) #050505;
 }
 ::-webkit-scrollbar {
   width: 8px;
@@ -108,7 +108,7 @@ html {
   background: #050505;
 }
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: rgb(var(--accent-soft-rgb));
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -172,7 +172,7 @@ html {
   }
 
   .link-underline {
-    background-image: linear-gradient(currentColor, currentColor);
+    background-image: linear-gradient(rgb(var(--accent-strong-rgb)), rgb(var(--accent-strong-rgb)));
     background-size: 0% 1px;
     background-position: 0 100%;
     background-repeat: no-repeat;
